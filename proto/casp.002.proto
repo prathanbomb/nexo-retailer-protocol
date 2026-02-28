@@ -36,29 +36,5 @@ message SaleToPOIServiceResponseV06 {
 // Recipient5 - Message recipient
 
 // TransactionResponse23 - Transaction response wrapper
-message TransactionResponse23 {
-  oneof tx_oneof_rsp {
-    PaymentResponse28 pmt_rsp = 1;
-    CardAcquisitionResponse2 card_acq_rsp = 2;
-    ReversalResponse6 rvrsal_rsp = 3;
-    BalanceInquiryResponse6 bal_inq_rsp = 4;
-    BatchResponse4 btch_rsp = 5;
-    AdminResponse4 adm_rsp = 6;
-    DisplayResponse2 dsply_rsp = 7;
-    Get_PINResponse3 pin_rsp = 8;
-    EnableServiceResponse6 enbl_svc_rsp = 9;
-    PINResponse1 pin_rspns = 10;
-    CardReaderAPDUResponse8 crd_rdr_apdu_rsp = 11;
-    CardReaderPowerOffResponse3 crd_rdr_pwr_off_rsp = 12;
-    CardReaderInitResponse5 crd_rdr_init_rsp = 13;
-    IdentifyTerminalResponse2 id_trmnl_rsp = 14;
-    Get_DataResponse3 get_data_rsp = 15;
-    LogoutResponse3 lgout_rsp = 16;
-    RecoveryResponse4 rcvry_rsp = 17;
-    SecurityResponse4 scnty_rsp = 18;
-    AbortResponse3 abrt_rsp = 19;
-    CardAcquisitionResponse3 card_acq_rsp2 = 20;
-  }
-}
 
 // PaymentResponse28 - Payment response

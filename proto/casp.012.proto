@@ -40,3 +40,10 @@ message NetworkManagement6 {
 // Recipient5 - Message recipient
 
 // Diagnosis4 - Diagnosis request
+
+// DiagnosisResponse2 - Diagnosis response
+message DiagnosisResponse2 {
+  optional string tx_id = 1;
+  optional string dignss_rsp = 2;  // Response1Code
+  optional string dignss_data = 3;
+}

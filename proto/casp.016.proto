@@ -38,3 +38,9 @@ message PrintManagement6 {
 // Recipient5 - Message recipient
 
 // PrintOutput2 - Print output
+
+// PrintResponse2 - Print response
+message PrintResponse2 {
+  optional string tx_id = 1;
+  optional string prnt_rsp = 2;  // Response1Code
+}

@@ -38,3 +38,9 @@ message InputManagement6 {
 // Recipient5 - Message recipient
 
 // InputUpdate2 - Input update
+
+// InputResponse2 - Input response
+message InputResponse2 {
+  optional string tx_id = 1;
+  optional string inp_rsp = 2;  // Response1Code
+}
