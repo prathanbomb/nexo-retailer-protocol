@@ -11,20 +11,21 @@
 //!
 //! ## Message Types
 //!
-//! The library defines all 17 CASP message types from ISO 20022:
+//! The library defines all CASP message types from ISO 20022:
 //!
-//! - `casp001`: SaleToPOIServiceRequestV06
-//! - `casp002`: SaleToPOIServiceResponseV06
-//! - `casp003`: SaleToPOIAdminRequestV06
-//! - `casp004`: SaleToPOIAdminResponseV06
-//! - `casp005-017`: Additional CASP message types
+//! All message types are available at the crate root, including:
+//! - `Casp001Document`: SaleToPOIServiceRequestV06
+//! - `Casp002Document`: SaleToPOIServiceResponseV06
+//! - `Casp003Document`: SaleToPOIAdminRequestV06
+//! - `Casp004Document`: SaleToPOIAdminResponseV06
+//! - Plus all shared types (Header4, SecurityTrailer4, CardData8, etc.)
 //!
 //! ## Usage
 //!
 //! ```rust,no_run
-//! use nexo_retailer_protocol::casp001;
+//! use nexo_retailer_protocol::{Casp001Document, Header4};
 //!
-//! let doc = casp001::Document { /* ... */ };
+//! let doc = Casp001Document { /* ... */ };
 //! let encoded = doc.encode_to_vec();
 //! ```
 //!
@@ -35,37 +36,10 @@
 //! cargo build --no-default-features --target thumbv7em-none-eabihf
 //! ```
 
-// Re-export generated protobuf types
-pub mod protos;
-
-// Re-export commonly used message types for convenience
-pub use protos::nexo::casp::v1::casp001;
-pub use protos::nexo::casp::v1::casp002;
-pub use protos::nexo::casp::v1::casp003;
-pub use protos::nexo::casp::v1::casp004;
-pub use protos::nexo::casp::v1::casp005;
-pub use protos::nexo::casp::v1::casp006;
-pub use protos::nexo::casp::v1::casp007;
-pub use protos::nexo::casp::v1::casp008;
-pub use protos::nexo::casp::v1::casp009;
-pub use protos::nexo::casp::v1::casp010;
-pub use protos::nexo::casp::v1::casp011;
-pub use protos::nexo::casp::v1::casp012;
-pub use protos::nexo::casp::v1::casp013;
-pub use protos::nexo::casp::v1::casp014;
-pub use protos::nexo::casp::v1::casp015;
-pub use protos::nexo::casp::v1::casp016;
-pub use protos::nexo::casp::v1::casp017;
-
-// Re-export common types
-pub use protos::nexo::casp::v1::{
-    ActiveCurrencyAndAmount,
-    // Add other common types as needed
-};
-
-// Ensure library works in no_std environment
-#[cfg(not(feature = "std"))]
-compile_error!("no_std support is planned for Phase 2; current builds require std feature");
+// Include generated protobuf code
+// prost-build generates all proto messages in a single file
+// All types are available at the crate root
+include!("protos/nexo.casp.v1.rs");
 
 #[cfg(test)]
 mod tests {

@@ -31,11 +31,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Output directory for generated code
     config.out_dir("src/protos");
 
-    // Disable external protoc to avoid duplicate message errors
-    // The proto files from Plan 01 have structural issues that need fixing
-    // For now, we'll compile without protoc validation
-    config.extern_path(".nexo.casp.v1", "::nexo_retailer_protocol::protos::nexo::casp::v1");
-
     // Generate Rust code from all proto files
     config.compile_protos(
         &[
@@ -59,7 +54,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "proto/casp.017.proto",
         ],
         &["proto/"]
-    )?;
+    ).map_err(|e| {
+        eprintln!("prost-build error: {}", e);
+        e
+    })?;
+
+    eprintln!("prost-build: Successfully generated Rust code from 18 proto files");
 
     Ok(())
 }
