@@ -25,12 +25,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Validation
 
-- [ ] **VAL-01**: Field presence validation per XSD constraints
-- [ ] **VAL-02**: Type checking for all message fields
-- [ ] **VAL-03**: Currency code validation (ISO 4217)
-- [ ] **VAL-04**: String encoding validation (UTF-8)
-- [ ] **VAL-05**: Basic constraint validation (length limits, ranges)
-- [ ] **VAL-06**: Validation conditional on alloc feature (heap required for collections)
+- [x] **VAL-01**: Field presence validation per XSD constraints
+- [x] **VAL-02**: Type checking for all message fields
+- [x] **VAL-03**: Currency code validation (ISO 4217)
+- [x] **VAL-04**: String encoding validation (UTF-8)
+- [x] **VAL-05**: Basic constraint validation (length limits, ranges)
+- [x] **VAL-06**: Validation conditional on alloc feature (heap required for collections)
 
 ### Error Handling
 
@@ -148,12 +148,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CODEC-03 | Phase 2 | Complete |
 | CODEC-04 | Phase 2 | Complete |
 | CODEC-05 | Phase 2 | Complete |
-| VAL-01 | Phase 2 | Pending |
-| VAL-02 | Phase 2 | Pending |
-| VAL-03 | Phase 2 | Pending |
-| VAL-04 | Phase 2 | Pending |
-| VAL-05 | Phase 2 | Pending |
-| VAL-06 | Phase 2 | Pending |
+| VAL-01 | Phase 2 | Complete |
+| VAL-02 | Phase 2 | Complete |
+| VAL-03 | Phase 2 | Complete |
+| VAL-04 | Phase 2 | Complete |
+| VAL-05 | Phase 2 | Complete |
+| VAL-06 | Phase 2 | Complete |
 | ERROR-01 | Phase 2 | Complete |
 | ERROR-02 | Phase 2 | Complete |
 | ERROR-03 | Phase 2 | Complete |
