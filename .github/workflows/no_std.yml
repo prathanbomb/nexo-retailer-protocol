@@ -1,0 +1,57 @@
+name: no_std bare-metal build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  no_std-build:
+    name: Build for bare-metal target (thumbv7em-none-eabihf)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7em-none-eabihf
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build with no-default-features
+        run: cargo build --no-default-features --target thumbv7em-none-eabihf
+
+      - name: Build with alloc feature
+        run: cargo build --features alloc --target thumbv7em-none-eabihf
+
+      - name: Run dependency audit (check for std leakage)
+        run: |
+          echo "Checking for std leakage in no_std build..."
+          cargo tree --target thumbv7em-none-eabihf --no-default-features | grep -i "std" && {
+            echo "ERROR: std dependency found in no_std build!"
+            exit 1
+          } || echo "PASS: No std dependencies found"
+
+      - name: Build documentation for bare-metal target
+        run: cargo doc --no-deps --target thumbv7em-none-eabihf
