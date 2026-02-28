@@ -22,7 +22,7 @@ message Document {
 // CardTerminalManagement6 - Card and terminal management message
 message CardTerminalManagement6 {
   optional Header4 hdr = 1;
-  oneof mgmt {
+  oneof mgmt_oneof {
     CardReaderInitRequest4 crd_rdr_init_req = 2;
     CardReaderInitResponse5 crd_rdr_init_rsp = 3;
     CardReaderPowerOffRequest3 crd_rdr_pwr_off_req = 4;

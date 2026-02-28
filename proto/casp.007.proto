@@ -22,7 +22,7 @@ message Document {
 // PINManagement6 - PIN management message
 message PINManagement6 {
   optional Header4 hdr = 1;
-  oneof pin {
+  oneof pin_oneof {
     Get_PINRequest3 pin_req = 2;
     Get_PINResponse3 pin_rsp = 3;
     Send_PINRequest2 pin_snd_req = 4;

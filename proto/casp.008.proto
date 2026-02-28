@@ -22,7 +22,7 @@ message Document {
 // DisplayManagement6 - Display management message
 message DisplayManagement6 {
   optional Header4 hdr = 1;
-  oneof dsply {
+  oneof dsply_oneof {
     DisplayAction2 dsply_actn = 2;
     DisplayResponse2 dsply_rsp = 3;
   }

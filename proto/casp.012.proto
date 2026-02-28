@@ -22,7 +22,7 @@ message Document {
 // NetworkManagement6 - Network management message
 message NetworkManagement6 {
   optional Header4 hdr = 1;
-  oneof net {
+  oneof net_oneof {
     Diagnosis4 dignss = 2;
     DiagnosisResponse2 dignss_rsp = 3;
     RecoveryRequest4 rcvry_req = 4;

@@ -22,7 +22,7 @@ message Document {
 // TransactionManagement6 - Transaction management message
 message TransactionManagement6 {
   optional Header4 hdr = 1;
-  oneof tx {
+  oneof tx_oneof {
     AbortRequest3 abrt_req = 2;
     AbortResponse3 abrt_rsp = 3;
   }

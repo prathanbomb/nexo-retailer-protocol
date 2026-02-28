@@ -22,7 +22,7 @@ message Document {
 // InputManagement6 - Input management message
 message InputManagement6 {
   optional Header4 hdr = 1;
-  oneof inp {
+  oneof inp_oneof {
     InputUpdate2 inp_upd = 2;
     InputResponse2 inp_rsp = 3;
   }

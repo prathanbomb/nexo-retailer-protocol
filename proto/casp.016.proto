@@ -22,7 +22,7 @@ message Document {
 // PrintManagement6 - Print management message
 message PrintManagement6 {
   optional Header4 hdr = 1;
-  oneof prnt {
+  oneof prnt_oneof {
     PrintOutput2 prnt_outpt = 2;
     PrintResponse2 prnt_rsp = 3;
   }

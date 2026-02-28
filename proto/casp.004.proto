@@ -30,7 +30,7 @@ message SaleToPOIAdminResponseV06 {
 message Header4 {
   optional string msg_fctn = 1;
   optional string proto_vrsn = 2;
-  optional string orgnl Biz_t_msg = 3;
+  optional string orgnl_biz_t_msg = 3;
   optional string orgnl_msg_id = 4;
   optional string tx_id = 5;
   optional int64 cre_dt_tm = 6;
@@ -56,7 +56,7 @@ message Identification1 {
 // Recipient5 - Message recipient
 message Recipient5 {
   optional string msg_tx_id = 1;
-  optional string orgnl Biz_t_msg = 2;
+  optional string orgnl_biz_t_msg = 2;
   optional string orgnl_msg_id = 3;
 }
 

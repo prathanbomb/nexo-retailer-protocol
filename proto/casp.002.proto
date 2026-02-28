@@ -31,7 +31,7 @@ message SaleToPOIServiceResponseV06 {
 message Header4 {
   optional string msg_fctn = 1;  // MessageFunction1Code
   optional string proto_vrsn = 2;
-  optional string orgnl Biz_t_msg = 3;
+  optional string orgnl_biz_t_msg = 3;
   optional string orgnl_msg_id = 4;
   optional string tx_id = 5;
   optional string cre_dt_tm = 6;  // ISODateTime
@@ -58,13 +58,13 @@ message Identification1 {
 // Recipient5 - Message recipient
 message Recipient5 {
   optional string msg_tx_id = 1;
-  optional string orgnl Biz_t_msg = 2;
+  optional string orgnl_biz_t_msg = 2;
   optional string orgnl_msg_id = 3;
 }
 
 // TransactionResponse23 - Transaction response wrapper
 message TransactionResponse23 {
-  oneof tx_rsp {
+  oneof tx_oneof_rsp {
     PaymentResponse28 pmt_rsp = 1;
     CardAcquisitionResponse2 card_acq_rsp = 2;
     ReversalResponse6 rvrsal_rsp = 3;

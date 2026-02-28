@@ -22,7 +22,7 @@ message Document {
 // LoginManagement6 - Login management message
 message LoginManagement6 {
   optional Header4 hdr = 1;
-  oneof login {
+  oneof login_oneof {
     LoginRequest3 login_req = 2;
     LoginResponse3 login_rsp = 3;
     LogoutRequest3 lgout_req = 4;

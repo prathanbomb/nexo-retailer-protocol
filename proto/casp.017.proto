@@ -22,7 +22,7 @@ message Document {
 // ApplicationManagement6 - Application management message
 message ApplicationManagement6 {
   optional Header4 hdr = 1;
-  oneof app {
+  oneof app_oneof {
     EnableServiceRequest7 enbl_svc_req = 2;
     EnableServiceResponse6 enbl_svc_rsp = 3;
   }

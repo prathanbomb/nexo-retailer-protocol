@@ -22,7 +22,7 @@ message Document {
 // CardDataManagement6 - Card data management message
 message CardDataManagement6 {
   optional Header4 hdr = 1;
-  oneof crd_data {
+  oneof crd_data_oneof {
     CardAcquisitionRequest3 card_acq_req = 2;
     CardAcquisitionResponse2 card_acq_rsp = 3;
   }

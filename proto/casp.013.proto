@@ -22,7 +22,7 @@ message Document {
 // SecurityManagement2 - Security management message
 message SecurityManagement2 {
   optional Header4 hdr = 1;
-  oneof scnty {
+  oneof scnty_oneof {
     SecurityRequest4 scnty_req = 2;
     SecurityResponse4 scnty_rsp = 3;
   }

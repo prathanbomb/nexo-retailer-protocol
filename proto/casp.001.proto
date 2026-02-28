@@ -31,7 +31,7 @@ message SaleToPOIServiceRequestV06 {
 message Header4 {
   optional string msg_fctn = 1;  // MessageFunction1Code
   optional string proto_vrsn = 2;
-  optional string orgnl Biz_t_msg = 3;
+  optional string orgnl_biz_t_msg = 3;
   optional string orgnl_msg_id = 4;
   optional string tx_id = 5;
   optional string cre_dt_tm = 6;  // ISODateTime
@@ -58,13 +58,13 @@ message Identification1 {
 // Recipient5 - Message recipient
 message Recipient5 {
   optional string msg_tx_id = 1;
-  optional string orgnl Biz_t_msg = 2;
+  optional string orgnl_biz_t_msg = 2;
   optional string orgnl_msg_id = 3;
 }
 
 // Transaction23 - Transaction message (oneof for different transaction types)
 message Transaction23 {
-  oneof tx {
+  oneof tx_oneof {
     CardPaymentContext30 card_pmt_ctx = 1;
     PaymentRequest29 pmt_req = 2;
     CardAcquisitionRequest3 card_acq_req = 3;
@@ -154,7 +154,7 @@ message PaymentRequest29 {
   optional string rcncltn_id = 4;
   optional string orgnl_msg_id = 5;
   optional string orgnl_tx_id = 6;
-  optional string orgnl Biz_t_msg = 7;
+  optional string orgnl_biz_t_msg = 7;
   optional string mrchnt_categ_cd = 8;
   optional string tx_id = 9;
   optional string instlmt = 10;
@@ -182,7 +182,7 @@ message SaleData4 {
   optional string pstrt_id = 14;
   optional string apprn = 15;
   optional string rct_nb = 16;
-  optional string ovr rid = 17;
+  optional string ovr_rid = 17;
   optional string trmt_conds = 18;
   optional string chnl = 19;  // TransactionChannel1Code
   optional string attndnc_cntxt = 20;  // AttendanceContext1Code
@@ -190,7 +190,7 @@ message SaleData4 {
   optional string orgnl_sale_tx_id = 22;
   optional string orgnl_sale_id = 23;
   optional string orgnl_sale_ref_nb = 24;
-  optional string orgnl Biz_t_msg = 25;
+  optional string orgnl_biz_t_msg = 25;
   optional string orgnl_msg_id = 26;
   optional string orgnl_tx_id = 27;
   optional string orgnl_pmt_tx_id = 28;
@@ -199,72 +199,72 @@ message SaleData4 {
   optional string orgnl_crd_pmt_tx_id = 31;
   optional string orgnl_crd_pmt_id = 32;
   optional string orgnl_crd_pmt_ref_nb = 33;
-  optional string orgnl_crd_pmt Biz_t_msg = 34;
+  optional string orgnl_crd_pmt_biz_t_msg = 34;
   optional string orgnl_crd_pmt_msg_id = 35;
   optional string orgnl_crd_pmt_tx_id2 = 36;
   optional string orgnl_crd_pmt_id2 = 37;
   optional string orgnl_crd_pmt_ref_nb2 = 38;
-  optional string orgnl_crd_pmt Biz_t_msg2 = 39;
+  optional string orgnl_crd_pmt_biz_t_msg2 = 39;
   optional string orgnl_crd_pmt_msg_id2 = 40;
   optional string orgnl_crd_pmt_tx_id3 = 41;
   optional string orgnl_crd_pmt_id3 = 42;
   optional string orgnl_crd_pmt_ref_nb3 = 43;
-  optional string orgnl_crd_pmt Biz_t_msg3 = 44;
+  optional string orgnl_crd_pmt_biz_t_msg3 = 44;
   optional string orgnl_crd_pmt_msg_id3 = 45;
   optional string orgnl_crd_pmt_tx_id4 = 46;
   optional string orgnl_crd_pmt_id4 = 47;
   optional string orgnl_crd_pmt_ref_nb4 = 48;
-  optional string orgnl_crd_pmt Biz_t_msg4 = 49;
+  optional string orgnl_crd_pmt_biz_t_msg4 = 49;
   optional string orgnl_crd_pmt_msg_id4 = 50;
   optional string orgnl_crd_pmt_tx_id5 = 51;
   optional string orgnl_crd_pmt_id5 = 52;
   optional string orgnl_crd_pmt_ref_nb5 = 53;
-  optional string orgnl_crd_pmt Biz_t_msg5 = 54;
+  optional string orgnl_crd_pmt_biz_t_msg5 = 54;
   optional string orgnl_crd_pmt_msg_id5 = 55;
   optional string orgnl_crd_pmt_tx_id6 = 56;
   optional string orgnl_crd_pmt_id6 = 57;
   optional string orgnl_crd_pmt_ref_nb6 = 58;
-  optional string orgnl_crd_pmt Biz_t_msg6 = 59;
+  optional string orgnl_crd_pmt_biz_t_msg6 = 59;
   optional string orgnl_crd_pmt_msg_id6 = 60;
   optional string orgnl_crd_pmt_tx_id7 = 61;
   optional string orgnl_crd_pmt_id7 = 62;
   optional string orgnl_crd_pmt_ref_nb7 = 63;
-  optional string orgnl_crd_pmt Biz_t_msg7 = 64;
+  optional string orgnl_crd_pmt_biz_t_msg7 = 64;
   optional string orgnl_crd_pmt_msg_id7 = 65;
   optional string orgnl_crd_pmt_tx_id8 = 66;
   optional string orgnl_crd_pmt_id8 = 67;
   optional string orgnl_crd_pmt_ref_nb8 = 68;
-  optional string orgnl_crd_pmt Biz_t_msg8 = 69;
+  optional string orgnl_crd_pmt_biz_t_msg8 = 69;
   optional string orgnl_crd_pmt_msg_id8 = 70;
   optional string orgnl_crd_pmt_tx_id9 = 71;
   optional string orgnl_crd_pmt_id9 = 72;
   optional string orgnl_crd_pmt_ref_nb9 = 73;
-  optional string orgnl_crd_pmt Biz_t_msg9 = 74;
+  optional string orgnl_crd_pmt_biz_t_msg9 = 74;
   optional string orgnl_crd_pmt_msg_id9 = 75;
   optional string orgnl_crd_pmt_tx_id10 = 76;
   optional string orgnl_crd_pmt_id10 = 77;
   optional string orgnl_crd_pmt_ref_nb10 = 78;
-  optional string orgnl_crd_pmt Biz_t_msg10 = 79;
+  optional string orgnl_crd_pmt_biz_t_msg10 = 79;
   optional string orgnl_crd_pmt_msg_id10 = 80;
   optional string orgnl_crd_pmt_tx_id11 = 81;
   optional string orgnl_crd_pmt_id11 = 82;
   optional string orgnl_crd_pmt_ref_nb11 = 83;
-  optional string orgnl_crd_pmt Biz_t_msg11 = 84;
+  optional string orgnl_crd_pmt_biz_t_msg11 = 84;
   optional string orgnl_crd_pmt_msg_id11 = 85;
   optional string orgnl_crd_pmt_tx_id12 = 86;
   optional string orgnl_crd_pmt_id12 = 87;
   optional string orgnl_crd_pmt_ref_nb12 = 88;
-  optional string orgnl_crd_pmt Biz_t_msg12 = 89;
+  optional string orgnl_crd_pmt_biz_t_msg12 = 89;
   optional string orgnl_crd_pmt_msg_id12 = 90;
   optional string orgnl_crd_pmt_tx_id13 = 91;
   optional string orgnl_crd_pmt_id13 = 92;
   optional string orgnl_crd_pmt_ref_nb13 = 93;
-  optional string orgnl_crd_pmt Biz_t_msg13 = 94;
+  optional string orgnl_crd_pmt_biz_t_msg13 = 94;
   optional string orgnl_crd_pmt_msg_id13 = 95;
   optional string orgnl_crd_pmt_tx_id14 = 96;
   optional string orgnl_crd_pmt_id14 = 97;
   optional string orgnl_crd_pmt_ref_nb14 = 98;
-  optional string orgnl_crd_pmt Biz_t_msg14 = 99;
+  optional string orgnl_crd_pmt_biz_t_msg14 = 99;
   optional string orgnl_crd_pmt_msg_id14 = 100;
 }
 
@@ -336,7 +336,7 @@ message CardPaymentInstrument80 {
 message ReversalRequest7 {
   optional string tx_id = 1;
   optional string orgnl_msg_id = 2;
-  optional string orgnl Biz_t_msg = 3;
+  optional string orgnl_biz_t_msg = 3;
   optional string orgnl_tx_id = 4;
   optional string rvrsal_rsn = 5;  // ReversalReason1Code
   optional string rvrsal_amt = 6;
@@ -1096,4 +1096,10 @@ message SecurityTrailer4 {
   optional bytes signtr_val = 3;
   optional bytes nce = 4;
   optional bytes nce2 = 5;
+}
+
+// CardAcquisitionRequest3 - Card acquisition request (placeholder)
+message CardAcquisitionRequest3 {
+  optional string tx_id = 1;
+  optional string card_acq_tp = 2;  // CardAcquisition1Code
 }

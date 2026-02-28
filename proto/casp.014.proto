@@ -22,7 +22,7 @@ message Document {
 // CertificateManagement6 - Certificate management message
 message CertificateManagement6 {
   optional Header4 hdr = 1;
-  oneof cert {
+  oneof cert_oneof {
     CertificateRequest6 cert_req = 2;
     CertificateResponse6 cert_rsp = 3;
   }

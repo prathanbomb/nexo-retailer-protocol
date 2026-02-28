@@ -22,7 +22,7 @@ message Document {
 // TotaliserManagement6 - Totaliser management message
 message TotaliserManagement6 {
   optional Header4 hdr = 1;
-  oneof totlsr {
+  oneof totlsr_oneof {
     TotaliserRequest2 totlsr_req = 2;
     TotaliserResponse2 totlsr_rsp = 3;
   }

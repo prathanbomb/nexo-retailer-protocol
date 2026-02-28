@@ -279,36 +279,36 @@ enum ContentType2Code {
 // CardDataReading1Code - Card data reading method enumeration
 enum CardDataReading1Code {
   CARD_DATA_READING_1_CODE_UNSPECIFIED = 0;
-  ICCS = 1;  // ICC contact
-  ICCM = 2;  // ICC contactless
-  MSTR = 3;  // Magnetic stripe
-  KEYA = 4;  // Key entry
-  CTSK = 5;  // Contactless
+  CARD_DATA_READING_1_ICCS = 1;  // ICC contact
+  CARD_DATA_READING_1_ICCM = 2;  // ICC contactless
+  CARD_DATA_READING_1_MSTR = 3;  // Magnetic stripe
+  CARD_DATA_READING_1_KEYA = 4;  // Key entry
+  CARD_DATA_READING_1_CTSK = 5;  // Contactless
 }
 
 // CardDataReading5Code - Extended card data reading method enumeration
 enum CardDataReading5Code {
   CARD_DATA_READING_5_CODE_UNSPECIFIED = 0;
-  ICSS = 1;  // ICC standard
-  ICSX = 2;  // ICC contactless
-  MSTR = 3;  // Magnetic stripe
-  KEYE = 4;  // Key entry
-  MSRK = 5;  // Magnetic stripe (key entered)
-  CTLS = 6;  // Contactless
-  CTVS = 7;  // Contactless (via contact)
-  CTSK = 8;  // Contactless (contact)
-  FLNG = 9;  // Falling back
+  CARD_DATA_READING_5_ICSS = 1;  // ICC standard
+  CARD_DATA_READING_5_ICSX = 2;  // ICC contactless
+  CARD_DATA_READING_5_MSTR = 3;  // Magnetic stripe
+  CARD_DATA_READING_5_KEYE = 4;  // Key entry
+  CARD_DATA_READING_5_MSRK = 5;  // Magnetic stripe (key entered)
+  CARD_DATA_READING_5_CTLS = 6;  // Contactless
+  CARD_DATA_READING_5_CTVS = 7;  // Contactless (via contact)
+  CARD_DATA_READING_5_CTSK = 8;  // Contactless (contact)
+  CARD_DATA_READING_5_FLNG = 9;  // Falling back
 }
 
 // TransactionChannel1Code - Transaction channel enumeration
 enum TransactionChannel1Code {
   TRANSACTION_CHANNEL_1_CODE_UNSPECIFIED = 0;
-  POSC = 1;  // Point of sale
-  ECOM = 2;  // E-commerce
-  MCOM = 3;  // Mobile commerce
-  ATM = 4;   // ATM
-  BTCH = 5;  // Batch
-  VLBT = 6;  // Voice batch
+  TX_CH_POSC = 1;  // Point of sale
+  TX_CH_ECOM = 2;  // E-commerce
+  TX_CH_MCOM = 3;  // Mobile commerce
+  TX_CH_ATM = 4;   // ATM
+  TX_CH_BTCH = 5;  // Batch
+  TX_CH_VLBT = 6;  // Voice batch
 }
 
 // MemoryUnit1Code - Memory unit enumeration
@@ -377,9 +377,9 @@ enum InputCapability1Code {
 // OutputFormat1Code - Output format enumeration
 enum OutputFormat1Code {
   OUTPUT_FORMAT_1_CODE_UNSPECIFIED = 0;
-  TXT = 1;   // Text
-  HTML = 2;  // HTML
-  PDF = 3;   // PDF
+  OUT_FMT_TXT = 1;   // Text
+  OUT_FMT_HTML = 2;  // HTML
+  OUT_FMT_PDF = 3;   // PDF
 }
 
 // PinFormat1Code - PIN format enumeration
@@ -449,25 +449,25 @@ enum TransactionResult1Code {
 // UserInterface2Code - User interface enumeration
 enum UserInterface2Code {
   USER_INTERFACE_2_CODE_UNSPECIFIED = 0;
-  ATMM = 1;   // ATM
-  POSP = 2;   // Point of sale
-  UNAT = 3;   // Unattended
-  ECOM = 4;   // E-commerce
-  MCOM = 5;   // Mobile commerce
-  VBCM = 6;   // Voice banking
-  IPTV = 7;   // IPTV
-  MBIL = 8;   // Mobile billing
-  PMVL = 9;   // Prepaid mobile
+  UI_2_ATMM = 1;   // ATM
+  UI_2_POSP = 2;   // Point of sale
+  UI_2_UNAT = 3;   // Unattended
+  UI_2_ECOM = 4;   // E-commerce
+  UI_2_MCOM = 5;   // Mobile commerce
+  UI_2_VBCM = 6;   // Voice banking
+  UI_2_IPTV = 7;   // IPTV
+  UI_2_MBIL = 8;   // Mobile billing
+  UI_2_PMVL = 9;   // Prepaid mobile
 }
 
 // UserInterface3Code - Extended user interface enumeration
 enum UserInterface3Code {
   USER_INTERFACE_3_CODE_UNSPECIFIED = 0;
-  ATMM = 1;   // ATM
-  PTCP = 2;   // Point of sale cardholder present
-  UNAT = 3;   // Unattended
-  ECOM = 4;   // E-commerce
-  CDM = 5;    // Cash dispense
-  MCP = 6;    // Mobile commerce
-  VBC = 7;    // Voice banking center
+  UI_3_ATMM = 1;   // ATM
+  UI_3_PTCP = 2;   // Point of sale cardholder present
+  UI_3_UNAT = 3;   // Unattended
+  UI_3_ECOM = 4;   // E-commerce
+  UI_3_CDM = 5;    // Cash dispense
+  UI_3_MCP = 6;    // Mobile commerce
+  UI_3_VBC = 7;    // Voice banking center
 }
