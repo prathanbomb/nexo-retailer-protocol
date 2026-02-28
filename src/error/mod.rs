@@ -272,6 +272,85 @@ pub type EncodeError = NexoError;
 /// Used in codec layer functions that return size-related decoding errors.
 pub type DecodeError = NexoError;
 
+/// Standard library-specific convenience methods
+///
+/// These implementations are only available when the `std` feature is enabled,
+/// providing additional functionality for server environments.
+#[cfg(feature = "std")]
+impl NexoError {
+    /// Create a connection error from a dynamic string
+    ///
+    /// This convenience method allows creating connection errors with
+    /// dynamically allocated error messages (useful for std environments).
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// # #[cfg(feature = "std")]
+    /// # {
+    /// use nexo_retailer_protocol::NexoError;
+    ///
+    /// let addr = "192.168.1.100:8080";
+    /// let err = NexoError::connection_owned(format!("failed to connect to {}", addr));
+    /// # }
+    /// ```
+    pub fn connection_owned<S: Into<String>>(details: S) -> Self {
+        // Convert to owned string but store as static str for compatibility
+        // In practice, this leaks the string - acceptable for error paths
+        let details_str = details.into();
+        let leaked = Box::leak(details_str.into_boxed_str());
+        NexoError::Connection { details: leaked }
+    }
+
+    /// Create a validation error from dynamic strings
+    ///
+    /// This convenience method allows creating validation errors with
+    /// dynamically allocated field names and reasons.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// # #[cfg(feature = "std")]
+    /// # {
+    /// use nexo_retailer_protocol::NexoError;
+    ///
+    /// let field_name = String::from("currency_code");
+    /// let reason = String::from("invalid format");
+    /// let err = NexoError::validation_owned(field_name, reason);
+    /// # }
+    /// ```
+    pub fn validation_owned<F: Into<String>, R: Into<String>>(field: F, reason: R) -> Self {
+        let field_str = field.into();
+        let reason_str = reason.into();
+        let field_leaked = Box::leak(field_str.into_boxed_str());
+        let reason_leaked = Box::leak(reason_str.into_boxed_str());
+        NexoError::Validation {
+            field: field_leaked,
+            reason: reason_leaked,
+        }
+    }
+
+    /// Create an encoding error from a dynamic string
+    ///
+    /// This convenience method allows creating encoding errors with
+    /// dynamically allocated error messages.
+    pub fn encoding_owned<S: Into<String>>(details: S) -> Self {
+        let details_str = details.into();
+        let leaked = Box::leak(details_str.into_boxed_str());
+        NexoError::Encoding { details: leaked }
+    }
+
+    /// Create a decoding error from a dynamic string
+    ///
+    /// This convenience method allows creating decoding errors with
+    /// dynamically allocated error messages.
+    pub fn decoding_owned<S: Into<String>>(details: S) -> Self {
+        let details_str = details.into();
+        let leaked = Box::leak(details_str.into_boxed_str());
+        NexoError::Decoding { details: leaked }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
