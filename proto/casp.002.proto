@@ -1,0 +1,257 @@
+syntax = "proto3";
+
+// CASP.002 SaleToPOIServiceResponseV06 message from ISO 20022
+// Converted from: casp.002.001.06.xsd
+// Message purpose: Point-of-Interaction to Point-of-Sale service responses
+// Generated: 2026-02-28
+
+package nexo.casp.v1;
+
+import "common.proto";
+
+// Document root message
+message Casp002Document {
+  Document document = 1;
+}
+
+// Document - Root element containing SaleToPOIServiceResponseV06
+message Document {
+  SaleToPOIServiceResponseV06 sale_to_poi_svc_rsp = 1;
+}
+
+// SaleToPOIServiceResponseV06 - Service response from POI to POS
+message SaleToPOIServiceResponseV06 {
+  optional Header4 hdr = 1;
+  repeated TransactionResponse23 tx_rsp = 2;
+  optional SecurityTrailer4 scty_trlr = 3;
+  optional LoginResponse3 login_rsp = 4;
+}
+
+// Header4 - Message header
+message Header4 {
+  optional string msg_fctn = 1;  // MessageFunction1Code
+  optional string proto_vrsn = 2;
+  optional string orgnl Biz_t_msg = 3;
+  optional string orgnl_msg_id = 4;
+  optional string tx_id = 5;
+  optional string cre_dt_tm = 6;  // ISODateTime
+  optional InitiatingParty3 initg_pty = 7;
+  optional Recipient5 recipnt = 8;
+  optional string trace_abilty = 9;  // Traceability6Code
+}
+
+// InitiatingParty3 - Party that initiated the transaction
+message InitiatingParty3 {
+  optional Identification1 id = 1;
+  optional string tp = 2;
+  optional string med_of_id = 3;  // IdentificationMean1Code
+}
+
+// Identification1 - Party identification
+message Identification1 {
+  optional string id = 1;
+  optional string issr = 2;
+  optional string tp = 3;
+  optional string cstmr_id = 4;
+}
+
+// Recipient5 - Message recipient
+message Recipient5 {
+  optional string msg_tx_id = 1;
+  optional string orgnl Biz_t_msg = 2;
+  optional string orgnl_msg_id = 3;
+}
+
+// TransactionResponse23 - Transaction response wrapper
+message TransactionResponse23 {
+  oneof tx_rsp {
+    PaymentResponse28 pmt_rsp = 1;
+    CardAcquisitionResponse2 card_acq_rsp = 2;
+    ReversalResponse6 rvrsal_rsp = 3;
+    BalanceInquiryResponse6 bal_inq_rsp = 4;
+    BatchResponse4 btch_rsp = 5;
+    AdminResponse4 adm_rsp = 6;
+    DisplayResponse2 dsply_rsp = 7;
+    Get_PINResponse3 pin_rsp = 8;
+    EnableServiceResponse6 enbl_svc_rsp = 9;
+    PINResponse1 pin_rspns = 10;
+    CardReaderAPDUResponse8 crd_rdr_apdu_rsp = 11;
+    CardReaderPowerOffResponse3 crd_rdr_pwr_off_rsp = 12;
+    CardReaderInitResponse5 crd_rdr_init_rsp = 13;
+    IdentifyTerminalResponse2 id_trmnl_rsp = 14;
+    Get_DataResponse3 get_data_rsp = 15;
+    LogoutResponse3 lgout_rsp = 16;
+    RecoveryResponse4 rcvry_rsp = 17;
+    SecurityResponse4 scnty_rsp = 18;
+    AbortResponse3 abrt_rsp = 19;
+    CardAcquisitionResponse3 card_acq_rsp2 = 20;
+  }
+}
+
+// PaymentResponse28 - Payment response
+message PaymentResponse28 {
+  optional string tx_id = 1;
+  optional string pmt_rsp = 2;  // Response1Code
+  optional string pmt_rsp2 = 3;  // Response1Code
+  optional ActiveCurrencyAndAmount amt = 4;
+  optional string authstn_rsp = 5;  // AuthorisationResponse1Code
+  optional string authstn_nb = 6;
+  optional string tx_sts = 7;  // TransactionResult1Code
+}
+
+// CardAcquisitionResponse2 - Card acquisition response
+message CardAcquisitionResponse2 {
+  optional string tx_id = 1;
+  optional string card_acq_rsp = 2;  // Response1Code
+  optional CardData8 crd_data = 3;
+}
+
+// CardData8 - Card data
+message CardData8 {
+  optional string crd_pmt_tokn = 1;
+  optional string crd_nb = 2;
+  optional string xpry_dt = 3;
+  optional string card_seq_nb = 4;
+  optional string msstrp_cde = 5;
+  optional string eff_dt = 6;
+  optional string crdt_dbit = 7;  // CreditDebit3Code
+  optional string crt_mtd = 8;  // CardDataReading5Code
+}
+
+// ReversalResponse6 - Reversal response
+message ReversalResponse6 {
+  optional string tx_id = 1;
+  optional string rvrsal_rsp = 2;  // Response1Code
+  optional string rvrsl_rsn = 3;
+}
+
+// BalanceInquiryResponse6 - Balance inquiry response
+message BalanceInquiryResponse6 {
+  optional string tx_id = 1;
+  optional string bal_inq_rsp = 2;  // Response1Code
+  repeated BalanceDetails5 bals = 3;
+}
+
+// BalanceDetails5 - Balance details
+message BalanceDetails5 {
+  optional ActiveCurrencyAndAmount amt = 1;
+  optional string bal_tp = 2;  // BalanceType5Code
+  optional int64 dt_tm = 3;
+}
+
+// BatchResponse4 - Batch response
+message BatchResponse4 {
+  optional string tx_id = 1;
+  optional string btch_rsp = 2;  // Response1Code
+  repeated TransactionResponse23 tx_rspns = 3;
+}
+
+// AdminResponse4 - Admin response
+message AdminResponse4 {
+  optional string tx_id = 1;
+  optional string adm_rsp = 2;  // Response1Code
+}
+
+// DisplayResponse2 - Display response
+message DisplayResponse2 {
+  optional string tx_id = 1;
+  optional string dsply_rsp = 2;  // Response1Code
+}
+
+// Get_PINResponse3 - Get PIN response
+message Get_PINResponse3 {
+  optional string tx_id = 1;
+  optional string pin_rsp = 2;  // Response1Code
+  optional string pin = 3;
+}
+
+// EnableServiceResponse6 - Enable service response
+message EnableServiceResponse6 {
+  optional string tx_id = 1;
+  optional string svc_rsp = 2;  // Response1Code
+}
+
+// PINResponse1 - PIN response
+message PINResponse1 {
+  optional string tx_id = 1;
+  optional string pin_rsp = 2;  // Response1Code
+  optional string pin = 3;
+}
+
+// CardReaderAPDUResponse8 - Card reader APDU response
+message CardReaderAPDUResponse8 {
+  optional string tx_id = 1;
+  optional string apdu_rsp = 2;  // Response1Code
+  optional bytes apdu = 3;
+}
+
+// CardReaderPowerOffResponse3 - Card reader power off response
+message CardReaderPowerOffResponse3 {
+  optional string tx_id = 1;
+  optional string pwr_off_rsp = 2;  // Response1Code
+}
+
+// CardReaderInitResponse5 - Card reader initialization response
+message CardReaderInitResponse5 {
+  optional string tx_id = 1;
+  optional string init_rsp = 2;  // Response1Code
+}
+
+// IdentifyTerminalResponse2 - Identify terminal response
+message IdentifyTerminalResponse2 {
+  optional string tx_id = 1;
+  optional string id_trmnl_rsp = 2;  // Response1Code
+  optional string trmnl_id = 3;
+}
+
+// Get_DataResponse3 - Get data response
+message Get_DataResponse3 {
+  optional string tx_id = 1;
+  optional string get_data_rsp = 2;  // Response1Code
+  optional bytes data = 3;
+}
+
+// LogoutResponse3 - Logout response
+message LogoutResponse3 {
+  optional string lgout_rsp = 1;  // Response1Code
+  optional string usr_id = 2;
+}
+
+// RecoveryResponse4 - Recovery response
+message RecoveryResponse4 {
+  optional string tx_id = 1;
+  optional string rcvry_rsp = 2;  // Response1Code
+}
+
+// SecurityResponse4 - Security response
+message SecurityResponse4 {
+  optional string tx_id = 1;
+  optional string scnty_rsp = 2;  // Response1Code
+}
+
+// AbortResponse3 - Abort response
+message AbortResponse3 {
+  optional string tx_id = 1;
+  optional string abrt_rsp = 2;  // Response1Code
+}
+
+// CardAcquisitionResponse3 - Card acquisition response v3
+message CardAcquisitionResponse3 {
+  optional string tx_id = 1;
+  optional string card_acq_rsp = 2;  // Response1Code
+  optional CardData8 crd_data = 3;
+}
+
+// LoginResponse3 - Login response
+message LoginResponse3 {
+  optional string login_rsp = 1;  // Response1Code
+  optional string usr_id = 2;
+}
+
+// SecurityTrailer4 - Security trailer
+message SecurityTrailer4 {
+  optional string scnty_trlr = 1;  // SecurityTrailer1Code
+  optional bytes authstn_data = 2;
+  optional bytes signtr_val = 3;
+  optional bytes nce = 4;
+}

@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+// CASP.006 message from ISO 20022
+// Converted from: casp.006.001.06.xsd
+// Message purpose: Card and terminal management
+// Generated: 2026-02-28
+
+package nexo.casp.v1;
+
+import "common.proto";
+
+// Document root message
+message Casp006Document {
+  Document document = 1;
+}
+
+// Document - Root element
+message Document {
+  CardTerminalManagement6 crd_trmnl_mgmt = 1;
+}
+
+// CardTerminalManagement6 - Card and terminal management message
+message CardTerminalManagement6 {
+  optional Header4 hdr = 1;
+  oneof mgmt {
+    CardReaderInitRequest4 crd_rdr_init_req = 2;
+    CardReaderInitResponse5 crd_rdr_init_rsp = 3;
+    CardReaderPowerOffRequest3 crd_rdr_pwr_off_req = 4;
+    CardReaderPowerOffResponse3 crd_rdr_pwr_off_rsp = 5;
+    IdentifyTerminalRequest2 id_trmnl_req = 6;
+    IdentifyTerminalResponse2 id_trmnl_rsp = 7;
+  }
+  optional SecurityTrailer4 scty_trlr = 8;
+}
+
+// Header4 - Message header
+message Header4 {
+  optional string msg_fctn = 1;
+  optional string proto_vrsn = 2;
+  optional string tx_id = 3;
+  optional int64 cre_dt_tm = 4;
+  optional InitiatingParty3 initg_pty = 5;
+  optional Recipient5 recipnt = 6;
+}
+
+// InitiatingParty3 - Party that initiated the transaction
+message InitiatingParty3 {
+  optional Identification1 id = 1;
+  optional string tp = 2;
+}
+
+// Identification1 - Party identification
+message Identification1 {
+  optional string id = 1;
+  optional string issr = 2;
+  optional string tp = 3;
+}
+
+// Recipient5 - Message recipient
+message Recipient5 {
+  optional string msg_tx_id = 1;
+  optional string orgnl_msg_id = 2;
+}
+
+// CardReaderInitRequest4 - Card reader initialization request
+message CardReaderInitRequest4 {
+  optional string tx_id = 1;
+  optional string init_tp = 2;  // InitRequest1Code
+}
+
+// CardReaderInitResponse5 - Card reader initialization response
+message CardReaderInitResponse5 {
+  optional string tx_id = 1;
+  optional string init_rsp = 2;  // Response1Code
+  optional string trmnl_id = 3;
+}
+
+// CardReaderPowerOffRequest3 - Card reader power off request
+message CardReaderPowerOffRequest3 {
+  optional string tx_id = 1;
+  optional string pwr_off_tp = 2;  // PowerOffRequest1Code
+}
+
+// CardReaderPowerOffResponse3 - Card reader power off response
+message CardReaderPowerOffResponse3 {
+  optional string tx_id = 1;
+  optional string pwr_off_rsp = 2;  // Response1Code
+}
+
+// IdentifyTerminalRequest2 - Identify terminal request
+message IdentifyTerminalRequest2 {
+  optional string tx_id = 1;
+  optional string id_tp = 2;  // IdentifyTerminal1Code
+}
+
+// IdentifyTerminalResponse2 - Identify terminal response
+message IdentifyTerminalResponse2 {
+  optional string tx_id = 1;
+  optional string id_rsp = 2;  // Response1Code
+  optional string trmnl_id = 3;
+}
+
+// SecurityTrailer4 - Security trailer
+message SecurityTrailer4 {
+  optional string scnty_trlr = 1;
+  optional bytes authstn_data = 2;
+  optional bytes signtr_val = 3;
+}

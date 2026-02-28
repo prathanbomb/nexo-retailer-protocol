@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+// CASP.015 message from ISO 20022
+// Converted from: casp.015.001.06.xsd
+// Message purpose: Totaliser management
+// Generated: 2026-02-28
+
+package nexo.casp.v1;
+
+import "common.proto";
+
+// Document root message
+message Casp015Document {
+  Document document = 1;
+}
+
+// Document - Root element
+message Document {
+  TotaliserManagement6 totlsr_mgmt = 1;
+}
+
+// TotaliserManagement6 - Totaliser management message
+message TotaliserManagement6 {
+  optional Header4 hdr = 1;
+  oneof totlsr {
+    TotaliserRequest2 totlsr_req = 2;
+    TotaliserResponse2 totlsr_rsp = 3;
+  }
+  optional SecurityTrailer4 scty_trlr = 4;
+}
+
+// Header4 - Message header
+message Header4 {
+  optional string msg_fctn = 1;
+  optional string proto_vrsn = 2;
+  optional string tx_id = 3;
+  optional int64 cre_dt_tm = 4;
+  optional InitiatingParty3 initg_pty = 5;
+  optional Recipient5 recipnt = 6;
+}
+
+// InitiatingParty3 - Party that initiated the transaction
+message InitiatingParty3 {
+  optional Identification1 id = 1;
+  optional string tp = 2;
+}
+
+// Identification1 - Party identification
+message Identification1 {
+  optional string id = 1;
+  optional string issr = 2;
+  optional string tp = 3;
+}
+
+// Recipient5 - Message recipient
+message Recipient5 {
+  optional string msg_tx_id = 1;
+  optional string orgnl_msg_id = 2;
+}
+
+// TotaliserRequest2 - Totaliser request
+message TotaliserRequest2 {
+  optional string tx_id = 1;
+  optional string totlsr_tp = 2;  // Totaliser1Code
+}
+
+// TotaliserResponse2 - Totaliser response
+message TotaliserResponse2 {
+  optional string tx_id = 1;
+  optional string totlsr_rsp = 2;  // Response1Code
+  repeated TotaliserData2 totlsr_data = 3;
+}
+
+// TotaliserData2 - Totaliser data
+message TotaliserData2 {
+  optional string totlsr_nm = 1;
+  optional int64 count = 2;
+  optional ActiveCurrencyAndAmount amt = 3;
+}
+
+// SecurityTrailer4 - Security trailer
+message SecurityTrailer4 {
+  optional string scnty_trlr = 1;
+  optional bytes authstn_data = 2;
+  optional bytes signtr_val = 3;
+}

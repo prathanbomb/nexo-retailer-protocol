@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+// CASP.012 message from ISO 20022
+// Converted from: casp.012.001.06.xsd
+// Message purpose: Network and communication management
+// Generated: 2026-02-28
+
+package nexo.casp.v1;
+
+import "common.proto";
+
+// Document root message
+message Casp012Document {
+  Document document = 1;
+}
+
+// Document - Root element
+message Document {
+  NetworkManagement6 net_mgmt = 1;
+}
+
+// NetworkManagement6 - Network management message
+message NetworkManagement6 {
+  optional Header4 hdr = 1;
+  oneof net {
+    Diagnosis4 dignss = 2;
+    DiagnosisResponse2 dignss_rsp = 3;
+    RecoveryRequest4 rcvry_req = 4;
+    RecoveryResponse4 rcvry_rsp = 5;
+  }
+  optional SecurityTrailer4 scty_trlr = 6;
+}
+
+// Header4 - Message header
+message Header4 {
+  optional string msg_fctn = 1;
+  optional string proto_vrsn = 2;
+  optional string tx_id = 3;
+  optional int64 cre_dt_tm = 4;
+  optional InitiatingParty3 initg_pty = 5;
+  optional Recipient5 recipnt = 6;
+}
+
+// InitiatingParty3 - Party that initiated the transaction
+message InitiatingParty3 {
+  optional Identification1 id = 1;
+  optional string tp = 2;
+}
+
+// Identification1 - Party identification
+message Identification1 {
+  optional string id = 1;
+  optional string issr = 2;
+  optional string tp = 3;
+}
+
+// Recipient5 - Message recipient
+message Recipient5 {
+  optional string msg_tx_id = 1;
+  optional string orgnl_msg_id = 2;
+}
+
+// Diagnosis4 - Diagnosis request
+message Diagnosis4 {
+  optional string tx_id = 1;
+  optional string dignss_tp = 2;  // Diagnosis1Code
+}
+
+// DiagnosisResponse2 - Diagnosis response
+message DiagnosisResponse2 {
+  optional string tx_id = 1;
+  optional string dignss_rsp = 2;  // Response1Code
+  optional string dignss_data = 3;
+}
+
+// RecoveryRequest4 - Recovery request
+message RecoveryRequest4 {
+  optional string tx_id = 1;
+  optional string rcvry_tp = 2;  // Recovery1Code
+}
+
+// RecoveryResponse4 - Recovery response
+message RecoveryResponse4 {
+  optional string tx_id = 1;
+  optional string rcvry_rsp = 2;  // Response1Code
+}
+
+// SecurityTrailer4 - Security trailer
+message SecurityTrailer4 {
+  optional string scnty_trlr = 1;
+  optional bytes authstn_data = 2;
+  optional bytes signtr_val = 3;
+}

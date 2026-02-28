@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+// CASP.011 message from ISO 20022
+// Converted from: casp.011.001.06.xsd
+// Message purpose: Login and logout management
+// Generated: 2026-02-28
+
+package nexo.casp.v1;
+
+import "common.proto";
+
+// Document root message
+message Casp011Document {
+  Document document = 1;
+}
+
+// Document - Root element
+message Document {
+  LoginManagement6 login_mgmt = 1;
+}
+
+// LoginManagement6 - Login management message
+message LoginManagement6 {
+  optional Header4 hdr = 1;
+  oneof login {
+    LoginRequest3 login_req = 2;
+    LoginResponse3 login_rsp = 3;
+    LogoutRequest3 lgout_req = 4;
+    LogoutResponse3 lgout_rsp = 5;
+  }
+  optional SecurityTrailer4 scty_trlr = 6;
+}
+
+// Header4 - Message header
+message Header4 {
+  optional string msg_fctn = 1;
+  optional string proto_vrsn = 2;
+  optional string tx_id = 3;
+  optional int64 cre_dt_tm = 4;
+  optional InitiatingParty3 initg_pty = 5;
+  optional Recipient5 recipnt = 6;
+}
+
+// InitiatingParty3 - Party that initiated the transaction
+message InitiatingParty3 {
+  optional Identification1 id = 1;
+  optional string tp = 2;
+}
+
+// Identification1 - Party identification
+message Identification1 {
+  optional string id = 1;
+  optional string issr = 2;
+  optional string tp = 3;
+}
+
+// Recipient5 - Message recipient
+message Recipient5 {
+  optional string msg_tx_id = 1;
+  optional string orgnl_msg_id = 2;
+}
+
+// LoginRequest3 - Login request
+message LoginRequest3 {
+  optional string usr_id = 1;
+  optional string pwd = 2;
+}
+
+// LoginResponse3 - Login response
+message LoginResponse3 {
+  optional string login_rsp = 1;  // Response1Code
+  optional string usr_id = 2;
+}
+
+// LogoutRequest3 - Logout request
+message LogoutRequest3 {
+  optional string usr_id = 1;
+}
+
+// LogoutResponse3 - Logout response
+message LogoutResponse3 {
+  optional string lgout_rsp = 1;  // Response1Code
+  optional string usr_id = 2;
+}
+
+// SecurityTrailer4 - Security trailer
+message SecurityTrailer4 {
+  optional string scnty_trlr = 1;
+  optional bytes authstn_data = 2;
+  optional bytes signtr_val = 3;
+}
