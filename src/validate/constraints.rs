@@ -227,7 +227,7 @@ pub fn validate_enum_value<T: PartialEq>(
 pub fn validate_repeated_field<T>(
     field: &[T],
     max_count: usize,
-    field_name: &str,
+    _field_name: &str,
 ) -> Result<(), ValidationError> {
     if field.len() > max_count {
         Err(ValidationError::StringTooLong {

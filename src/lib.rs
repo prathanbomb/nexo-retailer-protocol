@@ -38,6 +38,35 @@
 //!
 //! For detailed field validation errors, see [`ValidationError`].
 //!
+//! ## Message Validation
+//!
+//! The library provides comprehensive validation for XSD constraints:
+//!
+//! ```rust,no_run
+//! use nexo_retailer_protocol::{
+//!     Validate, validate_currency_code, validate_monetary_amount,
+//!     validate_max256_text, validate_required
+//! };
+//!
+//! // Validate individual fields
+//! validate_currency_code("USD")?;
+//! validate_max256_text("Some text")?;
+//!
+//! // Validate entire messages
+//! let header = Header4::default();
+//! header.validate()?;
+//! ```
+//!
+//! Validation features:
+//! - **Currency validation**: ISO 4217 format `[A-Z]{3,3}` (e.g., "USD", "EUR")
+//! - **String length validation**: Max256Text, Max20000Text, Max70Text
+//! - **Field presence validation**: Required vs optional fields (XSD minOccurs)
+//! - **Monetary amount validation**: Nanos range, sign consistency
+//! - **no_std compatible**: Basic validation works without alloc feature
+//! - **alloc feature**: Enables collection validation (repeated fields)
+//!
+//! See the [`validate`] module for detailed validation functions.
+//!
 //! ## Codec (Encoding/Decoding)
 //!
 //! The library provides a codec layer for encoding and decoding all CASP message types:
@@ -96,18 +125,120 @@ pub mod validate;
 // Re-export commonly used error types at crate root
 pub use error::{DecodeError, EncodeError, NexoError, ValidationError};
 pub use validate::{
-    validate_currency_code, validate_monetary_amount,
-    validate_max_text, validate_max256_text, validate_max20000_text, validate_max70_text
+    // Validate trait and core validators
+    Validate,
+    validate_required,
+    validate_positive_i64,
+    validate_non_negative_i32,
+    validate_enum_value,
+    // Currency validation
+    validate_currency_code,
+    validate_monetary_amount,
+    // String validation
+    validate_max_text,
+    validate_max256_text,
+    validate_max20000_text,
+    validate_max70_text,
 };
+
+// Re-export validate_repeated_field only when alloc feature is enabled
+#[cfg(feature = "alloc")]
+pub use validate::validate_repeated_field;
 
 // Re-export codec types at crate root for convenience
 pub use codec::{Codec, ProstCodec, encode as encode_message, decode as decode_message};
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test_library_builds() {
         // Basic smoke test - library compiles
         assert!(true, "library builds successfully");
+    }
+
+    // Integration tests demonstrating end-to-end validation
+    #[test]
+    fn test_validation_integration_valid_message() {
+        // Test a valid monetary amount
+        let amount = ActiveCurrencyAndAmount {
+            ccy: "USD".to_string(),
+            units: 100,
+            nanos: 500000000, // 100.50
+        };
+        assert!(amount.validate().is_ok());
+    }
+
+    #[test]
+    fn test_validation_integration_invalid_currency() {
+        // Test invalid currency code (lowercase)
+        let amount = ActiveCurrencyAndAmount {
+            ccy: "usd".to_string(), // Invalid: should be uppercase
+            units: 100,
+            nanos: 0,
+        };
+        assert!(amount.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_integration_invalid_nanos() {
+        // Test invalid nanos (sign mismatch)
+        let amount = ActiveCurrencyAndAmount {
+            ccy: "USD".to_string(),
+            units: 100,
+            nanos: -500000000, // Sign mismatch: positive units, negative nanos
+        };
+        assert!(amount.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_integration_header_validation() {
+        // Test Header4 validation
+        let header = Header4 {
+            msg_fctn: Some("DREQ".to_string()),
+            proto_vrsn: Some("6.0".to_string()),
+            tx_id: Some("TX-12345".to_string()),
+            ..Default::default()
+        };
+        assert!(header.validate().is_ok());
+    }
+
+    #[test]
+    fn test_validation_integration_header_long_field() {
+        // Test Header4 with field exceeding Max70Text limit
+        let header = Header4 {
+            msg_fctn: Some("A".repeat(100)), // Exceeds 70 bytes
+            ..Default::default()
+        };
+        assert!(header.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_integration_standalone_validators() {
+        // Test standalone validator functions
+        assert!(validate_currency_code("USD").is_ok());
+        assert!(validate_currency_code("usd").is_err());
+
+        assert!(validate_max256_text("Hello").is_ok());
+        assert!(validate_max256_text(&"A".repeat(257)).is_err());
+
+        let field = Some("value".to_string());
+        assert!(validate_required(&field, "TestField").is_ok());
+
+        let none_field: Option<String> = None;
+        assert!(validate_required(&none_field, "TestField").is_err());
+    }
+
+    #[test]
+    fn test_validation_integration_alloc_feature() {
+        // This test validates that alloc feature enables collection validation
+        // It only compiles when alloc feature is enabled
+        #[cfg(feature = "alloc")]
+        {
+            let items = vec![1, 2, 3];
+            assert!(validate_repeated_field(&items, 10, "Items").is_ok());
+            assert!(validate_repeated_field(&items, 2, "Items").is_err());
+        }
     }
 }
