@@ -44,6 +44,13 @@
 // All types are available at the crate root
 include!("protos/nexo.casp.v1.rs");
 
+// Public module exports
+pub mod error;
+pub mod features;
+
+// Re-export commonly used error types at crate root
+pub use error::{DecodeError, EncodeError, NexoError, ValidationError};
+
 #[cfg(test)]
 mod tests {
     use super::*;
