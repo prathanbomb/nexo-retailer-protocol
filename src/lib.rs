@@ -42,16 +42,15 @@
 //!
 //! The library provides a codec layer for encoding and decoding all CASP message types:
 //!
-//! ```rust,no_run
+//! ```rust
 //! use nexo_retailer_protocol::{encode_message, decode_message, Casp001Document};
 //!
 //! // Encode a message to bytes
-//! let message = Casp001Document { /* fields */ };
-//! let bytes = encode_message(&message)?;
+//! let message = Casp001Document::default();
+//! let bytes = encode_message(&message).unwrap();
 //!
 //! // Decode bytes back to a message
-//! let decoded: Casp001Document = decode_message(&bytes)?;
-//! # Ok::<(), nexo_retailer_protocol::NexoError>(())
+//! let decoded: Casp001Document = decode_message(&bytes).unwrap();
 //! ```
 //!
 //! The codec layer:
