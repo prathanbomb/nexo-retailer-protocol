@@ -69,14 +69,14 @@ include!("protos/nexo.casp.v1.rs");
 // Public module exports
 pub mod error;
 pub mod features;
+pub mod validate;
 
 // Re-export commonly used error types at crate root
 pub use error::{DecodeError, EncodeError, NexoError, ValidationError};
+pub use validate::{validate_currency_code, validate_monetary_amount};
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_library_builds() {
         // Basic smoke test - library compiles
