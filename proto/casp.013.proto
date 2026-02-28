@@ -38,17 +38,3 @@ message SecurityManagement2 {
 // Recipient5 - Message recipient
 
 // SecurityRequest4 - Security request
-message SecurityRequest4 {
-  optional string tx_id = 1;
-  optional string scnty_tp = 2;  // Security1Code
-  optional bytes scnty_data = 3;
-}
-
-// SecurityResponse4 - Security response
-message SecurityResponse4 {
-  optional string tx_id = 1;
-  optional string scnty_rsp = 2;  // Response1Code
-  optional bytes scnty_data = 3;
-}
-
-// SecurityTrailer4 - Security trailer

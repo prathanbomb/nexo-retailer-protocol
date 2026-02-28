@@ -39,23 +39,3 @@ message PINManagement6 {
 // Recipient5 - Message recipient
 
 // Get_PINRequest3 - Get PIN request
-message Get_PINRequest3 {
-  optional string tx_id = 1;
-  optional string pin_req_tp = 2;  // PINRequestType1Code
-  optional int32 pin_lngt = 3;
-}
-
-// Get_PINResponse3 - Get PIN response
-message Get_PINResponse3 {
-  optional string tx_id = 1;
-  optional string pin_rsp = 2;  // Response1Code
-  optional string pin = 3;
-}
-
-// Send_PINRequest2 - Send PIN request
-message Send_PINRequest2 {
-  optional string tx_id = 1;
-  optional string pin = 2;
-}
-
-// SecurityTrailer4 - Security trailer

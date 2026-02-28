@@ -38,16 +38,3 @@ message InputManagement6 {
 // Recipient5 - Message recipient
 
 // InputUpdate2 - Input update
-message InputUpdate2 {
-  optional string tx_id = 1;
-  optional string inp_upd_tp = 2;  // InputUpdate1Code
-  optional string inp_data = 3;
-}
-
-// InputResponse2 - Input response
-message InputResponse2 {
-  optional string tx_id = 1;
-  optional string inp_rsp = 2;  // Response1Code
-}
-
-// SecurityTrailer4 - Security trailer

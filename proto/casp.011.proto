@@ -40,26 +40,3 @@ message LoginManagement6 {
 // Recipient5 - Message recipient
 
 // LoginRequest3 - Login request
-message LoginRequest3 {
-  optional string usr_id = 1;
-  optional string pwd = 2;
-}
-
-// LoginResponse3 - Login response
-message LoginResponse3 {
-  optional string login_rsp = 1;  // Response1Code
-  optional string usr_id = 2;
-}
-
-// LogoutRequest3 - Logout request
-message LogoutRequest3 {
-  optional string usr_id = 1;
-}
-
-// LogoutResponse3 - Logout response
-message LogoutResponse3 {
-  optional string lgout_rsp = 1;  // Response1Code
-  optional string usr_id = 2;
-}
-
-// SecurityTrailer4 - Security trailer

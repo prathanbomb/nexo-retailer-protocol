@@ -38,15 +38,3 @@ message TransactionManagement6 {
 // Recipient5 - Message recipient
 
 // AbortRequest3 - Abort request
-message AbortRequest3 {
-  optional string tx_id = 1;
-  optional string abrt_rsn = 2;  // Abort1Code
-}
-
-// AbortResponse3 - Abort response
-message AbortResponse3 {
-  optional string tx_id = 1;
-  optional string abrt_rsp = 2;  // Response1Code
-}
-
-// SecurityTrailer4 - Security trailer

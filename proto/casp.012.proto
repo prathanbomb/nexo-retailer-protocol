@@ -40,28 +40,3 @@ message NetworkManagement6 {
 // Recipient5 - Message recipient
 
 // Diagnosis4 - Diagnosis request
-message Diagnosis4 {
-  optional string tx_id = 1;
-  optional string dignss_tp = 2;  // Diagnosis1Code
-}
-
-// DiagnosisResponse2 - Diagnosis response
-message DiagnosisResponse2 {
-  optional string tx_id = 1;
-  optional string dignss_rsp = 2;  // Response1Code
-  optional string dignss_data = 3;
-}
-
-// RecoveryRequest4 - Recovery request
-message RecoveryRequest4 {
-  optional string tx_id = 1;
-  optional string rcvry_tp = 2;  // Recovery1Code
-}
-
-// RecoveryResponse4 - Recovery response
-message RecoveryResponse4 {
-  optional string tx_id = 1;
-  optional string rcvry_rsp = 2;  // Response1Code
-}
-
-// SecurityTrailer4 - Security trailer

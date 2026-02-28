@@ -35,10 +35,3 @@ message SaleToPOIAdminRequestV06 {
 // Recipient5 - Message recipient
 
 // AdminRequest4 - Admin request
-message AdminRequest4 {
-  optional string tx_id = 1;
-  optional string adm_req = 2;  // AdminRequest1Code
-  optional string req_data = 3;
-}
-
-// SecurityTrailer4 - Security trailer

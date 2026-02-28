@@ -38,17 +38,3 @@ message ApplicationManagement6 {
 // Recipient5 - Message recipient
 
 // EnableServiceRequest7 - Enable service request
-message EnableServiceRequest7 {
-  optional string tx_id = 1;
-  optional string svc = 2;  // Service1Code
-  optional bool enbl = 3;
-}
-
-// EnableServiceResponse6 - Enable service response
-message EnableServiceResponse6 {
-  optional string tx_id = 1;
-  optional string svc_rsp = 2;  // Response1Code
-  optional string svc = 3;  // Service1Code
-}
-
-// SecurityTrailer4 - Security trailer

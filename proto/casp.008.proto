@@ -38,16 +38,3 @@ message DisplayManagement6 {
 // Recipient5 - Message recipient
 
 // DisplayAction2 - Display action
-message DisplayAction2 {
-  optional string tx_id = 1;
-  optional string dsply_actn_tp = 2;  // DisplayAction1Code
-  optional string msg_cntt = 3;
-}
-
-// DisplayResponse2 - Display response
-message DisplayResponse2 {
-  optional string tx_id = 1;
-  optional string dsply_rsp = 2;  // Response1Code
-}
-
-// SecurityTrailer4 - Security trailer

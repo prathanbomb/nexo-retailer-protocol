@@ -38,28 +38,3 @@ message CardDataManagement6 {
 // Recipient5 - Message recipient
 
 // CardAcquisitionRequest3 - Card acquisition request
-message CardAcquisitionRequest3 {
-  optional string tx_id = 1;
-  optional string card_acq_tp = 2;  // CardAcquisition1Code
-}
-
-// CardAcquisitionResponse2 - Card acquisition response
-message CardAcquisitionResponse2 {
-  optional string tx_id = 1;
-  optional string card_acq_rsp = 2;  // Response1Code
-  optional CardData8 crd_data = 3;
-}
-
-// CardData8 - Card data
-message CardData8 {
-  optional string crd_pmt_tokn = 1;
-  optional string crd_nb = 2;
-  optional string xpry_dt = 3;
-  optional string card_seq_nb = 4;
-  optional string msstrp_cde = 5;
-  optional string eff_dt = 6;
-  optional string crdt_dbit = 7;
-  optional string crt_mtd = 8;
-}
-
-// SecurityTrailer4 - Security trailer

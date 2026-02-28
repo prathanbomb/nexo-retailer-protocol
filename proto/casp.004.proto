@@ -35,10 +35,3 @@ message SaleToPOIAdminResponseV06 {
 // Recipient5 - Message recipient
 
 // AdminResponse4 - Admin response
-message AdminResponse4 {
-  optional string tx_id = 1;
-  optional string adm_rsp = 2;  // Response1Code
-  optional string rsp_data = 3;
-}
-
-// SecurityTrailer4 - Security trailer
