@@ -11,11 +11,11 @@ import "common.proto";
 
 // Document root message
 message Casp002Document {
-  Document document = 1;
+  Casp002DocumentDocument document = 1;
 }
 
 // Document - Root element containing SaleToPOIServiceResponseV06
-message Document {
+message Casp002DocumentDocument {
   SaleToPOIServiceResponseV06 sale_to_poi_svc_rsp = 1;
 }
 
@@ -28,39 +28,12 @@ message SaleToPOIServiceResponseV06 {
 }
 
 // Header4 - Message header
-message Header4 {
-  optional string msg_fctn = 1;  // MessageFunction1Code
-  optional string proto_vrsn = 2;
-  optional string orgnl_biz_t_msg = 3;
-  optional string orgnl_msg_id = 4;
-  optional string tx_id = 5;
-  optional string cre_dt_tm = 6;  // ISODateTime
-  optional InitiatingParty3 initg_pty = 7;
-  optional Recipient5 recipnt = 8;
-  optional string trace_abilty = 9;  // Traceability6Code
-}
 
 // InitiatingParty3 - Party that initiated the transaction
-message InitiatingParty3 {
-  optional Identification1 id = 1;
-  optional string tp = 2;
-  optional string med_of_id = 3;  // IdentificationMean1Code
-}
 
 // Identification1 - Party identification
-message Identification1 {
-  optional string id = 1;
-  optional string issr = 2;
-  optional string tp = 3;
-  optional string cstmr_id = 4;
-}
 
 // Recipient5 - Message recipient
-message Recipient5 {
-  optional string msg_tx_id = 1;
-  optional string orgnl_biz_t_msg = 2;
-  optional string orgnl_msg_id = 3;
-}
 
 // TransactionResponse23 - Transaction response wrapper
 message TransactionResponse23 {
@@ -249,9 +222,3 @@ message LoginResponse3 {
 }
 
 // SecurityTrailer4 - Security trailer
-message SecurityTrailer4 {
-  optional string scnty_trlr = 1;  // SecurityTrailer1Code
-  optional bytes authstn_data = 2;
-  optional bytes signtr_val = 3;
-  optional bytes nce = 4;
-}

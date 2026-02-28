@@ -11,11 +11,11 @@ import "common.proto";
 
 // Document root message
 message Casp003Document {
-  Document document = 1;
+  Casp003DocumentDocument document = 1;
 }
 
 // Document - Root element containing SaleToPOIAdminRequestV06
-message Document {
+message Casp003DocumentDocument {
   SaleToPOIAdminRequestV06 sale_to_poi_adm_req = 1;
 }
 
@@ -27,38 +27,12 @@ message SaleToPOIAdminRequestV06 {
 }
 
 // Header4 - Message header
-message Header4 {
-  optional string msg_fctn = 1;
-  optional string proto_vrsn = 2;
-  optional string orgnl_biz_t_msg = 3;
-  optional string orgnl_msg_id = 4;
-  optional string tx_id = 5;
-  optional int64 cre_dt_tm = 6;
-  optional InitiatingParty3 initg_pty = 7;
-  optional Recipient5 recipnt = 8;
-  optional string trace_abilty = 9;
-}
 
 // InitiatingParty3 - Party that initiated the transaction
-message InitiatingParty3 {
-  optional Identification1 id = 1;
-  optional string tp = 2;
-}
 
 // Identification1 - Party identification
-message Identification1 {
-  optional string id = 1;
-  optional string issr = 2;
-  optional string tp = 3;
-  optional string cstmr_id = 4;
-}
 
 // Recipient5 - Message recipient
-message Recipient5 {
-  optional string msg_tx_id = 1;
-  optional string orgnl_biz_t_msg = 2;
-  optional string orgnl_msg_id = 3;
-}
 
 // AdminRequest4 - Admin request
 message AdminRequest4 {
@@ -68,9 +42,3 @@ message AdminRequest4 {
 }
 
 // SecurityTrailer4 - Security trailer
-message SecurityTrailer4 {
-  optional string scnty_trlr = 1;
-  optional bytes authstn_data = 2;
-  optional bytes signtr_val = 3;
-  optional bytes nce = 4;
-}

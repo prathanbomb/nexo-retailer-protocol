@@ -11,11 +11,11 @@ import "common.proto";
 
 // Document root message
 message Casp012Document {
-  Document document = 1;
+  Casp012DocumentDocument document = 1;
 }
 
 // Document - Root element
-message Document {
+message Casp012DocumentDocument {
   NetworkManagement6 net_mgmt = 1;
 }
 
@@ -32,33 +32,12 @@ message NetworkManagement6 {
 }
 
 // Header4 - Message header
-message Header4 {
-  optional string msg_fctn = 1;
-  optional string proto_vrsn = 2;
-  optional string tx_id = 3;
-  optional int64 cre_dt_tm = 4;
-  optional InitiatingParty3 initg_pty = 5;
-  optional Recipient5 recipnt = 6;
-}
 
 // InitiatingParty3 - Party that initiated the transaction
-message InitiatingParty3 {
-  optional Identification1 id = 1;
-  optional string tp = 2;
-}
 
 // Identification1 - Party identification
-message Identification1 {
-  optional string id = 1;
-  optional string issr = 2;
-  optional string tp = 3;
-}
 
 // Recipient5 - Message recipient
-message Recipient5 {
-  optional string msg_tx_id = 1;
-  optional string orgnl_msg_id = 2;
-}
 
 // Diagnosis4 - Diagnosis request
 message Diagnosis4 {
@@ -86,8 +65,3 @@ message RecoveryResponse4 {
 }
 
 // SecurityTrailer4 - Security trailer
-message SecurityTrailer4 {
-  optional string scnty_trlr = 1;
-  optional bytes authstn_data = 2;
-  optional bytes signtr_val = 3;
-}
