@@ -1,0 +1,473 @@
+syntax = "proto3";
+
+// Common types for ISO 20022 CASP (Card Authenticated Secure Protocol)
+// Converted from XSD schemas for Nexo Retailer Protocol v6
+// Generated: 2026-02-28
+// Source: ISO 20022 CASP v6 (2024-02-29)
+
+package nexo.casp.v1;
+
+// ActiveCurrencyAndAmount - CRITICAL monetary type (SCHEMA-05)
+// Source: XSD complexType with xs:decimal base (fractionDigits=5, totalDigits=18)
+// Converted to integer representation to avoid IEEE 754 precision loss
+// Nanos must match sign of units, range -999999999 to +999999999
+message ActiveCurrencyAndAmount {
+  string ccy = 1;   // ISO 4217 currency code
+  int64 units = 2;  // Whole currency units
+  int32 nanos = 3;  // Nano (10^-9) units, must match sign of units
+}
+
+// ActiveCurrencyCode - ISO 4217 currency code pattern
+// Source: XSD simpleType with pattern [A-Z]{3,3}
+// Validation logic implemented in Phase 2
+message ActiveCurrencyCode {
+  string value = 1;
+}
+
+// GenericIdentification177 - Generic identification
+message GenericIdentification177 {
+  optional string id = 1;
+  optional string issr = 2;
+  optional string tp = 3;
+  optional string cstmr_id = 4;
+}
+
+// AddressVerification1 - Address verification for cardholder verification
+message AddressVerification1 {
+  optional string adr_dgts = 1;     // Address digits
+  optional string pstl_cd_dgts = 2; // Postal code digits
+}
+
+// AggregationTransaction3 - Aggregated transaction details
+message AggregationTransaction3 {
+  optional int64 frst_pmt_dt_tm = 1;   // First payment date/time (unix timestamp nanos)
+  optional int64 last_pmt_dt_tm = 2;   // Last payment date/time (unix timestamp nanos)
+  optional int32 nb_of_pmts = 3;       // Number of payments
+  repeated DetailedAmount21 indv_pmt = 4; // Individual payments
+}
+
+// DetailedAmount21 - Detailed amount breakdown
+message DetailedAmount21 {
+  optional ActiveCurrencyAndAmount amt = 1;
+  optional string tp = 2;
+}
+
+// ContentInformationType38 - Content information for signed data
+message ContentInformationType38 {
+  optional string cntt_tp = 1;
+  optional bytes cntt = 2;
+}
+
+// UserInterface4Code - User interface type enumeration
+enum UserInterface4Code {
+  USER_INTERFACE_4_CODE_UNSPECIFIED = 0;
+  ATMP = 1;  // ATM
+  PTCP = 2;  // Point of sale cardholder present
+  UNAT = 3;  // Unattended
+  ECOM = 4;  // E-commerce
+  CDM = 5;   // Cash dispense
+  MCP = 6;   // Mobile commerce
+  VBC = 7;   // Voice banking center
+}
+
+// InformationQualify1Code - Information qualifier enumeration
+enum InformationQualify1Code {
+  INFORMATION_QUALIFY_1_CODE_UNSPECIFIED = 0;
+  PRIN = 1;  // Print
+  DISL = 2;  // Display
+  BOTH = 3;  // Both
+}
+
+// OutputFormat3Code - Output format enumeration
+enum OutputFormat3Code {
+  OUTPUT_FORMAT_3_CODE_UNSPECIFIED = 0;
+  TEXT = 1;
+  HTML = 2;
+  BARC = 3;
+  PDF = 4;
+}
+
+// TrueFalseIndicator - Boolean indicator
+message TrueFalseIndicator {
+  bool value = 1;
+}
+
+// Number - Numeric value
+message Number {
+  string value = 1;
+}
+
+// Max256Text - Text up to 256 characters
+message Max256Text {
+  string value = 1;
+}
+
+// Max20000Text - Text up to 20000 characters
+message Max20000Text {
+  string value = 1;
+}
+
+// Max5NumericText - Numeric text up to 5 characters
+message Max5NumericText {
+  string value = 1;
+}
+
+// OutputBarcode2 - Output barcode specification
+message OutputBarcode2 {
+  optional string tp = 1;
+  optional string val = 2;
+}
+
+// Algorithm26Code - Encryption algorithm enumeration
+enum Algorithm26Code {
+  ALGORITHM_26_CODE_UNSPECIFIED = 0;
+  HS25 = 1;
+  HS38 = 2;
+  HS51 = 3;
+  HS01 = 4;
+  SH31 = 5;
+  SH32 = 6;
+  SH33 = 7;
+  SH35 = 8;
+  SHK1 = 9;
+  SHK2 = 10;
+  SMS3 = 11;
+}
+
+// Algorithm27Code - MAC algorithm enumeration
+enum Algorithm27Code {
+  ALGORITHM_27_CODE_UNSPECIFIED = 0;
+  MACC = 1;
+  MCCS = 2;
+  CMA1 = 3;
+  MCC1 = 4;
+  CMA9 = 5;
+  CMA5 = 6;
+  CMA2 = 7;
+  CM31 = 8;
+  CM32 = 9;
+  CM33 = 10;
+  MCS3 = 11;
+  CCA1 = 12;
+  CCA2 = 13;
+  CCA3 = 14;
+  S34C = 15;
+  S34R = 16;
+}
+
+// Algorithm28Code - Key encryption algorithm enumeration
+enum Algorithm28Code {
+  ALGORITHM_28_CODE_UNSPECIFIED = 0;
+  EA2C = 1;
+  E3DC = 2;
+  DKP9 = 3;
+  UKPT = 4;
+  UKA2 = 5;
+  EA9C = 6;
+  EA5C = 7;
+  DA12 = 8;
+  DA19 = 9;
+  DA25 = 10;
+  N108 = 11;
+  EA5R = 12;
+  EA9R = 13;
+  EA2R = 14;
+  E3DR = 15;
+  E36C = 16;
+  E36R = 17;
+  SD5C = 18;
+  UKA1 = 19;
+  UKA3 = 20;
+  SM4C = 21;
+  SM4R = 22;
+}
+
+// Algorithm29Code - Mode of operation enumeration
+enum Algorithm29Code {
+  ALGORITHM_29_CODE_UNSPECIFIED = 0;
+  ERS2 = 1;
+  ERS1 = 2;
+  RPSS = 3;
+  ERS3 = 4;
+}
+
+// Algorithm7Code - Padding algorithm enumeration
+enum Algorithm7Code {
+  ALGORITHM_7_CODE_UNSPECIFIED = 0;
+  PPD0 = 1;
+  PPD1 = 2;
+  PPD2 = 3;
+  PPD3 = 4;
+  PPD4 = 5;
+  PPD5 = 6;
+  PPD6 = 7;
+}
+
+// Algorithm8Code - Signature algorithm enumeration
+enum Algorithm8Code {
+  ALGORITHM_8_CODE_UNSPECIFIED = 0;
+  RS11 = 1;
+  RS12 = 2;
+  RS21 = 3;
+  RS22 = 4;
+  RS51 = 5;
+  RS52 = 6;
+  DSAG = 7;
+  DSAV = 8;
+  ECGS = 9;
+  ECGV = 10;
+  ECD1 = 11;
+  ECD2 = 12;
+  ECG2 = 13;
+  ECDS = 14;
+  ECG1 = 15;
+  ECD3 = 16;
+  ECDC = 17;
+  ECG3 = 18;
+  ECCH = 19;
+  ECG4 = 20;
+  ECD4 = 21;
+  ECG5 = 22;
+  ECD5 = 23;
+  ECG6 = 24;
+  ECD6 = 25;
+  ECG7 = 26;
+  ECD7 = 27;
+  ECG8 = 28;
+  ECD8 = 29;
+  ECG9 = 30;
+  ECD9 = 31;
+  SA11 = 32;
+  SA12 = 33;
+  SA13 = 34;
+  SA14 = 35;
+  SA15 = 36;
+  SA16 = 37;
+  SA17 = 38;
+  SA18 = 39;
+  SA19 = 40;
+  SA20 = 41;
+  SA21 = 42;
+  SA22 = 43;
+  SA23 = 44;
+  SA24 = 45;
+}
+
+// AddressType2Code - Address type enumeration
+enum AddressType2Code {
+  ADDRESS_TYPE_2_CODE_UNSPECIFIED = 0;
+  ADDR = 1;  // Address
+  PBOX = 2;  // Post office box
+  HOME = 3;  // Home
+  BIZZ = 4;  // Business
+  MLTO = 5;  // Mailing
+  DLVY = 6;  // Delivery
+}
+
+// ContentType2Code - Content type enumeration
+enum ContentType2Code {
+  CONTENT_TYPE_2_CODE_UNSPECIFIED = 0;
+  ADPU = 1;
+  APDU = 2;
+  DATA = 3;
+  TPIN = 4;
+  DPIN = 5;
+  EMDC = 6;
+  EMDV = 7;
+}
+
+// CardDataReading1Code - Card data reading method enumeration
+enum CardDataReading1Code {
+  CARD_DATA_READING_1_CODE_UNSPECIFIED = 0;
+  ICCS = 1;  // ICC contact
+  ICCM = 2;  // ICC contactless
+  MSTR = 3;  // Magnetic stripe
+  KEYA = 4;  // Key entry
+  CTSK = 5;  // Contactless
+}
+
+// CardDataReading5Code - Extended card data reading method enumeration
+enum CardDataReading5Code {
+  CARD_DATA_READING_5_CODE_UNSPECIFIED = 0;
+  ICSS = 1;  // ICC standard
+  ICSX = 2;  // ICC contactless
+  MSTR = 3;  // Magnetic stripe
+  KEYE = 4;  // Key entry
+  MSRK = 5;  // Magnetic stripe (key entered)
+  CTLS = 6;  // Contactless
+  CTVS = 7;  // Contactless (via contact)
+  CTSK = 8;  // Contactless (contact)
+  FLNG = 9;  // Falling back
+}
+
+// TransactionChannel1Code - Transaction channel enumeration
+enum TransactionChannel1Code {
+  TRANSACTION_CHANNEL_1_CODE_UNSPECIFIED = 0;
+  POSC = 1;  // Point of sale
+  ECOM = 2;  // E-commerce
+  MCOM = 3;  // Mobile commerce
+  ATM = 4;   // ATM
+  BTCH = 5;  // Batch
+  VLBT = 6;  // Voice batch
+}
+
+// MemoryUnit1Code - Memory unit enumeration
+enum MemoryUnit1Code {
+  MEMORY_UNIT_1_CODE_UNSPECIFIED = 0;
+  BYTE = 1;
+  KBTE = 2;
+  MBTE = 3;
+  GBTE = 4;
+}
+
+// MessageFunction1Code - Message function enumeration
+enum MessageFunction1Code {
+  MESSAGE_FUNCTION_1_CODE_UNSPECIFIED = 0;
+  DREQ = 1;  // Device request
+  DRQT = 2;  // Device request with time
+  DVCP = 3;  // Device close
+  DVOP = 4;  // Device open
+  STDA = 5;  // Send data
+}
+
+// ProtocolParameter1Code - Protocol parameter enumeration
+enum ProtocolParameter1Code {
+  PROTOCOL_PARAMETER_1_CODE_UNSPECIFIED = 0;
+  CMID = 1;  // Cardholder interface device
+  CIDR = 2;  // Cardholder interface device reader
+  POID = 3;  // Point of interaction device
+}
+
+// SecurityTrailer1Code - Security trailer enumeration
+enum SecurityTrailer1Code {
+  SECURITY_TRAILER_1_CODE_UNSPECIFIED = 0;
+  TKNR = 1;  // Token reserved
+  AUTH = 2;  // Authentication
+}
+
+// Traceability6Code - Traceability enumeration
+enum Traceability6Code {
+  TRACEABILITY_6_CODE_UNSPECIFIED = 0;
+  TRAC = 1;
+  NOTR = 2;
+}
+
+// DisplayCapability1Code - Display capability enumeration
+enum DisplayCapability1Code {
+  DISPLAY_CAPABILITY_1_CODE_UNSPECIFIED = 0;
+  DISP = 1;  // Display available
+  NODI = 2;  // No display
+}
+
+// CommunicationCharacteristic1Code - Communication characteristic enumeration
+enum CommunicationCharacteristic1Code {
+  COMMUNICATION_CHARACTERISTIC_1_CODE_UNSPECIFIED = 0;
+  WRLS = 1;  // Wireless
+  WIRED = 2;  // Wired
+}
+
+// InputCapability1Code - Input capability enumeration
+enum InputCapability1Code {
+  INPUT_CAPABILITY_1_CODE_UNSPECIFIED = 0;
+  KEYP = 1;  // Keypad
+  NOTP = 2;  // No input
+  TCHP = 3;  // Touchpad
+}
+
+// OutputFormat1Code - Output format enumeration
+enum OutputFormat1Code {
+  OUTPUT_FORMAT_1_CODE_UNSPECIFIED = 0;
+  TXT = 1;   // Text
+  HTML = 2;  // HTML
+  PDF = 3;   // PDF
+}
+
+// PinFormat1Code - PIN format enumeration
+enum PinFormat1Code {
+  PIN_FORMAT_1_CODE_UNSPECIFIED = 0;
+  NUMC = 1;  // Numeric
+  ALPH = 2;  // Alphanumeric
+}
+
+// ServiceProvider2Code - Service provider enumeration
+enum ServiceProvider2Code {
+  SERVICE_PROVIDER_2_CODE_UNSPECIFIED = 0;
+  ISSR = 1;  // Issuer
+  ACQR = 2;  // Acquirer
+}
+
+// SettlementService1Code - Settlement service enumeration
+enum SettlementService1Code {
+  SETTLEMENT_SERVICE_1_CODE_UNSPECIFIED = 0;
+  STTL = 1;  // Settlement
+  RVSL = 2;  // Reversal
+}
+
+// UnitOfMeasure1Code - Unit of measure enumeration
+enum UnitOfMeasure1Code {
+  UNIT_OF_MEASURE_1_CODE_UNSPECIFIED = 0;
+  PCTG = 1;  // Percentage
+  CURR = 2;  // Currency
+}
+
+// StorageLocation1Code - Storage location enumeration
+enum StorageLocation1Code {
+  STORAGE_LOCATION_1_CODE_UNSPECIFIED = 0;
+  ONGD = 1;  // On guard
+  OFFL = 2;  // Offline
+}
+
+// SystemIdentification2Code - System identification enumeration
+enum SystemIdentification2Code {
+  SYSTEM_IDENTIFICATION_2_CODE_UNSPECIFIED = 0;
+  POIN = 1;  // Point of interaction
+  CUST = 2;  // Customer
+}
+
+// TokenRequestType1Code - Token request type enumeration
+enum TokenRequestType1Code {
+  TOKEN_REQUEST_TYPE_1_CODE_UNSPECIFIED = 0;
+  DRCT = 1;  // Direct
+  INDR = 2;  // Indirect
+}
+
+// TransactionIdentifier1Code - Transaction identifier enumeration
+enum TransactionIdentifier1Code {
+  TRANSACTION_IDENTIFIER_1_CODE_UNSPECIFIED = 0;
+  TXID = 1;  // Transaction ID
+  SCTY = 2;  // Security
+}
+
+// TransactionResult1Code - Transaction result enumeration
+enum TransactionResult1Code {
+  TRANSACTION_RESULT_1_CODE_UNSPECIFIED = 0;
+  SUCC = 1;  // Success
+  FAIL = 2;  // Failure
+  PART = 3;  // Partial
+}
+
+// UserInterface2Code - User interface enumeration
+enum UserInterface2Code {
+  USER_INTERFACE_2_CODE_UNSPECIFIED = 0;
+  ATMM = 1;   // ATM
+  POSP = 2;   // Point of sale
+  UNAT = 3;   // Unattended
+  ECOM = 4;   // E-commerce
+  MCOM = 5;   // Mobile commerce
+  VBCM = 6;   // Voice banking
+  IPTV = 7;   // IPTV
+  MBIL = 8;   // Mobile billing
+  PMVL = 9;   // Prepaid mobile
+}
+
+// UserInterface3Code - Extended user interface enumeration
+enum UserInterface3Code {
+  USER_INTERFACE_3_CODE_UNSPECIFIED = 0;
+  ATMM = 1;   // ATM
+  PTCP = 2;   // Point of sale cardholder present
+  UNAT = 3;   // Unattended
+  ECOM = 4;   // E-commerce
+  CDM = 5;    // Cash dispense
+  MCP = 6;    // Mobile commerce
+  VBC = 7;    // Voice banking center
+}
