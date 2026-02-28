@@ -1,0 +1,27 @@
+[package]
+name = "nexo-retailer-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+authors = ["Nexo Retailer Protocol Contributors"]
+description = "Rust implementation of Nexo Retailer Protocol (ISO 20022 CASP) with std and no_std support"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/your-org/nexo-retailer-protocol"
+keywords = ["nexo", "payment", "iso20022", "casp", "protobuf"]
+categories = ["no-std", "parser-implementations", "api-bindings"]
+
+[features]
+default = ["std"]
+std = ["prost/std"]
+alloc = []
+# Feature flag validation: prevent invalid combinations
+
+[dependencies]
+prost = { version = "0.14", default-features = false, features = ["derive"] }
+
+[build-dependencies]
+prost-build = "0.14"
+
+# Dev dependencies for testing (Phase 2+)
+[dev-dependencies]
+# Empty for now - tests added in Phase 6
