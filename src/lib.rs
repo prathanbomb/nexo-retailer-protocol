@@ -24,10 +24,13 @@
 //!
 //! ```rust,no_run
 //! use nexo_retailer_protocol::{Casp001Document, Header4};
+//! use prost::Message;
 //!
-//! let doc = Casp001Document { /* ... */ };
-//! let encoded = doc.encode_to_vec();
+//! // Note: This is a simplified example. Actual usage requires
+//! // constructing the full message structure with all required fields.
+//! // See specific message types for complete examples.
 //! ```
+//!
 //!
 //! ## no_std Support
 //!
