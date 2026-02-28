@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T16:40:48.804Z"
+last_updated: "2026-02-28T16:47:11.929Z"
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 7
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 ---
@@ -52,17 +52,17 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 2 of 6 (Core Library)
-Plan: 1 of 4 in current phase (COMPLETE)
-Status: In Progress - Error handling and feature flags complete
-Last activity: 2026-02-28 — Plan 02-01 complete (3/3 tasks, error types and feature flags established)
+Plan: 2 of 4 in current phase (COMPLETE)
+Status: In Progress - Codec layer with size limits complete
+Last activity: 2026-02-28 — Plan 02-02 complete (3/3 tasks, codec trait, ProstCodec, size limits, round-trip tests)
 
-Progress: [███░░░░░░░░] 15% (Phase 2: 25% complete - Plan 01 done, 3 plans remaining)
+Progress: [████░░░░░░░] 20% (Phase 2: 50% complete - Plans 01-02 done, 2 plans remaining)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 492 min (8.2 hours)
+- Total plans completed: 2
+- Average duration: 244 min (4.1 hours)
 - Total execution time: 8.2 hours
 
 **By Phase:**
@@ -86,6 +86,7 @@ Progress: [███░░░░░░░░] 15% (Phase 2: 25% complete - Plan 
 | Phase 01-schema-conversion P03 | 25 | 5 tasks | 24 files |
 | Phase 02-core-library P01 | 5 | 3 tasks | 7 files |
 | Phase 02-core-library P01 | 5min | 3 tasks | 7 files |
+| Phase 02-core-library P02 | 224 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,18 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 02-core-library P01]: defmt::Format derive only on NexoError, not ValidationError (String fields not supported)
 - [Phase 02-core-library P01]: Feature flags follow additive principle: default = [\"std\"], no negative feature names
 - [Phase 02-core-library P01]: &'static str for no_std, Box::leak for std convenience methods
+- [Phase 02-core-library P02]: Codec trait requires Message + Default bound (prost::Message::decode needs Default)
+- [Phase 02-core-library P02]: Size limits checked BEFORE encode/decode to prevent unbounded allocation
+- [Phase 02-core-library P02]: 4MB default limit follows gRPC standard for maximum message size
+- [Phase 02-core-library P02]: encode_to_vec() returns Vec<u8> directly, not Result (allocates properly sized buffer)
+- [Phase 02-core-library P02]: Convenience functions use ProstCodec internally for ergonomic API
+- [Phase 02-core-library]: Use core::error::Error for no_std compatibility
+- [Phase 02-core-library]: Manual Error trait impl instead of thiserror
+- [Phase 02-core-library]: defmt::Format only on NexoError, not ValidationError
+- [Phase 02-core-library]: Additive feature flags: default = [std], no negative names
+- [Phase 02-core-library P01]: defmt::Format derive only on NexoError, not ValidationError (String fields not supported)
+- [Phase 02-core-library P01]: Feature flags follow additive principle: default = [\"std\"], no negative feature names
+- [Phase 02-core-library P01]: &'static str for no_std, Box::leak for std convenience methods
 - [Phase 02-core-library]: Use core::error::Error for no_std compatibility
 - [Phase 02-core-library]: Manual Error trait impl instead of thiserror
 - [Phase 02-core-library]: defmt::Format only on NexoError, not ValidationError
@@ -129,6 +142,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-28 (Plan 02-01 execution)
-Stopped at: Plan 02-01 complete - all 3 tasks done, error handling and feature flags established
-Resume file: .planning/phases/02-core-library/02-01-SUMMARY.md
+Last session: 2026-02-28 (Plan 02-02 execution)
+Stopped at: Plan 02-02 complete - all 3 tasks done, codec layer with size limits established
+Resume file: .planning/phases/02-core-library/02-02-SUMMARY.md

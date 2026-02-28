@@ -17,11 +17,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Serialization (Codec)
 
-- [ ] **CODEC-01**: Protobuf encode for all 17 CASP message types
-- [ ] **CODEC-02**: Protobuf decode for all 17 CASP message types
-- [ ] **CODEC-03**: Message size limits enforced to prevent unbounded allocation
-- [ ] **CODEC-04**: no_std-compatible codec layer (uses prost with default-features = false)
-- [ ] **CODEC-05**: Codec layer isolated for testing and potential codec swaps
+- [x] **CODEC-01**: Protobuf encode for all 17 CASP message types
+- [x] **CODEC-02**: Protobuf decode for all 17 CASP message types
+- [x] **CODEC-03**: Message size limits enforced to prevent unbounded allocation
+- [x] **CODEC-04**: no_std-compatible codec layer (uses prost with default-features = false)
+- [x] **CODEC-05**: Codec layer isolated for testing and potential codec swaps
 
 ### Validation
 
@@ -143,11 +143,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHEMA-03 | Phase 1 | Pending |
 | SCHEMA-04 | Phase 1 | Pending |
 | SCHEMA-05 | Phase 1 | Complete |
-| CODEC-01 | Phase 2 | Pending |
-| CODEC-02 | Phase 2 | Pending |
-| CODEC-03 | Phase 2 | Pending |
-| CODEC-04 | Phase 2 | Pending |
-| CODEC-05 | Phase 2 | Pending |
+| CODEC-01 | Phase 2 | Complete |
+| CODEC-02 | Phase 2 | Complete |
+| CODEC-03 | Phase 2 | Complete |
+| CODEC-04 | Phase 2 | Complete |
+| CODEC-05 | Phase 2 | Complete |
 | VAL-01 | Phase 2 | Pending |
 | VAL-02 | Phase 2 | Pending |
 | VAL-03 | Phase 2 | Pending |
