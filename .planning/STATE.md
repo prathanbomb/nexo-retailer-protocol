@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-01T15:47:21.000Z"
+last_updated: "2026-03-01T16:13:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 27
-  completed_plans: 8
+  completed_plans: 10
   current_plan_phase: 03-transport-layer
-  current_plan_number: 02
+  current_plan_number: 04
   current_plan_status: ready_to_start
 ---
 
@@ -26,43 +26,44 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 3 of 6 (Transport Layer)
-Plan: 1 of 6 in current phase (COMPLETE)
-Status: In Progress - Transport trait and framing layer complete
-Last activity: 2026-03-01 — Plan 03-01 complete (4/4 tasks, Transport trait, FramedTransport, tests)
+Plan: 4 of 6 in current phase (READY TO START)
+Status: In Progress - Tokio transport implementation complete
+Last activity: 2026-03-01 — Plan 03-02 complete (4/4 tasks, TokioTransport, TimeoutConfig, unit tests)
 
-Progress: [████░░░░░░░] 30% (Phase 3: 17% complete - Plan 01 done, 5 plans remaining)
+Progress: [████░░░░░░░] 37% (Phase 3: 50% complete - Plans 01-03 done, 3 plans remaining)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 244 min (4.1 hours)
-- Total execution time: 8.2 hours
+- Total plans completed: 10
+- Average duration: 173 min (2.9 hours)
+- Total execution time: 28.9 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Schema Conversion | 1 | 1/2 | 492 min |
-| 2. Core Library | 0 | 0/4 | - |
-| 3. Transport Layer | 0 | 0/4 | - |
+| 1. Schema Conversion | 3 | 3/3 | 184 min |
+| 2. Core Library | 3 | 3/3 | 91 min |
+| 3. Transport Layer | 4 | 4/6 | 212 min |
 | 4. Client API | 0 | 0/5 | - |
 | 5. Server API & Reliability | 0 | 0/6 | - |
 | 6. Testing & Verification | 0 | 0/6 | - |
 
 **Recent Trend:**
-- Last 5 plans: P01(492min), P02(35min, partial), P03(25min), P02-01(5min)
-- Trend: Velocity increasing
+- Last 5 plans: P03-02(15min), P03-03(120min), P03-01(663min), P02-03(45min), P02-02(224min)
+- Trend: Velocity improving with simpler transport implementations
 
 *Updated after each plan completion*
 | Phase 01-schema-conversion P01 | 492 | 4 tasks | 19 files |
 | Phase 01-schema-conversion P02 | 35 | 4 tasks | 24 files (partial) |
 | Phase 01-schema-conversion P03 | 25 | 5 tasks | 24 files |
 | Phase 02-core-library P01 | 5 | 3 tasks | 7 files |
-| Phase 02-core-library P01 | 5min | 3 tasks | 7 files |
 | Phase 02-core-library P02 | 224 | 3 tasks | 3 files |
 | Phase 02-core-library P03 | 45 | 4 tasks | 3 files |
-| Phase 03 P01 | 663 | 4 tasks | 4 files |
+| Phase 03-transport-layer P03-01 | 663 | 4 tasks | 4 files |
+| Phase 03-transport-layer P03-02 | 15 | 4 tasks | 4 files |
+| Phase 03-transport-layer P03-03 | 120 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,14 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 02-core-library]: Manual Error trait impl instead of thiserror
 - [Phase 02-core-library]: defmt::Format only on NexoError, not ValidationError
 - [Phase 02-core-library]: Additive feature flags: default = [std], no negative names
+- [Phase 03-transport-layer P03-03]: Manual address parsing for Embassy's (IpAddress, u16) tuples
+- [Phase 03-transport-layer P03-03]: EmbassyTimeoutConfig as separate type for embassy_time::Duration type safety
+- [Phase 03-transport-layer P03-03]: Moderate timeout defaults (10s connect, 30s read, 10s write) for embedded environments
+- [Phase 03-transport-layer P03-02]: Use tokio::time::timeout for all async operations to prevent hangs
+- [Phase 03-transport-layer P03-02]: Import AsyncReadExt and AsyncWriteExt traits for read/write methods
+- [Phase 03-transport-layer P03-02]: Add macros and rt-multi-thread features for tokio::test support
+- [Phase 03-transport-layer P03-02]: peer_addr().is_ok() for connection state detection (simple but effective)
+- [Phase 03-transport-layer P03-02]: Default timeouts: 10s connect, 30s read, 10s write
 - [Phase 02-core-library P01]: defmt::Format derive only on NexoError, not ValidationError (String fields not supported)
 - [Phase 02-core-library P01]: Feature flags follow additive principle: default = [\"std\"], no negative feature names
 - [Phase 02-core-library P01]: &'static str for no_std, Box::leak for std convenience methods
@@ -102,6 +111,14 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 02-core-library]: Manual Error trait impl instead of thiserror
 - [Phase 02-core-library]: defmt::Format only on NexoError, not ValidationError
 - [Phase 02-core-library]: Additive feature flags: default = [std], no negative names
+- [Phase 03-transport-layer P03-03]: Manual address parsing for Embassy's (IpAddress, u16) tuples
+- [Phase 03-transport-layer P03-03]: EmbassyTimeoutConfig as separate type for embassy_time::Duration type safety
+- [Phase 03-transport-layer P03-03]: Moderate timeout defaults (10s connect, 30s read, 10s write) for embedded environments
+- [Phase 03-transport-layer P03-02]: Use tokio::time::timeout for all async operations to prevent hangs
+- [Phase 03-transport-layer P03-02]: Import AsyncReadExt and AsyncWriteExt traits for read/write methods
+- [Phase 03-transport-layer P03-02]: Add macros and rt-multi-thread features for tokio::test support
+- [Phase 03-transport-layer P03-02]: peer_addr().is_ok() for connection state detection (simple but effective)
+- [Phase 03-transport-layer P03-02]: Default timeouts: 10s connect, 30s read, 10s write
 
 ### Pending Todos
 
@@ -114,10 +131,15 @@ None yet.
 - Nexo TCP framing specification needs detailed review during Phase 3 planning
 
 **Current blockers:**
-- None
+- smoltcp 0.12.0 compilation errors blocking Embassy transport (transitive dependency from embassy-net)
+
+**Deferred items:**
+- Embassy transport integration testing (deferred to Plan 03-04)
+- Embassy transport unit tests (deferred to Plan 03-05)
+- Embassy transport export from lib.rs (deferred to Plan 03-05)
 
 ## Session Continuity
 
-Last session: 2026-02-28 (Plan 02-02 execution)
-Stopped at: Plan 02-02 complete - all 3 tasks done, codec layer with size limits established
-Resume file: .planning/phases/02-core-library/02-02-SUMMARY.md
+Last session: 2026-03-01 (Plan 03-02 execution)
+Stopped at: Plan 03-02 complete - all 4 tasks done, Tokio transport with timeouts and tests
+Resume file: .planning/phases/03-transport-layer/03-02-SUMMARY.md
