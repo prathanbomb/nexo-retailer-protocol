@@ -40,6 +40,9 @@
 // Builder pattern for message construction
 pub mod builder;
 
+// Reconnection logic with exponential backoff
+pub mod reconnect;
+
 // Runtime-specific implementations
 #[cfg(feature = "std")]
 pub mod std;
