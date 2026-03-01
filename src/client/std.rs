@@ -6,6 +6,7 @@
 
 #![cfg(feature = "std")]
 
+use crate::client::reconnect::{ReconnectConfig, Backoff};
 use crate::error::NexoError;
 use crate::transport::{FramedTransport, Transport, TokioTransport};
 
@@ -117,6 +118,8 @@ pub struct NexoClient<T: Transport = TokioTransport> {
     server_addr: String,
     /// Pending requests awaiting responses
     pending: PendingRequests,
+    /// Reconnection configuration
+    reconnect_config: Option<ReconnectConfig>,
 }
 
 impl NexoClient<TokioTransport> {
@@ -136,6 +139,7 @@ impl NexoClient<TokioTransport> {
             connected: Arc::new(AtomicBool::new(false)),
             server_addr: String::new(),
             pending: PendingRequests::new(),
+            reconnect_config: None,
         }
     }
 
@@ -169,6 +173,91 @@ impl NexoClient<TokioTransport> {
         self.connected.store(true, Ordering::Release);
         Ok(())
     }
+
+    /// Set reconnection configuration
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Reconnection configuration with backoff parameters
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nexo_retailer_protocol::{NexoClient, client::ReconnectConfig};
+    /// # use std::time::Duration;
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut client = NexoClient::new();
+    /// let config = ReconnectConfig::new()
+    ///     .with_max_attempts(5)
+    ///     .with_base_delay(Duration::from_millis(100));
+    /// client = client.with_reconnect_config(config);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn with_reconnect_config(mut self, config: ReconnectConfig) -> Self {
+        self.reconnect_config = Some(config);
+        self
+    }
+
+    /// Reconnect to the payment terminal with exponential backoff
+    ///
+    /// This method attempts to reconnect using the configured backoff strategy.
+    /// If no reconnection config is set, returns an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns `NexoError::Connection` if:
+    /// - No reconnection config is set
+    /// - Max reconnection attempts are exceeded
+    /// - Connection cannot be established
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nexo_retailer_protocol::{NexoClient, client::ReconnectConfig};
+    /// # use std::time::Duration;
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut client = NexoClient::new();
+    /// let config = ReconnectConfig::new()
+    ///     .with_max_attempts(5)
+    ///     .with_base_delay(Duration::from_millis(100));
+    /// client = client.with_reconnect_config(config);
+    /// client.connect("192.168.1.100:8080").await?;
+    ///
+    /// // After connection lost, reconnect with backoff
+    /// client.reconnect().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn reconnect(&mut self) -> Result<(), NexoError> {
+        let config = self.reconnect_config.ok_or(NexoError::Connection {
+            details: "reconnect config not set",
+        })?;
+
+        // Disconnect if currently connected
+        let addr = self.server_addr.clone();
+        if !addr.is_empty() {
+            self.connected.store(false, Ordering::Release);
+            self.transport = None;
+        }
+
+        // Attempt reconnection with backoff
+        let mut backoff = Backoff::new(config);
+        while backoff.wait_with_jitter().await {
+            let transport = match TokioTransport::connect(&addr, Duration::from_secs(10)).await {
+                Ok(t) => t,
+                Err(_) => continue, // Try again with backoff
+            };
+            self.transport = Some(FramedTransport::new(transport));
+            self.connected.store(true, Ordering::Release);
+            return Ok(());
+        }
+
+        // Max attempts exceeded
+        Err(NexoError::Connection {
+            details: "max reconnection attempts exceeded",
+        })
+    }
 }
 
 impl<T: Transport> NexoClient<T> {
@@ -183,6 +272,7 @@ impl<T: Transport> NexoClient<T> {
             connected: Arc::new(AtomicBool::new(false)),
             server_addr: String::new(),
             pending: PendingRequests::new(),
+            reconnect_config: None,
         }
     }
 
@@ -668,5 +758,37 @@ mod tests {
         assert_eq!(received.ccy, "EUR");
         assert_eq!(received.units, 200);
         assert_eq!(received.nanos, 750000000);
+    }
+
+    #[test]
+    fn test_reconnect_without_config() {
+        let mut client = NexoClient::new();
+        let result = block_on(client.reconnect());
+        assert!(result.is_err());
+        match result {
+            Err(NexoError::Connection { details }) => {
+                assert_eq!(details, "reconnect config not set");
+            }
+            _ => panic!("Expected 'reconnect config not set' error"),
+        }
+    }
+
+    #[test]
+    fn test_reconnect_with_config() {
+        use core::time::Duration;
+        use crate::client::reconnect::ReconnectConfig;
+
+        // Test that we can set reconnect config
+        let client = NexoClient::new();
+        let config = ReconnectConfig::new()
+            .with_base_delay(Duration::from_millis(100))
+            .with_max_delay(Duration::from_secs(60))
+            .with_max_attempts(5);
+
+        let client = client.with_reconnect_config(config);
+        // We can't test actual reconnection without a real server,
+        // but we can verify the config is set
+        assert!(client.reconnect_config.is_some());
+        assert_eq!(client.reconnect_config.unwrap().base_delay, Duration::from_millis(100));
     }
 }

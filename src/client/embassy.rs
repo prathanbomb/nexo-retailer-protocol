@@ -8,6 +8,7 @@
 
 extern crate alloc;
 
+use crate::client::reconnect::{ReconnectConfig, Backoff};
 use crate::error::NexoError;
 use crate::transport::{FramedTransport, Transport, EmbassyTransport};
 
@@ -71,6 +72,8 @@ pub struct NexoClient<'a, T: Transport> {
     /// Pending requests awaiting responses
     #[allow(dead_code)]
     pending: PendingRequests,
+    /// Reconnection configuration
+    reconnect_config: Option<ReconnectConfig>,
     _phantom: core::marker::PhantomData<&'a ()>,
 }
 
@@ -87,6 +90,7 @@ impl<'a> NexoClient<'a, EmbassyTransport<'a>> {
             connected: AtomicBool::new(false),
             server_addr: String::new(),
             pending: PendingRequests::new(),
+            reconnect_config: None,
             _phantom: core::marker::PhantomData,
         }
     }
@@ -104,8 +108,19 @@ impl<'a, T: Transport> NexoClient<'a, T> {
             connected: AtomicBool::new(false),
             server_addr: String::new(),
             pending: PendingRequests::new(),
+            reconnect_config: None,
             _phantom: core::marker::PhantomData,
         }
+    }
+
+    /// Set reconnection configuration
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Reconnection configuration with backoff parameters
+    pub fn with_reconnect_config(mut self, config: ReconnectConfig) -> Self {
+        self.reconnect_config = Some(config);
+        self
     }
 
     /// Connect to a Nexo payment terminal
@@ -161,6 +176,43 @@ impl<'a, T: Transport> NexoClient<'a, T> {
     /// `true` if connected, `false` otherwise
     pub fn is_connected(&self) -> bool {
         self.connected.load(Ordering::Acquire)
+    }
+
+    /// Reconnect to the payment terminal with exponential backoff
+    ///
+    /// This method attempts to reconnect using the configured backoff strategy.
+    /// If no reconnection config is set, returns an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns `NexoError::Connection` if:
+    /// - No reconnection config is set
+    /// - Max reconnection attempts are exceeded
+    /// - Connection cannot be established
+    pub async fn reconnect(&mut self) -> Result<(), NexoError> {
+        let config = self.reconnect_config.ok_or(NexoError::Connection {
+            details: "reconnect config not set",
+        })?;
+
+        // Disconnect if currently connected
+        let addr = self.server_addr.clone();
+        if !addr.is_empty() {
+            self.disconnect().await?;
+        }
+
+        // Attempt reconnection with backoff (no jitter for embassy)
+        let mut backoff = Backoff::new(config);
+        while backoff.wait_without_jitter().await {
+            match self.connect(&addr).await {
+                Ok(()) => return Ok(()),
+                Err(_) => continue, // Try again with backoff
+            }
+        }
+
+        // Max attempts exceeded
+        Err(NexoError::Connection {
+            details: "max reconnection attempts exceeded",
+        })
     }
 
     /// Send a request message
