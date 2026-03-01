@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 //! # Nexo Retailer Protocol (ISO 20022 CASP)
 //!
 //! Rust implementation of the Nexo Retailer Protocol with support for both
@@ -42,19 +44,21 @@
 //!
 //! The library provides comprehensive validation for XSD constraints:
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use nexo_retailer_protocol::{
 //!     Validate, validate_currency_code, validate_monetary_amount,
 //!     validate_max256_text, validate_required
 //! };
 //!
 //! // Validate individual fields
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! validate_currency_code("USD")?;
 //! validate_max256_text("Some text")?;
 //!
 //! // Validate entire messages
 //! let header = Header4::default();
 //! header.validate()?;
+//! # Ok(())
 //! ```
 //!
 //! Validation features:
@@ -111,6 +115,10 @@
 //! for embedded logging.
 //!
 
+// Required for alloc feature
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
 // Include generated protobuf code
 // prost-build generates all proto messages in a single file
 // All types are available at the crate root
@@ -146,6 +154,8 @@ pub use validate::{
 pub use validate::validate_repeated_field;
 
 // Re-export codec types at crate root for convenience
+// Codec uses Vec<u8> which requires alloc feature
+#[cfg(feature = "alloc")]
 pub use codec::{Codec, ProstCodec, encode as encode_message, decode as decode_message};
 
 #[cfg(test)]

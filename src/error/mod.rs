@@ -27,6 +27,12 @@
 use core::error::Error;
 use core::fmt;
 
+// Import alloc types for convenience methods (std-only)
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+#[cfg(feature = "alloc")]
+use alloc::boxed::Box;
+
 pub mod codes;
 
 /// Main error type for Nexo Retailer Protocol operations
@@ -162,12 +168,12 @@ impl From<prost::EncodeError> for NexoError {
 ///
 /// // Missing required field
 /// let err = ValidationError::MissingRequiredField {
-///     field: "SaleRefNo".to_string(),
+///     field: "SaleRefNo",
 /// };
 ///
 /// // Invalid currency code
 /// let err = ValidationError::InvalidCurrencyFormat {
-///     code: "USD".to_string(),
+///     code: "USD",
 /// };
 /// ```
 #[derive(Debug)]
@@ -175,13 +181,13 @@ pub enum ValidationError {
     /// Required field is missing (XSD minOccurs="1" violation)
     MissingRequiredField {
         /// Name of the missing field
-        field: String,
+        field: &'static str,
     },
 
     /// Currency code format validation failed (not ISO 4217 compliant)
     InvalidCurrencyFormat {
         /// The invalid currency code
-        code: String,
+        code: &'static str,
     },
 
     /// Currency code length is not exactly 3 characters
@@ -294,7 +300,8 @@ impl NexoError {
     /// let err = NexoError::connection_owned(format!("failed to connect to {}", addr));
     /// # }
     /// ```
-    pub fn connection_owned<S: Into<String>>(details: S) -> Self {
+    #[cfg(feature = "alloc")]
+    pub fn connection_owned<S: Into<alloc::string::String>>(details: S) -> Self {
         // Convert to owned string but store as static str for compatibility
         // In practice, this leaks the string - acceptable for error paths
         let details_str = details.into();
@@ -319,7 +326,11 @@ impl NexoError {
     /// let err = NexoError::validation_owned(field_name, reason);
     /// # }
     /// ```
-    pub fn validation_owned<F: Into<String>, R: Into<String>>(field: F, reason: R) -> Self {
+    #[cfg(feature = "alloc")]
+    pub fn validation_owned<F: Into<alloc::string::String>, R: Into<alloc::string::String>>(
+        field: F,
+        reason: R,
+    ) -> Self {
         let field_str = field.into();
         let reason_str = reason.into();
         let field_leaked = Box::leak(field_str.into_boxed_str());
@@ -334,7 +345,8 @@ impl NexoError {
     ///
     /// This convenience method allows creating encoding errors with
     /// dynamically allocated error messages.
-    pub fn encoding_owned<S: Into<String>>(details: S) -> Self {
+    #[cfg(feature = "alloc")]
+    pub fn encoding_owned<S: Into<alloc::string::String>>(details: S) -> Self {
         let details_str = details.into();
         let leaked = Box::leak(details_str.into_boxed_str());
         NexoError::Encoding { details: leaked }
@@ -344,7 +356,8 @@ impl NexoError {
     ///
     /// This convenience method allows creating decoding errors with
     /// dynamically allocated error messages.
-    pub fn decoding_owned<S: Into<String>>(details: S) -> Self {
+    #[cfg(feature = "alloc")]
+    pub fn decoding_owned<S: Into<alloc::string::String>>(details: S) -> Self {
         let details_str = details.into();
         let leaked = Box::leak(details_str.into_boxed_str());
         NexoError::Decoding { details: leaked }
@@ -388,12 +401,12 @@ mod tests {
     #[test]
     fn test_validation_error_display() {
         let err = ValidationError::MissingRequiredField {
-            field: "TestField".to_string(),
+            field: "TestField",
         };
         assert_eq!(err.to_string(), "Missing required field: 'TestField'");
 
         let err = ValidationError::InvalidCurrencyFormat {
-            code: "ABC".to_string(),
+            code: "ABC",
         };
         assert_eq!(err.to_string(), "Invalid currency code format: 'ABC'");
 
@@ -438,7 +451,7 @@ mod tests {
         assert!(err.source().is_none());
 
         let val_err = ValidationError::MissingRequiredField {
-            field: "Test".to_string(),
+            field: "Test",
         };
         assert!(val_err.source().is_none());
     }
