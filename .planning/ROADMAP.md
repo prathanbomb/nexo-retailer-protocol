@@ -14,9 +14,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Schema Conversion** - Convert 17 CASP XSD files to protobuf with field number registry and code generation ✓ (2026-02-28)
 - [x] **Phase 2: Core Library** - Implement codec, validation, error handling, and platform feature flags ✓ (2026-03-01)
-- [ ] **Phase 3: Transport Layer** - Build dual runtime (Tokio/Embassy) transport abstraction with custom TCP framing
-- [ ] **Phase 4: Client API** - Deliver POS initiator API with connection management and reconnection
-- [ ] **Phase 5: Server API & Reliability** - Implement concurrent server, heartbeat, logging, and deduplication
+- [x] **Phase 3: Transport Layer** - Build dual runtime (Tokio/Embassy) transport abstraction with custom TCP framing ✓ (2026-03-02)
+- [x] **Phase 4: Client API** - Deliver POS initiator API with connection management and reconnection ✓ (2026-03-02)
+- [x] **Phase 5: Server API & Reliability** - Implement concurrent server, heartbeat, logging, and deduplication ✓ (2026-03-02)
 - [ ] **Phase 6: Testing & Verification** - Comprehensive test suite with property-based, integration, and embedded CI
 
 ## Phase Details
