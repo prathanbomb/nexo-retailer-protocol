@@ -9,6 +9,8 @@
 
 use crate::error::NexoError;
 use crate::server::ConnectionState;
+use crate::server::handler::RequestHandler;
+use crate::server::dispatcher::Dispatcher;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use std::collections::BTreeMap;
@@ -50,6 +52,8 @@ pub struct NexoServer {
     connections: Arc<Mutex<BTreeMap<SocketAddr, ConnectionState>>>,
     /// Flag to signal graceful shutdown
     shutdown_flag: Arc<tokio::sync::Notify>,
+    /// Application handler for processing incoming messages
+    handler: Option<Arc<dyn RequestHandler>>,
 }
 
 impl NexoServer {
@@ -91,7 +95,37 @@ impl NexoServer {
             listener: Arc::new(listener),
             connections: Arc::new(Mutex::new(BTreeMap::new())),
             shutdown_flag: Arc::new(tokio::sync::Notify::new()),
+            handler: None,
         })
+    }
+
+    /// Set the request handler for this server
+    ///
+    /// # Arguments
+    ///
+    /// * `handler` - Application handler implementing `RequestHandler` trait
+    ///
+    /// # Returns
+    ///
+    /// Self for builder pattern chaining
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nexo_retailer_protocol::NexoServer;
+    /// # use nexo_retailer_protocol::server::RequestHandler;
+    /// # use std::sync::Arc;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let handler = Arc::new(MyHandler);
+    /// let server = NexoServer::bind("127.0.0.1:8080").await?
+    ///     .with_handler(handler);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn with_handler(mut self, handler: Arc<dyn RequestHandler>) -> Self {
+        self.handler = Some(handler);
+        self
     }
 
     /// Run the server, accepting connections indefinitely
@@ -149,6 +183,7 @@ impl NexoServer {
     fn spawn_connection_handler(&self, stream: tokio::net::TcpStream, addr: SocketAddr) {
         // Clone Arc references for the spawned task
         let connections = Arc::clone(&self.connections);
+        let handler = self.handler.clone();
 
         // Spawn connection handler task
         tokio::spawn(async move {
@@ -158,9 +193,14 @@ impl NexoServer {
             // Insert connection state into the HashMap
             connections.lock().await.insert(addr, state.clone());
 
-            // Handle connection (placeholder - will be implemented in later plans)
-            // For now, just keep the connection alive
-            let result = Self::handle_connection(stream, &mut state).await;
+            // Handle connection with dispatcher if handler is set
+            let result = if let Some(handler) = handler {
+                let dispatcher = Dispatcher::new(handler);
+                Self::handle_connection_with_dispatcher(stream, &mut state, dispatcher).await
+            } else {
+                // No handler set - use basic echo handler
+                Self::handle_connection(stream, &mut state).await
+            };
 
             // Clean up connection state when handler exits
             connections.lock().await.remove(&addr);
@@ -172,27 +212,21 @@ impl NexoServer {
         });
     }
 
-    /// Handle a single connection
+    /// Handle a single connection with dispatcher
     ///
-    /// This is a placeholder that will be implemented in later plans to:
-    /// - Read messages from the client
-    /// - Process messages
-    /// - Send responses
-    /// - Handle deduplication
-    /// - Handle heartbeat
-    ///
-    /// For now, it just keeps the connection alive by reading until EOF.
+    /// This method reads messages from the client, dispatches them to the handler,
+    /// and sends responses back. It continues until the client disconnects.
     ///
     /// # Arguments
     ///
     /// * `stream` - The TCP stream for the connection
     /// * `state` - The connection state (updated in-place)
-    async fn handle_connection(
+    /// * `dispatcher` - Message dispatcher for routing to handlers
+    async fn handle_connection_with_dispatcher(
         mut stream: tokio::net::TcpStream,
         state: &mut ConnectionState,
+        dispatcher: Dispatcher,
     ) -> Result<(), NexoError> {
-        // Placeholder: Read until EOF (client disconnects)
-        // In later plans, this will be replaced with message handling
         let mut buffer = [0u8; 4096];
         loop {
             let n = stream.read(&mut buffer).await.map_err(|e| {
@@ -207,8 +241,60 @@ impl NexoServer {
             // Increment message count
             state.increment_message_count();
 
-            // Placeholder: In later plans, we'll parse and handle messages
-            // For now, just echo back (basic functionality)
+            // Dispatch message to handler and get response
+            let response_bytes = dispatcher.dispatch(&buffer[..n]).await;
+
+            match response_bytes {
+                Ok(bytes) => {
+                    // Send response back to client
+                    if !bytes.is_empty() {
+                        stream.write_all(&bytes).await.map_err(|e| {
+                            NexoError::connection_owned(format!("write error: {}", e))
+                        })?;
+                    }
+                    // If bytes is empty (None acknowledgment), don't send anything
+                }
+                Err(e) => {
+                    // Handler returned error - log it and continue
+                    // Don't crash the server due to handler errors
+                    eprintln!("Handler error for connection {:?}: {:?}", state.addr(), e);
+                    // Optionally send error response to client
+                    // For now, just continue processing
+                }
+            }
+        }
+    }
+
+    /// Handle a single connection (fallback without dispatcher)
+    ///
+    /// This is a placeholder that keeps the connection alive by echoing back
+    /// any data received. Used when no handler is set.
+    ///
+    /// # Arguments
+    ///
+    /// * `stream` - The TCP stream for the connection
+    /// * `state` - The connection state (updated in-place)
+    async fn handle_connection(
+        mut stream: tokio::net::TcpStream,
+        state: &mut ConnectionState,
+    ) -> Result<(), NexoError> {
+        // Placeholder: Read until EOF (client disconnects)
+        // Echo back any data received
+        let mut buffer = [0u8; 4096];
+        loop {
+            let n = stream.read(&mut buffer).await.map_err(|e| {
+                NexoError::connection_owned(format!("read error: {}", e))
+            })?;
+
+            if n == 0 {
+                // EOF - client disconnected
+                return Ok(());
+            }
+
+            // Increment message count
+            state.increment_message_count();
+
+            // Echo back (basic functionality)
             stream.write_all(&buffer[..n]).await.map_err(|e| {
                 NexoError::connection_owned(format!("write error: {}", e))
             })?;
