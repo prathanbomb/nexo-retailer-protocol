@@ -53,6 +53,9 @@ pub mod connection;
 // Message deduplication cache for replay attack prevention
 pub mod dedup;
 
+// Heartbeat/keepalive protocol for dead connection detection
+pub mod heartbeat;
+
 // Request handler trait for application callbacks
 pub mod handler;
 
@@ -73,6 +76,9 @@ pub use connection::ConnectionState;
 
 // Re-export DeduplicationCache for convenience
 pub use dedup::DeduplicationCache;
+
+// Re-export HeartbeatConfig and HeartbeatMonitor for convenience
+pub use heartbeat::{HeartbeatConfig, HeartbeatMonitor};
 
 // Re-export RequestHandler trait for convenience
 pub use handler::RequestHandler;

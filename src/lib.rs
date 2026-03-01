@@ -356,6 +356,9 @@ pub use server::ConnectionState;
 // Re-export DeduplicationCache for server usage
 pub use server::DeduplicationCache;
 
+// Re-export HeartbeatConfig and HeartbeatMonitor for server usage
+pub use server::{HeartbeatConfig, HeartbeatMonitor};
+
 // Re-export RequestHandler for server usage
 #[cfg(feature = "std")]
 pub use server::RequestHandler;
