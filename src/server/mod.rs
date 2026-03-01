@@ -56,6 +56,9 @@ pub mod dedup;
 // Request handler trait for application callbacks
 pub mod handler;
 
+// Message dispatcher for routing incoming messages
+pub mod dispatcher;
+
 // Runtime-specific implementations
 #[cfg(feature = "std")]
 pub mod std_impl;
@@ -73,3 +76,6 @@ pub use dedup::DeduplicationCache;
 
 // Re-export RequestHandler trait for convenience
 pub use handler::RequestHandler;
+
+// Re-export Dispatcher for convenience
+pub use dispatcher::Dispatcher;

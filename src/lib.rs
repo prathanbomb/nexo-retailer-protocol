@@ -360,6 +360,10 @@ pub use server::DeduplicationCache;
 #[cfg(feature = "std")]
 pub use server::RequestHandler;
 
+// Re-export Dispatcher for server usage
+#[cfg(feature = "std")]
+pub use server::Dispatcher;
+
 #[cfg(all(feature = "embassy-net", not(feature = "std")))]
 pub use client::NexoClient;
 
