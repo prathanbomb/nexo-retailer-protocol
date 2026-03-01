@@ -368,6 +368,10 @@ impl NexoError {
 mod tests {
     use super::*;
 
+    // Import ToString for no_std tests with alloc
+    #[cfg(feature = "alloc")]
+    use prost::alloc::string::ToString;
+
     #[test]
     fn test_error_display() {
         let err = NexoError::Connection {

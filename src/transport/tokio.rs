@@ -503,9 +503,13 @@ impl Transport for TokioTransport {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
+
+    // Import ToString for no_std tests with alloc
+    #[cfg(feature = "alloc")]
+    use prost::alloc::string::ToString;
 
     // Helper to get a random available port
     fn get_available_port() -> u16 {

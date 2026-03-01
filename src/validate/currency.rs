@@ -102,7 +102,7 @@ pub fn validate_currency_code(code: &str) -> Result<(), ValidationError> {
     // Check format: Only uppercase ASCII letters
     if !code.bytes().all(|b| b.is_ascii_uppercase()) {
         return Err(ValidationError::InvalidCurrencyFormat {
-            code: code.to_string(),
+            code: "currency_code",
         });
     }
 
@@ -202,6 +202,10 @@ pub fn validate_monetary_amount(amount: &crate::ActiveCurrencyAndAmount) -> Resu
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Import ToString for no_std tests with alloc
+    #[cfg(feature = "alloc")]
+    use prost::alloc::string::ToString;
 
     // ------------------------------------------------------------------------
     // Currency Code Validation Tests

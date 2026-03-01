@@ -201,6 +201,10 @@ pub use transport::{EmbassyTransport, EmbassyTimeoutConfig};
 mod tests {
     use super::*;
 
+    // Import ToString for no_std tests with alloc
+    #[cfg(feature = "alloc")]
+    use prost::alloc::string::ToString;
+
     #[test]
     fn test_library_builds() {
         // Basic smoke test - library compiles
@@ -209,6 +213,7 @@ mod tests {
 
     // Integration tests demonstrating end-to-end validation
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_validation_integration_valid_message() {
         // Test a valid monetary amount
         let amount = ActiveCurrencyAndAmount {
@@ -220,6 +225,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_validation_integration_invalid_currency() {
         // Test invalid currency code (lowercase)
         let amount = ActiveCurrencyAndAmount {
@@ -231,6 +237,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_validation_integration_invalid_nanos() {
         // Test invalid nanos (sign mismatch)
         let amount = ActiveCurrencyAndAmount {
@@ -242,6 +249,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_validation_integration_header_validation() {
         // Test Header4 validation
         let header = Header4 {
@@ -254,6 +262,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_validation_integration_header_long_field() {
         // Test Header4 with field exceeding Max70Text limit
         let header = Header4 {
@@ -272,22 +281,20 @@ mod tests {
         assert!(validate_max256_text("Hello").is_ok());
         assert!(validate_max256_text(&"A".repeat(257)).is_err());
 
-        let field = Some("value".to_string());
+        let field = Some("value");
         assert!(validate_required(&field, "TestField").is_ok());
 
-        let none_field: Option<String> = None;
+        let none_field: Option<&str> = None;
         assert!(validate_required(&none_field, "TestField").is_err());
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_validation_integration_alloc_feature() {
         // This test validates that alloc feature enables collection validation
         // It only compiles when alloc feature is enabled
-        #[cfg(feature = "alloc")]
-        {
-            let items = vec![1, 2, 3];
-            assert!(validate_repeated_field(&items, 10, "Items").is_ok());
-            assert!(validate_repeated_field(&items, 2, "Items").is_err());
-        }
+        let items = vec![1, 2, 3];
+        assert!(validate_repeated_field(&items, 10, "Items").is_ok());
+        assert!(validate_repeated_field(&items, 2, "Items").is_err());
     }
 }

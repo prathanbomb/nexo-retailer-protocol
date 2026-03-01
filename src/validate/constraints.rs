@@ -72,12 +72,12 @@ use crate::error::ValidationError;
 /// let field: Option<String> = None;
 /// assert!(validate_required(&field, "FieldName").is_err());
 /// ```
-pub fn validate_required<T>(field: &Option<T>, field_name: &str) -> Result<(), ValidationError> {
+pub fn validate_required<T>(field: &Option<T>, field_name: &'static str) -> Result<(), ValidationError> {
     if field.is_some() {
         Ok(())
     } else {
         Err(ValidationError::MissingRequiredField {
-            field: field_name.to_string(),
+            field: field_name,
         })
     }
 }
@@ -107,12 +107,12 @@ pub fn validate_required<T>(field: &Option<T>, field_name: &str) -> Result<(), V
 /// assert!(validate_positive_i64(0, "Count").is_err());
 /// assert!(validate_positive_i64(-1, "Count").is_err());
 /// ```
-pub fn validate_positive_i64(value: i64, field: &str) -> Result<(), ValidationError> {
+pub fn validate_positive_i64(value: i64, field: &'static str) -> Result<(), ValidationError> {
     if value > 0 {
         Ok(())
     } else {
         Err(ValidationError::MissingRequiredField {
-            field: field.to_string(),
+            field,
         })
     }
 }
@@ -141,12 +141,12 @@ pub fn validate_positive_i64(value: i64, field: &str) -> Result<(), ValidationEr
 /// assert!(validate_non_negative_i32(100, "Index").is_ok());
 /// assert!(validate_non_negative_i32(-1, "Index").is_err());
 /// ```
-pub fn validate_non_negative_i32(value: i32, field: &str) -> Result<(), ValidationError> {
+pub fn validate_non_negative_i32(value: i32, field: &'static str) -> Result<(), ValidationError> {
     if value >= 0 {
         Ok(())
     } else {
         Err(ValidationError::MissingRequiredField {
-            field: field.to_string(),
+            field,
         })
     }
 }
@@ -186,13 +186,13 @@ pub fn validate_non_negative_i32(value: i32, field: &str) -> Result<(), Validati
 pub fn validate_enum_value<T: PartialEq>(
     value: T,
     valid_values: &[T],
-    field: &str,
+    field: &'static str,
 ) -> Result<(), ValidationError> {
     if valid_values.contains(&value) {
         Ok(())
     } else {
         Err(ValidationError::MissingRequiredField {
-            field: field.to_string(),
+            field,
         })
     }
 }
@@ -445,6 +445,10 @@ impl Validate for crate::CardData8 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Import ToString for no_std tests with alloc
+    #[cfg(feature = "alloc")]
+    use prost::alloc::string::ToString;
 
     // ------------------------------------------------------------------------
     // validate_required tests
