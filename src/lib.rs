@@ -115,6 +115,37 @@
 //! - Handles partial reads/writes automatically
 //! - Works with all prost::Message types
 //!
+//! ## Client API
+//!
+//! The library provides a high-level client API for POS initiators:
+//!
+//! ```rust,no_run
+//! use nexo_retailer_protocol::NexoClient;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // Create a new client
+//! let mut client = NexoClient::new();
+//!
+//! // Connect to payment terminal
+//! client.connect("192.168.1.100:8080").await?;
+//!
+//! // Send a payment request
+//! let request = Casp001Document::default();
+//! let response: Casp002Document = client.send_and_receive(&request).await?;
+//!
+//! // Disconnect when done
+//! client.disconnect().await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! The client API:
+//! - Provides connection management (connect, disconnect, is_connected)
+//! - Supports both Tokio (std) and Embassy (no_std) runtimes
+//! - Handles request/response correlation automatically
+//! - Uses length-prefixed framing for message transmission
+//!
 //! ## Usage
 //!
 //! ```rust,no_run
@@ -198,6 +229,14 @@ pub use transport::TimeoutConfig;
 #[cfg(feature = "embassy-net")]
 pub use transport::{EmbassyTransport, EmbassyTimeoutConfig};
 
+// Re-export NexoClient at crate root for ergonomic API
+// The client is generic over Transport, so it works with both std and embassy
+#[cfg(feature = "std")]
+pub use client::NexoClient;
+
+#[cfg(all(feature = "embassy-net", not(feature = "std")))]
+pub use client::NexoClient;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -205,6 +244,14 @@ mod tests {
     // Import ToString for no_std tests with alloc
     #[cfg(feature = "alloc")]
     use prost::alloc::string::ToString;
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn test_client_exported_at_crate_root() {
+        // Verify NexoClient is accessible from crate root
+        let client = NexoClient::new();
+        assert!(!client.is_connected());
+    }
 
     #[test]
     fn test_library_builds() {
