@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T18:02:21.735Z"
+last_updated: "2026-03-01T18:10:25.201Z"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 24
-  completed_plans: 23
+  completed_plans: 25
 ---
 
 ---
@@ -78,11 +78,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 5 of 6 (Server API & Reliability)
-Plan: 05-01 (Server Connection Manager) - COMPLETE
-Status: Executing Phase 5 - 1 of 6 plans complete
-Last activity: 2026-03-01 — Completed plan 05-01: Server Connection Manager and Concurrent Request Handling (3.6 min)
+Plan: 05-05 (Integrate Structured Logging) - COMPLETE
+Status: Executing Phase 5 - 5 of 6 plans complete
+Last activity: 2026-03-02 — Completed plan 05-05: Integrate Structured Logging (2.9 min)
 
-Progress: [███████░░░░] 60% (Phase 4: 100% complete, Phase 5: 17% complete - 1/6 plans done)
+Progress: [██████████░] 83% (Phase 4: 100% complete, Phase 5: 83% complete - 5/6 plans done)
 
 ## Performance Metrics
 
@@ -99,7 +99,7 @@ Progress: [███████░░░░] 60% (Phase 4: 100% complete, Phase
 | 2. Core Library | 3 | 3/3 | 91 min |
 | 3. Transport Layer | 6 | 6/6 | 173 min |
 | 4. Client API | 5 | 5/5 | 68 min |
-| 5. Server API & Reliability | 1 | 1/6 | 4 min |
+| 5. Server API & Reliability | 5 | 5/6 | 88 min |
 | 6. Testing & Verification | 0 | 0/6 | - |
 
 **Recent Trend:**
@@ -128,6 +128,7 @@ Progress: [███████░░░░] 60% (Phase 4: 100% complete, Phase
 | Phase 05-server-api-reliability P05-01 | 4 | 3 tasks | 5 files |
 | Phase 05-server-api-reliability P05-03 | 4 | 3 tasks | 6 files |
 | Phase 05 P05-02 | 386 | 3 tasks | 7 files |
+| Phase 05 P05-05 | 177 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -202,6 +203,14 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 05-server-api-reliability P05-01]: tokio::spawn per connection with automatic cleanup in async move block
 - [Phase 05-server-api-reliability P05-01]: Echo placeholder in handle_connection() until message dispatcher added in 05-02
 - [Phase 05-server-api-reliability]: Per-connection deduplication cache with 5-minute TTL for replay attack prevention
+- [Phase 05-04]: Heartbeat protocol with tokio::select! for concurrent message handling and dead connection detection
+- [Phase 05-04]: tokio::time::interval for precise heartbeat timing with drift correction
+- [Phase 05-04]: 3:1 timeout-to-interval ratio (90s timeout, 30s interval) for robustness
+- [Phase 05-04]: Per-connection heartbeat config via Option<HeartbeatConfig> for flexibility
+- [Phase 05-05]: tracing framework (not log crate) for async-aware structured logging with span-based correlation
+- [Phase 05-05]: env-filter in tracing-subscriber for RUST_LOG environment variable configuration
+- [Phase 05-05]: Direct logging with context fields instead of entered() guards for tokio::spawn compatibility
+- [Phase 05-05]: Feature-gated tracing code with #[cfg(feature = "std")] for no_std compatibility
 
 ### Pending Todos
 
@@ -221,7 +230,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-01 (Phase 5 execution)
-Stopped at: Completed plan 05-01 - Server Connection Manager and Concurrent Request Handling
-Next step: Execute plan 05-02 - Message Dispatcher and Request Routing
-Summary file: .planning/phases/05-server-api-reliability/05-01-SUMMARY.md
+Last session: 2026-03-02 (Phase 5 execution)
+Stopped at: Completed plan 05-05 - Integrate Structured Logging
+Next step: Execute plan 05-06 - Error Recovery and Resilience Patterns
+Summary file: .planning/phases/05-server-api-reliability/05-05-SUMMARY.md
