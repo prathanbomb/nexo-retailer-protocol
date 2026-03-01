@@ -84,6 +84,36 @@ cargo build --features defmt --target thumbv7em-none-eabihf
 | Embedded with defmt logging | `cargo build --features defmt --no-default-features` |
 | Full embedded | `cargo build --features alloc,defmt --no-default-features` |
 
+## Testing
+
+### Unit Tests
+
+Run unit tests with:
+
+```bash
+cargo test
+```
+
+### Integration Tests
+
+The project includes integration tests that verify the complete client request/response flow with a mock Nexo server:
+
+```bash
+# Run all integration tests
+cargo test --test client_integration
+
+# Run specific integration test
+cargo test --test client_integration test_client_connects_to_server -- --exact
+```
+
+Integration tests cover:
+- Client connection to mock server
+- Payment request sending using builder pattern
+- Request/response correlation
+- Reconnection logic with server failure simulation
+- Timeout handling with delayed response simulation
+- Builder pattern validation
+
 ## Dependency Audit
 
 Check for std leakage in no_std builds:
