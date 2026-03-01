@@ -37,6 +37,9 @@
 //! # }
 //! ```
 
+// Builder pattern for message construction
+pub mod builder;
+
 // Runtime-specific implementations
 #[cfg(feature = "std")]
 pub mod std;
