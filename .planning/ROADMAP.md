@@ -107,14 +107,14 @@ Plans:
   5. Late responses are rejected after timeout to prevent state confusion
   6. Integration tests verify complete request/response flow with mock server
 
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 04-01: Implement client connection management and request/response API
-- [ ] 04-02: Implement builder pattern for message construction
-- [ ] 04-03: Implement reconnection logic with exponential backoff
-- [ ] 04-04: Implement timeout handling and late response rejection
-- [ ] 04-05: Write client integration tests with mock server
+- [ ] 04-01-PLAN.md — Implement client connection management and request/response API (CLIENT-01, CLIENT-03)
+- [ ] 04-02-PLAN.md — Implement builder pattern for message construction (CLIENT-02)
+- [ ] 04-03-PLAN.md — Implement reconnection logic with exponential backoff (CLIENT-05, RELY-03)
+- [ ] 04-04-PLAN.md — Implement timeout handling and late response rejection (CLIENT-06, CLIENT-07)
+- [ ] 04-05-PLAN.md — Write client integration tests with mock server (CLIENT-08)
 
 ### Phase 5: Server API & Reliability
 

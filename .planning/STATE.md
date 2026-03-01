@@ -2,15 +2,41 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
+status: unknown
+last_updated: "2026-03-01T17:16:19.895Z"
+progress:
+  total_phases: 4
+  completed_phases: 3
+  total_plans: 18
+  completed_plans: 15
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
+last_updated: "2026-03-01T16:11:45.714Z"
+progress:
+  total_phases: 3
+  completed_phases: 3
+  total_plans: 13
+  completed_plans: 14
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-01T16:13:00.000Z"
+last_updated: "2026-03-01T17:15:54.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 27
-  completed_plans: 11
-  current_plan_phase: 03-transport-layer
-  current_plan_number: 05
+  completed_plans: 12
+  current_plan_phase: 04-client-api
+  current_plan_number: 01
   current_plan_status: complete
 ---
 
@@ -21,16 +47,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Enable embedded payment devices to communicate using the Nexo Retailer Protocol with a Rust implementation that works in both bare metal (no_std) and standard environments.
-**Current focus:** Phase 3: Transport Layer
+**Current focus:** Phase 4: Client API
 
 ## Current Position
 
-Phase: 3 of 6 (Transport Layer)
-Plan: 5 of 6 in current phase (COMPLETE)
-Status: In Progress - Embassy transport export and tests complete
-Last activity: 2026-03-01 — Plan 03-05 complete (3/3 tasks, Embassy transport exported, unit and integration tests)
+Phase: 4 of 6 (Client API)
+Plan: 1 of 5 in current phase (COMPLETE)
+Status: In Progress - Client connection management and request/response API complete
+Last activity: 2026-03-01 — Plan 04-01 complete (5 tasks, NexoClient with connection management, request correlation, and send/receive methods)
 
-Progress: [████░░░░░░░] 41% (Phase 3: 83% complete - Plans 01-05 done, 1 plan remaining)
+Progress: [█████░░░░░░] 44% (Phase 4: 20% complete - Plan 01 done, 4 plans remaining)
 
 ## Performance Metrics
 
@@ -67,6 +93,7 @@ Progress: [████░░░░░░░] 41% (Phase 3: 83% complete - Plans
 | Phase 03-transport-layer P03-04 | 3 | 3 tasks | 4 files |
 | Phase 03-transport-layer P03-05 | 20 | 3 tasks | 7 files |
 | Phase 03-transport-layer P03-06 | 4 | 4 tasks | 4 files |
+| Phase 04-client-api P01 | 204 | 5 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -124,6 +151,9 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 03-transport-layer P03-05]: Remove is_open() calls (API changed in Embassy 0.8)
 - [Phase 03-transport-layer P03-05]: Add ToString import to test modules for no_std compatibility
 - [Phase 03-transport-layer P03-05]: Gate tokio tests with #[cfg(all(test, feature = "std"))]
+- [Phase 04-client-api]: Used Arc<AtomicBool> for thread-safe connection state in std environments
+- [Phase 04-client-api]: Generic NexoClient over Transport trait enables single codebase for std and no_std
+- [Phase 04-client-api]: Feature-gated NexoClient exports prevent conflicts when both std and embassy enabled
 
 ### Pending Todos
 

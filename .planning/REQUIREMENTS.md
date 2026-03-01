@@ -58,9 +58,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Client API
 
-- [ ] **CLIENT-01**: Client API for POS initiators (request/response pattern)
+- [x] **CLIENT-01**: Client API for POS initiators (request/response pattern)
 - [ ] **CLIENT-02**: Builder pattern for complex message construction
-- [ ] **CLIENT-03**: Connection management (connect, disconnect)
+- [x] **CLIENT-03**: Connection management (connect, disconnect)
 - [ ] **CLIENT-04**: Request/response correlation with pending request tracking
 - [ ] **CLIENT-05**: Basic reconnection logic with exponential backoff
 - [ ] **CLIENT-06**: Unique message ID generation for replay protection
@@ -169,9 +169,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-03 | Phase 2 | Complete |
 | PLAT-04 | Phase 2 | Pending |
 | PLAT-05 | Phase 2 | Pending |
-| CLIENT-01 | Phase 4 | Pending |
+| CLIENT-01 | Phase 4 | Complete |
 | CLIENT-02 | Phase 4 | Pending |
-| CLIENT-03 | Phase 4 | Pending |
+| CLIENT-03 | Phase 4 | Complete |
 | CLIENT-04 | Phase 4 | Pending |
 | CLIENT-05 | Phase 4 | Pending |
 | CLIENT-06 | Phase 4 | Pending |
