@@ -146,6 +146,39 @@
 //! - Handles request/response correlation automatically
 //! - Uses length-prefixed framing for message transmission
 //!
+//! ### Automatic Reconnection
+//!
+//! The client supports automatic reconnection with exponential backoff:
+//!
+//! ```rust,no_run
+//! use nexo_retailer_protocol::{NexoClient, ReconnectConfig};
+//! use std::time::Duration;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // Create client with reconnection config
+//! let config = ReconnectConfig::new()
+//!     .with_base_delay(Duration::from_millis(100))
+//!     .with_max_delay(Duration::from_secs(60))
+//!     .with_max_attempts(5);
+//!
+//! let mut client = NexoClient::new()
+//!     .with_reconnect_config(config);
+//!
+//! client.connect("192.168.1.100:8080").await?;
+//!
+//! // After connection lost, reconnect with backoff
+//! client.reconnect().await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! Reconnection features:
+//! - Exponential backoff: delay = base * 2^attempt (100ms → 200ms → 400ms...)
+//! - Max delay cap prevents unbounded wait times
+//! - Jitter (std only) prevents thundering herd when multiple clients reconnect
+//! - Configurable max attempts allows infinite retry if set to u32::MAX
+//!
 //! ### Builder Pattern
 //!
 //! The library provides builder structs for fluent, type-safe message construction:
@@ -275,6 +308,9 @@ pub use client::NexoClient;
 
 #[cfg(all(feature = "embassy-net", not(feature = "std")))]
 pub use client::NexoClient;
+
+// Re-export reconnection types at crate root
+pub use client::reconnect::{ReconnectConfig, Backoff};
 
 // Re-export builders at crate root for ergonomic message construction
 pub use client::builder::{

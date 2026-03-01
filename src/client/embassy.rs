@@ -197,15 +197,23 @@ impl<'a, T: Transport> NexoClient<'a, T> {
         // Disconnect if currently connected
         let addr = self.server_addr.clone();
         if !addr.is_empty() {
-            self.disconnect().await?;
+            self.connected.store(false, Ordering::Release);
+            self.transport = None;
         }
 
         // Attempt reconnection with backoff (no jitter for embassy)
         let mut backoff = Backoff::new(config);
         while backoff.wait_without_jitter().await {
-            match self.connect(&addr).await {
-                Ok(()) => return Ok(()),
-                Err(_) => continue, // Try again with backoff
+            // For embassy, we need to use the existing transport
+            if self.transport.is_some() {
+                match self.connect(&addr).await {
+                    Ok(()) => return Ok(()),
+                    Err(_) => continue, // Try again with backoff
+                }
+            } else {
+                return Err(NexoError::Connection {
+                    details: "transport not initialized - use with_transport()",
+                });
             }
         }
 
