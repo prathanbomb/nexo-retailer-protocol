@@ -8,6 +8,9 @@ use core::time::Duration;
 #[cfg(feature = "std")]
 use rand::Rng;
 
+#[cfg(feature = "embassy-net")]
+use embassy_time::Duration as EmbassyDuration;
+
 /// Configuration for reconnection behavior
 ///
 /// # Example
@@ -187,7 +190,8 @@ impl Backoff {
         }
 
         let delay = self.next_delay();
-        embassy_time::Timer::after(delay).await;
+        let embassy_delay = EmbassyDuration::from_millis(delay.as_millis() as u64);
+        embassy_time::Timer::after(embassy_delay).await;
         true
     }
 }
