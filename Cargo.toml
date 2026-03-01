@@ -48,7 +48,7 @@ rand = { version = "0.8", optional = true }
 uuid = { version = "1.0", optional = true, default-features = false, features = ["v4"] }
 async-trait = { version = "0.1", optional = true }
 tracing = { version = "0.1", optional = true, default-features = false }
-tracing-subscriber = { version = "0.3", optional = true, features = ["env-filter"], default-features = false }
+tracing-subscriber = { version = "0.3", optional = true, features = ["env-filter", "fmt"], default-features = false }
 embassy-executor = { version = "0.9", optional = true, default-features = false, features = ["defmt", "arch-cortex-m", "executor-thread"] }
 embassy-time = { version = "0.5", optional = true, default-features = false, features = ["defmt"] }
 embassy-net = { version = "0.8", optional = true, default-features = false, features = ["tcp", "udp", "dhcpv4", "proto-ipv4", "medium-ethernet"] }
@@ -71,6 +71,11 @@ required-features = ["embassy"]
 [[example]]
 name = "echo_server"
 path = "examples/echo_server.rs"
+required-features = ["std"]
+
+[[example]]
+name = "tokio_server_with_logging"
+path = "examples/tokio_server_with_logging.rs"
 required-features = ["std"]
 
 # Integration tests

@@ -44,6 +44,15 @@ use tokio::main;
 #[cfg(feature = "std")]
 #[main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // Initialize tracing-subscriber for client logging
+    // This enables structured logging with RUST_LOG support
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_default_env()
+                .add_directive(tracing::Level::INFO.into())
+        )
+        .init();
+
     // Parse command-line arguments
     let args: Vec<String> = std::env::args().collect();
 

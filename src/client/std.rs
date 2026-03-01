@@ -21,6 +21,9 @@ use core::time::Duration;
 
 use tokio::sync::oneshot;
 
+#[cfg(feature = "std")]
+use tracing::{info, debug, warn};
+
 /// Pending request tracking using oneshot channels
 ///
 /// This struct manages in-flight requests by mapping message IDs to oneshot
@@ -174,10 +177,17 @@ impl NexoClient<TokioTransport> {
     /// # }
     /// ```
     pub async fn connect(&mut self, addr: &str) -> Result<(), NexoError> {
+        #[cfg(feature = "std")]
+        info!(addr = %addr, "Connecting to server");
+
         let transport = TokioTransport::connect(addr, Duration::from_secs(10)).await?;
         self.transport = Some(FramedTransport::new(transport));
         self.server_addr = addr.to_string();
         self.connected.store(true, Ordering::Release);
+
+        #[cfg(feature = "std")]
+        info!("Connected successfully");
+
         Ok(())
     }
 
@@ -394,6 +404,9 @@ impl<T: Transport> NexoClient<T> {
                 details: "transport not initialized",
             })?;
 
+        #[cfg(feature = "std")]
+        debug!("Sending request");
+
         transport.send_message(request).await?;
         Ok(())
     }
@@ -439,6 +452,10 @@ impl<T: Transport> NexoClient<T> {
             })?;
 
         let msg = transport.recv_message().await?;
+
+        #[cfg(feature = "std")]
+        debug!("Response received");
+
         Ok(msg)
     }
 
@@ -545,6 +562,9 @@ impl<T: Transport> NexoClient<T> {
             }
             Err(_) => {
                 // Timeout expired
+                #[cfg(feature = "std")]
+                warn!(message_id = %message_id, "Request timed out");
+
                 self.pending.cleanup(message_id);
                 Err(NexoError::Timeout)
             }
