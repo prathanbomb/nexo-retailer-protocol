@@ -27,10 +27,18 @@ defmt = ["dep:defmt"]
 # prost: protobuf codec with no_std support
 # defmt: embedded logging (optional, for no_std environments)
 # heapless: data structures without heap allocation (optional)
+# tokio: async runtime for std environments (optional)
+# embassy-*: async runtime for no_std embedded environments (optional)
 [dependencies]
 prost = { version = "0.14", default-features = false, features = ["derive"] }
 defmt = { version = "0.3", optional = true }
 heapless = { version = "0.8", optional = true }
+tokio = { version = "1", optional = true, features = ["net", "time", "io-util"], default-features = false }
+tokio-util = { version = "0.7", optional = true, features = ["codec"], default-features = false }
+embassy-executor = { version = "0.9", optional = true, features = ["defmt", "arch-cortex-m", "executor-thread"] }
+embassy-time = { version = "0.5", optional = true, features = ["defmt"] }
+embassy-net = { version = "0.8", optional = true }
+embassy-futures = { version = "0.1", optional = true }
 
 [build-dependencies]
 prost-build = "0.14"

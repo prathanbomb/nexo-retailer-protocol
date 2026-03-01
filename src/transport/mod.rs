@@ -137,7 +137,7 @@ mod tests {
         async fn read(&mut self, _buf: &mut [u8]) -> Result<usize, Self::Error> {
             if !self.connected {
                 return Err(NexoError::Connection {
-                    details: "Not connected".to_string(),
+                    details: "Not connected",
                 });
             }
             Ok(0)
@@ -146,7 +146,7 @@ mod tests {
         async fn write(&mut self, _buf: &[u8]) -> Result<usize, Self::Error> {
             if !self.connected {
                 return Err(NexoError::Connection {
-                    details: "Not connected".to_string(),
+                    details: "Not connected",
                 });
             }
             Ok(0)

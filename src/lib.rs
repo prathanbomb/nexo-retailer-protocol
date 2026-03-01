@@ -92,6 +92,29 @@
 //! - Is no_std compatible for bare-metal environments
 //! - Provides trait abstraction for testing with mock codecs
 //!
+//! ## Transport Layer
+//!
+//! The library provides a runtime-agnostic transport trait for sending messages over TCP:
+//!
+//! ```rust,ignore
+//! use nexo_retailer_protocol::{Transport, FramedTransport};
+//!
+//! // Any type implementing Transport can be wrapped with FramedTransport
+//! let transport = MyTransport::new();
+//! let mut framed = FramedTransport::new(transport);
+//!
+//! // Send/receive messages with length-prefixed framing
+//! framed.send_message(&message).await?;
+//! let received = framed.recv_message::<MessageType>().await?;
+//! ```
+//!
+//! The transport layer:
+//! - Provides runtime-agnostic trait for both Tokio (std) and Embassy (no_std)
+//! - Implements length-prefixed TCP framing (4-byte big-endian)
+//! - Enforces 4MB message size limits
+//! - Handles partial reads/writes automatically
+//! - Works with all prost::Message types
+//!
 //! ## Usage
 //!
 //! ```rust,no_run
@@ -128,6 +151,7 @@ include!("protos/nexo.casp.v1.rs");
 pub mod codec;
 pub mod error;
 pub mod features;
+pub mod transport;
 pub mod validate;
 
 // Re-export commonly used error types at crate root
@@ -157,6 +181,9 @@ pub use validate::validate_repeated_field;
 // Codec uses Vec<u8> which requires alloc feature
 #[cfg(feature = "alloc")]
 pub use codec::{Codec, ProstCodec, encode as encode_message, decode as decode_message};
+
+// Re-export transport types at crate root for convenience
+pub use transport::{Transport, FramedTransport};
 
 #[cfg(test)]
 mod tests {

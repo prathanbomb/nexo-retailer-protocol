@@ -87,11 +87,7 @@ impl<T: Transport> FramedTransport<T> {
         // Validate message size
         if encoded.len() > MAX_FRAME_SIZE {
             return Err(NexoError::Encoding {
-                details: format!(
-                    "Message size {} exceeds maximum frame size {}",
-                    encoded.len(),
-                    MAX_FRAME_SIZE
-                ),
+                details: "Message size exceeds maximum frame size (4MB)",
             }
             .into());
         }
@@ -129,11 +125,7 @@ impl<T: Transport> FramedTransport<T> {
         // Validate message size
         if length > MAX_FRAME_SIZE {
             return Err(NexoError::Decoding {
-                details: format!(
-                    "Message size {} exceeds maximum frame size {}",
-                    length,
-                    MAX_FRAME_SIZE
-                ),
+                details: "Message size exceeds maximum frame size (4MB)",
             }
             .into());
         }
@@ -143,8 +135,8 @@ impl<T: Transport> FramedTransport<T> {
         self.read_exact(&mut buffer).await?;
 
         // Decode message
-        let msg = M::decode(&*buffer).map_err(|e| NexoError::Decoding {
-            details: format!("Failed to decode message: {}", e),
+        let msg = M::decode(&*buffer).map_err(|_| NexoError::Decoding {
+            details: "Failed to decode protobuf message",
         })?;
 
         Ok(msg)
@@ -164,7 +156,7 @@ impl<T: Transport> FramedTransport<T> {
             let n = self.inner.write(&buf[total_written..]).await?;
             if n == 0 {
                 return Err(NexoError::Connection {
-                    details: "Write returned 0 bytes (connection closed)".to_string(),
+                    details: "Write returned 0 bytes (connection closed)",
                 }
                 .into());
             }
@@ -187,7 +179,7 @@ impl<T: Transport> FramedTransport<T> {
             let n = self.inner.read(&mut buf[total_read..]).await?;
             if n == 0 {
                 return Err(NexoError::Connection {
-                    details: "Read returned 0 bytes (unexpected EOF)".to_string(),
+                    details: "Read returned 0 bytes (unexpected EOF)",
                 }
                 .into());
             }
@@ -202,14 +194,15 @@ mod tests {
     use super::*;
     use crate::error::NexoError;
 
+    // Import futures executor for async test execution
+    use futures_executor::block_on;
+
     #[test]
     fn test_framing_module_exists() {
         // Simple test to verify the module is compiled
         assert_eq!(LENGTH_PREFIX_SIZE, 4);
         assert_eq!(MAX_FRAME_SIZE, 4 * 1024 * 1024);
     }
-    use super::*;
-    use crate::error::NexoError;
 
     // Mock transport for testing
     struct MockTransport {
@@ -249,7 +242,7 @@ mod tests {
         async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
             if !self.connected {
                 return Err(NexoError::Connection {
-                    details: "Not connected".to_string(),
+                    details: "Not connected",
                 });
             }
 
@@ -269,7 +262,7 @@ mod tests {
         async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
             if !self.connected {
                 return Err(NexoError::Connection {
-                    details: "Not connected".to_string(),
+                    details: "Not connected",
                 });
             }
 
@@ -301,7 +294,7 @@ mod tests {
         };
 
         // Send message (write to mock transport)
-        let send_result = futures::executor::block_on(framed.send_message(&original));
+        let send_result = block_on(framed.send_message(&original));
         assert!(send_result.is_ok(), "send_message failed: {:?}", send_result);
 
         // Get written data and set it as read data
@@ -309,7 +302,7 @@ mod tests {
         framed.inner_mut().set_read_data(written);
 
         // Receive message
-        let received: prost_types::Any = futures::executor::block_on(framed.recv_message())
+        let received: prost_types::Any = block_on(framed.recv_message())
             .expect("recv_message failed");
 
         assert_eq!(received.type_url, original.type_url);
@@ -327,7 +320,7 @@ mod tests {
             value: vec![1, 2, 3],
         };
 
-        futures::executor::block_on(framed.send_message(&msg)).unwrap();
+        block_on(framed.send_message(&msg)).unwrap();
 
         // Check that the length prefix is in big-endian format
         let written = framed.inner().get_written_data();
@@ -357,13 +350,13 @@ mod tests {
         };
 
         // Send and receive
-        futures::executor::block_on(framed.send_message(&msg)).unwrap();
+        block_on(framed.send_message(&msg)).unwrap();
 
         let written = framed.inner().get_written_data();
         framed.inner_mut().set_read_data(written);
 
         let received: prost_types::Any =
-            futures::executor::block_on(framed.recv_message()).unwrap();
+            block_on(framed.recv_message()).unwrap();
 
         assert_eq!(received.type_url, msg.type_url);
         assert_eq!(received.value, msg.value);
@@ -382,7 +375,7 @@ mod tests {
         };
 
         // Should fail with encoding error
-        let result = futures::executor::block_on(framed.send_message(&msg));
+        let result = block_on(framed.send_message(&msg));
         assert!(result.is_err());
 
         match result {
@@ -408,7 +401,7 @@ mod tests {
 
         // Should fail with decoding error
         let result: Result<prost_types::Any, _> =
-            futures::executor::block_on(framed.recv_message());
+            block_on(framed.recv_message());
         assert!(result.is_err());
 
         match result {
@@ -431,13 +424,13 @@ mod tests {
         };
 
         // Send and receive with partial reads
-        futures::executor::block_on(framed.send_message(&msg)).unwrap();
+        block_on(framed.send_message(&msg)).unwrap();
 
         let written = framed.inner().get_written_data();
         framed.inner_mut().set_read_data(written);
 
         let received: prost_types::Any =
-            futures::executor::block_on(framed.recv_message()).unwrap();
+            block_on(framed.recv_message()).unwrap();
 
         assert_eq!(received.type_url, msg.type_url);
         assert_eq!(received.value, msg.value);
@@ -459,17 +452,17 @@ mod tests {
             value: vec![4, 5, 6],
         };
 
-        futures::executor::block_on(framed.send_message(&msg1)).unwrap();
-        futures::executor::block_on(framed.send_message(&msg2)).unwrap();
+        block_on(framed.send_message(&msg1)).unwrap();
+        block_on(framed.send_message(&msg2)).unwrap();
 
         // Read them back
         let written = framed.inner().get_written_data();
         framed.inner_mut().set_read_data(written);
 
         let received1: prost_types::Any =
-            futures::executor::block_on(framed.recv_message()).unwrap();
+            block_on(framed.recv_message()).unwrap();
         let received2: prost_types::Any =
-            futures::executor::block_on(framed.recv_message()).unwrap();
+            block_on(framed.recv_message()).unwrap();
 
         assert_eq!(received1.type_url, msg1.type_url);
         assert_eq!(received1.value, msg1.value);
@@ -488,7 +481,7 @@ mod tests {
 
         // Should successfully receive an empty message
         let result: Result<prost_types::Any, _> =
-            futures::executor::block_on(framed.recv_message());
+            block_on(framed.recv_message());
 
         // prost::Message::decode on empty bytes might fail or return default
         // depending on the message type, but we should at least not panic
