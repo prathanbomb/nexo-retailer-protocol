@@ -14,6 +14,9 @@ use crate::server::dispatcher::Dispatcher;
 use crate::server::heartbeat::{HeartbeatConfig, HeartbeatMonitor};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
+#[cfg(feature = "std")]
+use tracing::{info, debug, warn, error, info_span};
+
 use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -157,6 +160,9 @@ impl NexoServer {
             // Accept a new connection
             let (stream, addr) = self.accept().await?;
 
+            #[cfg(feature = "std")]
+            info!(addr = %addr, "Connection accepted");
+
             // Spawn connection handler task
             self.spawn_connection_handler(stream, addr);
         }
@@ -190,6 +196,10 @@ impl NexoServer {
 
         // Spawn connection handler task
         tokio::spawn(async move {
+            // Log connection start with context
+            #[cfg(feature = "std")]
+            info!(addr = %addr, "Handling connection");
+
             // Create connection state with default heartbeat config
             let mut state = ConnectionState::new(addr);
             state.set_heartbeat_config(Some(HeartbeatConfig::new()));
@@ -214,7 +224,13 @@ impl NexoServer {
 
             // Log disconnection (if there was an error)
             if let Err(e) = result {
+                #[cfg(feature = "std")]
+                error!(error = %e, addr = %addr, "Connection closed with error");
+                #[cfg(not(feature = "std"))]
                 eprintln!("Connection {} closed with error: {:?}", addr, e);
+            } else {
+                #[cfg(feature = "std")]
+                info!(addr = %addr, message_count = state.message_count(), "Connection closed");
             }
         });
     }
@@ -257,6 +273,9 @@ impl NexoServer {
                 _ = heartbeat_interval.tick() => {
                     // Check for timeout
                     if heartbeat_monitor.check_timeout() {
+                        #[cfg(feature = "std")]
+                        warn!(elapsed = ?heartbeat_monitor.time_since_activity(), "Connection timeout");
+
                         return Err(NexoError::connection_owned(
                             format!("connection timeout: no activity for {:?}", heartbeat_monitor.time_since_activity())
                         ));
@@ -268,6 +287,9 @@ impl NexoServer {
                         // For now, we'll just send an empty byte array as a placeholder
                         // In a real implementation, this would be a proper CASP heartbeat message
                         let heartbeat_msg = create_heartbeat_message();
+
+                        #[cfg(feature = "std")]
+                        debug!("Heartbeat sent");
 
                         // Send heartbeat
                         if let Err(e) = stream.write_all(&heartbeat_msg).await {
@@ -293,6 +315,9 @@ impl NexoServer {
                             heartbeat_monitor.update_activity();
                             state.increment_message_count();
 
+                            #[cfg(feature = "std")]
+                            debug!(byte_count = n, "Message received");
+
                             // Dispatch message to handler and get response
                             let response_bytes = dispatcher.dispatch(&buffer[..n]).await;
 
@@ -300,6 +325,9 @@ impl NexoServer {
                                 Ok(bytes) => {
                                     // Send response back to client
                                     if !bytes.is_empty() {
+                                        #[cfg(feature = "std")]
+                                        debug!("Dispatching to handler");
+
                                         stream.write_all(&bytes).await.map_err(|e| {
                                             NexoError::connection_owned(format!("write error: {}", e))
                                         })?;
@@ -309,6 +337,9 @@ impl NexoServer {
                                 Err(e) => {
                                     // Handler returned error - log it and continue
                                     // Don't crash the server due to handler errors
+                                    #[cfg(feature = "std")]
+                                    error!(error = %e, "Handler error");
+                                    #[cfg(not(feature = "std"))]
                                     eprintln!("Handler error for connection {:?}: {:?}", state.addr(), e);
                                     // Optionally send error response to client
                                     // For now, just continue processing
@@ -393,6 +424,9 @@ impl NexoServer {
                             state.update_activity();
                             heartbeat_monitor.update_activity();
                             state.increment_message_count();
+
+                            #[cfg(feature = "std")]
+                            debug!(byte_count = n, "Message received (echo mode)");
 
                             // Echo back (basic functionality)
                             stream.write_all(&buffer[..n]).await.map_err(|e| {
