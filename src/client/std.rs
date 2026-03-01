@@ -7,6 +7,8 @@
 #![cfg(feature = "std")]
 
 use crate::client::reconnect::{ReconnectConfig, Backoff};
+use crate::client::timeout::TimeoutConfig;
+use crate::client::timeout::generate_message_id;
 use crate::error::NexoError;
 use crate::transport::{FramedTransport, Transport, TokioTransport};
 
@@ -445,6 +447,79 @@ impl<T: Transport> NexoClient<T> {
         self.send_request(request).await?;
         self.receive_response().await
     }
+
+    /// Send a request with timeout and receive a response
+    ///
+    /// This method wraps the send/receive operation with a timeout. If the timeout
+    /// expires, the pending request is cleaned up and `NexoError::Timeout` is returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - Request message implementing `prost::Message`
+    /// * `timeout` - Maximum duration to wait for response
+    ///
+    /// # Errors
+    ///
+    /// Returns `NexoError::Timeout` if timeout expires
+    /// Returns other errors from `send_and_receive`
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nexo_retailer_protocol::NexoClient;
+    /// # use std::time::Duration;
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut client = NexoClient::new();
+    /// client.connect("192.168.1.100:8080").await?;
+    ///
+    /// let request = YourRequestType::default();
+    /// let response: YourResponseType = client.send_with_timeout(&request, Duration::from_secs(10)).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn send_with_timeout<M: Message + Default>(
+        &mut self,
+        request: &M,
+        timeout: Duration,
+    ) -> Result<M, NexoError>
+    where
+        T::Error: Into<NexoError>,
+    {
+        // Generate unique message ID for this request
+        let message_id = generate_message_id();
+
+        // Register the pending request
+        let rx = self.pending.register(message_id.clone());
+
+        // Send the request
+        self.send_request(request).await.map_err(|e| {
+            // Clean up pending request on send error
+            self.pending.cleanup(message_id.clone());
+            e.into()
+        })?;
+
+        // Wait for response with timeout
+        match tokio::time::timeout(timeout, rx).await {
+            Ok(Ok(response_bytes)) => {
+                // Decode the response
+                M::decode(&*response_bytes).map_err(|_| NexoError::Decoding {
+                    details: "failed to decode response",
+                })
+            }
+            Ok(Err(_)) => {
+                // Channel closed (receiver dropped)
+                self.pending.cleanup(message_id);
+                Err(NexoError::Connection {
+                    details: "response channel closed",
+                })
+            }
+            Err(_) => {
+                // Timeout expired
+                self.pending.cleanup(message_id);
+                Err(NexoError::Timeout)
+            }
+        }
+    }
 }
 
 impl Default for NexoClient<TokioTransport> {
@@ -790,5 +865,20 @@ mod tests {
         // but we can verify the config is set
         assert!(client.reconnect_config.is_some());
         assert_eq!(client.reconnect_config.unwrap().base_delay, Duration::from_millis(100));
+    }
+
+    #[test]
+    fn test_send_with_timeout_when_not_connected() {
+        use core::time::Duration;
+
+        let mut client = NexoClient::new();
+        let result = block_on(client.send_with_timeout(&Vec::<u8>::new(), Duration::from_secs(1)));
+        assert!(result.is_err());
+        match result {
+            Err(NexoError::Connection { .. }) => {
+                // Expected - not connected
+            }
+            _ => panic!("Expected Connection error"),
+        }
     }
 }

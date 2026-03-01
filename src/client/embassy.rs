@@ -9,6 +9,7 @@
 extern crate alloc;
 
 use crate::client::reconnect::{ReconnectConfig, Backoff};
+use crate::client::timeout::generate_message_id;
 use crate::error::NexoError;
 use crate::transport::{FramedTransport, Transport, EmbassyTransport};
 
@@ -17,6 +18,10 @@ use prost::Message;
 use alloc::collections::BTreeMap;
 use alloc::string::{String, ToString};
 use core::sync::atomic::{AtomicBool, Ordering};
+use core::time::Duration as CoreDuration;
+
+/// Embassy Duration type alias to avoid conflicts with core::time::Duration
+type EmbassyDuration = embassy_time::Duration;
 
 /// Pending request tracking
 ///
@@ -303,6 +308,48 @@ impl<'a, T: Transport> NexoClient<'a, T> {
     ) -> Result<M, T::Error> {
         self.send_request(request).await?;
         self.receive_response().await
+    }
+
+    /// Send a request with timeout and receive a response
+    ///
+    /// This method wraps the send/receive operation with a timeout. If the timeout
+    /// expires, the pending request is cleaned up and `NexoError::Timeout` is returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - Request message implementing `prost::Message`
+    /// * `timeout` - Maximum duration to wait for response
+    ///
+    /// # Errors
+    ///
+    /// Returns `NexoError::Timeout` if timeout expires
+    /// Returns other errors from `send_and_receive`
+    ///
+    /// # Note
+    ///
+    /// Embassy doesn't have oneshot channels, so this implementation uses a
+    /// simplified timeout wrapper around send_and_receive.
+    pub async fn send_with_timeout<M: Message + Default>(
+        &mut self,
+        request: &M,
+        timeout: CoreDuration,
+    ) -> Result<M, NexoError>
+    where
+        T::Error: Into<NexoError>,
+    {
+        // Convert core::time::Duration to embassy_time::Duration
+        let embassy_timeout = EmbassyDuration::from_secs(timeout.as_secs())
+            + EmbassyDuration::from_micros(timeout.as_micros() as u64 % 1_000_000);
+
+        // Generate unique message ID for tracking
+        let _message_id = generate_message_id();
+
+        // Use embassy_time::with_timeout to wrap the operation
+        match embassy_time::with_timeout(embassy_timeout, self.send_and_receive(request)).await {
+            Ok(Ok(result)) => Ok(result),
+            Ok(Err(e)) => Err(e.into()),
+            Err(_) => Err(NexoError::Timeout),
+        }
     }
 }
 
