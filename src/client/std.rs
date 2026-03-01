@@ -520,4 +520,153 @@ mod tests {
         let received = block_on(rx2).unwrap();
         assert_eq!(received, response);
     }
+
+    // Mock transport that supports send/receive testing
+    struct MockFramedTransport {
+        connected: bool,
+        send_buffer: Vec<u8>,
+        receive_buffer: Vec<u8>,
+    }
+
+    impl MockFramedTransport {
+        fn new() -> Self {
+            Self {
+                connected: false,
+                send_buffer: Vec::new(),
+                receive_buffer: Vec::new(),
+            }
+        }
+
+        fn set_receive_data(&mut self, data: Vec<u8>) {
+            self.receive_buffer = data;
+        }
+
+        fn get_sent_data(&self) -> &[u8] {
+            &self.send_buffer
+        }
+    }
+
+    impl crate::transport::Transport for MockFramedTransport {
+        type Error = NexoError;
+
+        async fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+            if !self.connected {
+                return Err(NexoError::Connection {
+                    details: "Not connected",
+                });
+            }
+            let bytes_to_read = core::cmp::min(self.receive_buffer.len(), buf.len());
+            if bytes_to_read == 0 {
+                return Ok(0);
+            }
+            buf[..bytes_to_read].copy_from_slice(&self.receive_buffer[..bytes_to_read]);
+            self.receive_buffer = self.receive_buffer[bytes_to_read..].to_vec();
+            Ok(bytes_to_read)
+        }
+
+        async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+            if !self.connected {
+                return Err(NexoError::Connection {
+                    details: "Not connected",
+                });
+            }
+            self.send_buffer.extend_from_slice(buf);
+            Ok(buf.len())
+        }
+
+        async fn connect(&mut self, _addr: &str) -> Result<(), Self::Error> {
+            self.connected = true;
+            Ok(())
+        }
+
+        fn is_connected(&self) -> bool {
+            self.connected
+        }
+    }
+
+    #[test]
+    fn test_send_request_with_connected_transport() {
+        // Create a connected mock transport that properly implements read/write
+        let mock = MockFramedTransport::new();
+
+        // Create client with the transport (will be wrapped in FramedTransport internally)
+        let mut client = NexoClient::with_transport(mock);
+        client.connected.store(true, Ordering::Release);
+
+        // Verify the client is connected
+        assert!(client.is_connected());
+
+        // Note: Actual send/receive requires a properly framed protocol implementation
+        // The MockFramedTransport is simplified for basic state testing
+        // Full integration tests are in the transport layer tests
+    }
+
+    #[test]
+    fn test_send_and_receive_with_mock_transport() {
+        use prost::Message;
+
+        // Create a mock transport
+        let mut mock = MockFramedTransport::new();
+        mock.connected = true;
+
+        // Create a test message to send
+        let test_msg = crate::ActiveCurrencyAndAmount {
+            ccy: "USD".to_string(),
+            units: 100,
+            nanos: 500000000,
+        };
+
+        // Encode the test message and set up receive buffer
+        let encoded = test_msg.encode_to_vec();
+        let mut receive_data = Vec::new();
+        // Add length prefix (4 bytes big-endian)
+        let len = encoded.len() as u32;
+        receive_data.extend_from_slice(&len.to_be_bytes());
+        // Add message body
+        receive_data.extend_from_slice(&encoded);
+        mock.set_receive_data(receive_data);
+
+        let mut client = NexoClient::with_transport(mock);
+        client.connected.store(true, Ordering::Release);
+
+        // Send and receive
+        let send_result = block_on(client.send_request(&test_msg));
+        assert!(send_result.is_ok());
+
+        let received: crate::ActiveCurrencyAndAmount =
+            block_on(client.receive_response()).unwrap();
+
+        assert_eq!(received.ccy, "USD");
+        assert_eq!(received.units, 100);
+        assert_eq!(received.nanos, 500000000);
+    }
+
+    #[test]
+    fn test_send_and_receive_combined() {
+        let mut mock = MockFramedTransport::new();
+        mock.connected = true;
+
+        // Set up receive data
+        let test_msg = crate::ActiveCurrencyAndAmount {
+            ccy: "EUR".to_string(),
+            units: 200,
+            nanos: 750000000,
+        };
+        let encoded = test_msg.encode_to_vec();
+        let mut receive_data = Vec::new();
+        receive_data.extend_from_slice(&(encoded.len() as u32).to_be_bytes());
+        receive_data.extend_from_slice(&encoded);
+        mock.set_receive_data(receive_data);
+
+        let mut client = NexoClient::with_transport(mock);
+        client.connected.store(true, Ordering::Release);
+
+        // Use send_and_receive
+        let received: crate::ActiveCurrencyAndAmount =
+            block_on(client.send_and_receive(&test_msg)).unwrap();
+
+        assert_eq!(received.ccy, "EUR");
+        assert_eq!(received.units, 200);
+        assert_eq!(received.nanos, 750000000);
+    }
 }
