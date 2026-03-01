@@ -8,6 +8,7 @@ use std::net::SocketAddr;
 use std::time::{Duration, Instant};
 
 use crate::server::dedup::DeduplicationCache;
+use crate::server::heartbeat::HeartbeatConfig;
 
 /// Default TTL for deduplication cache (5 minutes)
 const DEFAULT_DEDUP_TTL: Duration = Duration::from_secs(5 * 60);
@@ -24,6 +25,8 @@ const DEFAULT_DEDUP_TTL: Duration = Duration::from_secs(5 * 60);
 /// * `connected_at` - Timestamp when the connection was established
 /// * `message_count` - Number of messages received from this client
 /// * `seen_message_ids` - Deduplication cache for tracking seen message IDs
+/// * `last_activity` - Timestamp of last activity (message received or heartbeat)
+/// * `heartbeat_config` - Optional per-connection heartbeat configuration
 ///
 /// # Examples
 ///
@@ -48,6 +51,10 @@ pub struct ConnectionState {
     message_count: u64,
     /// Deduplication cache for tracking seen message IDs
     seen_message_ids: DeduplicationCache,
+    /// Timestamp of last activity (message received or heartbeat)
+    last_activity: Instant,
+    /// Optional per-connection heartbeat configuration
+    heartbeat_config: Option<HeartbeatConfig>,
 }
 
 impl ConnectionState {
@@ -67,11 +74,14 @@ impl ConnectionState {
     /// let state = ConnectionState::new(addr);
     /// ```
     pub fn new(addr: SocketAddr) -> Self {
+        let now = Instant::now();
         Self {
             addr,
-            connected_at: Instant::now(),
+            connected_at: now,
             message_count: 0,
             seen_message_ids: DeduplicationCache::default(),
+            last_activity: now,
+            heartbeat_config: None,
         }
     }
 
@@ -94,11 +104,14 @@ impl ConnectionState {
     /// let state = ConnectionState::with_ttl(addr, ttl);
     /// ```
     pub fn with_ttl(addr: SocketAddr, dedup_ttl: Duration) -> Self {
+        let now = Instant::now();
         Self {
             addr,
-            connected_at: Instant::now(),
+            connected_at: now,
             message_count: 0,
             seen_message_ids: DeduplicationCache::new(dedup_ttl),
+            last_activity: now,
+            heartbeat_config: None,
         }
     }
 
@@ -167,6 +180,102 @@ impl ConnectionState {
     #[cfg(not(feature = "alloc"))]
     pub fn dedup_cache(&mut self) -> &mut DeduplicationCache {
         &mut self.seen_message_ids
+    }
+
+    /// Update the last activity timestamp (called when message received)
+    ///
+    /// This should be called whenever a message is received from the client,
+    /// indicating that the connection is still alive.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nexo_retailer_protocol::server::ConnectionState;
+    /// use std::net::SocketAddr;
+    ///
+    /// let addr = "127.0.0.1:8080".parse().unwrap();
+    /// let mut state = ConnectionState::new(addr);
+    ///
+    /// // Update activity on message received
+    /// state.update_activity();
+    /// ```
+    pub fn update_activity(&mut self) {
+        self.last_activity = Instant::now();
+    }
+
+    /// Get the timestamp of last activity
+    ///
+    /// # Returns
+    ///
+    /// The timestamp of the last activity
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nexo_retailer_protocol::server::ConnectionState;
+    /// use std::net::SocketAddr;
+    ///
+    /// let addr = "127.0.0.1:8080".parse().unwrap();
+    /// let state = ConnectionState::new(addr);
+    ///
+    /// // Last activity should be very recent
+    /// let last_activity = state.last_activity();
+    /// assert!(last_activity.elapsed() < std::time::Duration::from_secs(1));
+    /// ```
+    pub fn last_activity(&self) -> Instant {
+        self.last_activity
+    }
+
+    /// Get the heartbeat configuration for this connection
+    ///
+    /// # Returns
+    ///
+    /// Optional reference to the heartbeat configuration
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nexo_retailer_protocol::server::ConnectionState;
+    /// use std::net::SocketAddr;
+    ///
+    /// let addr = "127.0.0.1:8080".parse().unwrap();
+    /// let state = ConnectionState::new(addr);
+    ///
+    /// // Initially no heartbeat config
+    /// assert!(state.heartbeat_config().is_none());
+    /// ```
+    pub fn heartbeat_config(&self) -> Option<&HeartbeatConfig> {
+        self.heartbeat_config.as_ref()
+    }
+
+    /// Set the heartbeat configuration for this connection
+    ///
+    /// This allows per-connection override of the default heartbeat settings.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Heartbeat configuration to use for this connection
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nexo_retailer_protocol::server::{ConnectionState, HeartbeatConfig};
+    /// use std::net::SocketAddr;
+    /// use std::time::Duration;
+    ///
+    /// let addr = "127.0.0.1:8080".parse().unwrap();
+    /// let mut state = ConnectionState::new(addr);
+    ///
+    /// // Set custom heartbeat config
+    /// let config = HeartbeatConfig::new()
+    ///     .with_interval(Duration::from_secs(60))
+    ///     .with_timeout(Duration::from_secs(180));
+    /// state.set_heartbeat_config(Some(config));
+    ///
+    /// assert!(state.heartbeat_config().is_some());
+    /// ```
+    pub fn set_heartbeat_config(&mut self, config: Option<HeartbeatConfig>) {
+        self.heartbeat_config = config;
     }
 
     /// Get the duration since the connection was established
@@ -318,5 +427,90 @@ mod tests {
         assert_eq!(state.addr(), addr);
         assert_eq!(state.message_count(), 0);
         assert!(state.connection_duration().as_secs() < 1);
+    }
+
+    #[test]
+    fn test_connection_state_new_has_recent_activity() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let state = ConnectionState::new(addr);
+
+        // Last activity should be very recent (just created)
+        let elapsed = state.last_activity().elapsed();
+        assert!(elapsed < Duration::from_secs(1));
+    }
+
+    #[test]
+    fn test_connection_state_update_activity_resets_timestamp() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let mut state = ConnectionState::new(addr);
+
+        // Wait a bit
+        std::thread::sleep(Duration::from_millis(10));
+
+        // Update activity
+        state.update_activity();
+
+        // Last activity should be very recent
+        let elapsed = state.last_activity().elapsed();
+        assert!(elapsed < Duration::from_millis(10));
+    }
+
+    #[test]
+    fn test_connection_state_heartbeat_config_initially_none() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let state = ConnectionState::new(addr);
+
+        // Initially no heartbeat config
+        assert!(state.heartbeat_config().is_none());
+    }
+
+    #[test]
+    fn test_connection_state_set_heartbeat_config() {
+        use crate::server::HeartbeatConfig;
+
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let mut state = ConnectionState::new(addr);
+
+        // Set custom heartbeat config
+        let config = HeartbeatConfig::new()
+            .with_interval(Duration::from_secs(60))
+            .with_timeout(Duration::from_secs(180));
+
+        state.set_heartbeat_config(Some(config.clone()));
+
+        // Verify config is set
+        assert!(state.heartbeat_config().is_some());
+        let retrieved = state.heartbeat_config().unwrap();
+        assert_eq!(retrieved.interval(), Duration::from_secs(60));
+        assert_eq!(retrieved.timeout(), Duration::from_secs(180));
+    }
+
+    #[test]
+    fn test_connection_state_clear_heartbeat_config() {
+        use crate::server::HeartbeatConfig;
+
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let mut state = ConnectionState::new(addr);
+
+        // Set heartbeat config
+        let config = HeartbeatConfig::new();
+        state.set_heartbeat_config(Some(config));
+        assert!(state.heartbeat_config().is_some());
+
+        // Clear heartbeat config
+        state.set_heartbeat_config(None);
+        assert!(state.heartbeat_config().is_none());
+    }
+
+    #[test]
+    fn test_connection_state_activity_increases_over_time() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let state = ConnectionState::new(addr);
+
+        let time1 = state.last_activity().elapsed();
+        std::thread::sleep(Duration::from_millis(10));
+        let time2 = state.last_activity().elapsed();
+
+        assert!(time2 > time1);
     }
 }
