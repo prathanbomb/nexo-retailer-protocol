@@ -46,6 +46,7 @@
 //! with details about which field failed and why.
 
 use crate::error::NexoError;
+use crate::Header4;
 
 /// Trait for message builders
 ///
@@ -65,14 +66,260 @@ pub trait MessageBuilder<T> {
     fn build(self) -> Result<T, NexoError>;
 }
 
+/// Builder for Header4 message
+///
+/// Header4 contains protocol-level metadata for CASP messages including:
+/// - Message function (e.g., "DREQ" for Diagnosis Request)
+/// - Protocol version (e.g., "6.0")
+/// - Transaction ID for correlation
+///
+/// # Required Fields
+///
+/// * `msg_fctn` - Message function code (e.g., "DREQ", "AQRY")
+/// * `proto_vrsn` - Protocol version (typically "6.0")
+/// * `tx_id` - Transaction identifier for correlation
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use nexo_retailer_protocol::Header4Builder;
+///
+/// let header = Header4Builder::new()
+///     .message_function("DREQ".to_string())
+///     .protocol_version("6.0".to_string())
+///     .transaction_id("TX-12345".to_string())
+///     .build()
+///     .unwrap();
+/// ```
+pub struct Header4Builder {
+    inner: Header4,
+}
+
+impl Header4Builder {
+    /// Create a new Header4 builder with default values
+    ///
+    /// All fields start as `None`. Required fields must be set
+    /// before calling `build()`.
+    pub fn new() -> Self {
+        Self {
+            inner: Header4::default(),
+        }
+    }
+
+    /// Set the message function code
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - Message function code (e.g., "DREQ", "AQRY", "AUTH")
+    ///
+    /// # Required
+    ///
+    /// This field is REQUIRED according to the Nexo specification.
+    pub fn message_function(mut self, value: String) -> Self {
+        self.inner.msg_fctn = Some(value);
+        self
+    }
+
+    /// Set the protocol version
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - Protocol version string (typically "6.0")
+    ///
+    /// # Required
+    ///
+    /// This field is REQUIRED according to the Nexo specification.
+    pub fn protocol_version(mut self, value: String) -> Self {
+        self.inner.proto_vrsn = Some(value);
+        self
+    }
+
+    /// Set the transaction ID
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Unique transaction identifier for request/response correlation
+    ///
+    /// # Required
+    ///
+    /// This field is REQUIRED for proper message correlation.
+    pub fn transaction_id(mut self, id: String) -> Self {
+        self.inner.tx_id = Some(id);
+        self
+    }
+
+    /// Set the original business message type
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - Original message type identifier
+    pub fn original_business_message(mut self, value: String) -> Self {
+        self.inner.orgnl_biz_t_msg = Some(value);
+        self
+    }
+
+    /// Set the original message ID
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Original message identifier
+    pub fn original_message_id(mut self, id: String) -> Self {
+        self.inner.orgnl_msg_id = Some(id);
+        self
+    }
+
+    /// Set the creation date/time
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - ISO 8601 datetime string
+    pub fn creation_datetime(mut self, value: String) -> Self {
+        self.inner.cre_dt_tm = Some(value);
+        self
+    }
+}
+
+impl MessageBuilder<Header4> for Header4Builder {
+    /// Build the Header4, validating required fields
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(NexoError::Validation)` if:
+    /// - `msg_fctn` is not set
+    /// - `proto_vrsn` is not set
+    /// - `tx_id` is not set
+    fn build(self) -> Result<Header4, NexoError> {
+        // Validate required fields
+        if self.inner.msg_fctn.is_none() {
+            return Err(NexoError::Validation {
+                field: "msg_fctn",
+                reason: "message_function is required",
+            });
+        }
+
+        if self.inner.proto_vrsn.is_none() {
+            return Err(NexoError::Validation {
+                field: "proto_vrsn",
+                reason: "protocol_version is required",
+            });
+        }
+
+        if self.inner.tx_id.is_none() {
+            return Err(NexoError::Validation {
+                field: "tx_id",
+                reason: "transaction_id is required",
+            });
+        }
+
+        Ok(self.inner)
+    }
+}
+
+impl Default for Header4Builder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::client::builder::{Header4Builder, MessageBuilder};
+    use crate::error::NexoError;
 
     #[test]
     fn test_message_builder_trait_exists() {
         // This test verifies the MessageBuilder trait is defined
         // Actual builder implementations are tested separately
         assert!(true, "MessageBuilder trait defined successfully");
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_header_builder_valid_construction() {
+        use prost::alloc::string::ToString;
+
+        let header = Header4Builder::new()
+            .message_function("DREQ".to_string())
+            .protocol_version("6.0".to_string())
+            .transaction_id("TX-12345".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(header.msg_fctn, Some("DREQ".to_string()));
+        assert_eq!(header.proto_vrsn, Some("6.0".to_string()));
+        assert_eq!(header.tx_id, Some("TX-12345".to_string()));
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_header_builder_missing_message_function() {
+        use prost::alloc::string::ToString;
+
+        let result = Header4Builder::new()
+            .protocol_version("6.0".to_string())
+            .transaction_id("TX-12345".to_string())
+            .build();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            NexoError::Validation { field, .. } => {
+                assert_eq!(field, "msg_fctn");
+            }
+            _ => panic!("Expected ValidationError"),
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_header_builder_missing_protocol_version() {
+        use prost::alloc::string::ToString;
+
+        let result = Header4Builder::new()
+            .message_function("DREQ".to_string())
+            .transaction_id("TX-12345".to_string())
+            .build();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            NexoError::Validation { field, .. } => {
+                assert_eq!(field, "proto_vrsn");
+            }
+            _ => panic!("Expected ValidationError"),
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_header_builder_missing_transaction_id() {
+        use prost::alloc::string::ToString;
+
+        let result = Header4Builder::new()
+            .message_function("DREQ".to_string())
+            .protocol_version("6.0".to_string())
+            .build();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            NexoError::Validation { field, .. } => {
+                assert_eq!(field, "tx_id");
+            }
+            _ => panic!("Expected ValidationError"),
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_header_builder_fluent_api() {
+        use prost::alloc::string::ToString;
+
+        // Test that fluent chaining works properly
+        let builder = Header4Builder::new()
+            .message_function("AQRY".to_string())
+            .protocol_version("6.0".to_string())
+            .transaction_id("TX-99999".to_string());
+
+        // Each method should return Self for chaining
+        let header = builder.build().unwrap();
+        assert_eq!(header.msg_fctn, Some("AQRY".to_string()));
     }
 }
