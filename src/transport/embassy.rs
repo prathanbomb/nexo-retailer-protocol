@@ -40,6 +40,263 @@ use embassy_futures::select::{select, Either};
 use embassy_net::TcpSocket;
 use embassy_time::{Duration, Timer};
 
+/// Timeout configuration for Embassy transport operations
+///
+/// Provides timeout configuration using Embassy's `Duration` type and
+/// async wrapper methods using `embassy_futures::select`.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use nexo_retailer_protocol::transport::embassy::EmbassyTimeoutConfig;
+/// use embassy_time::Duration;
+///
+/// # async fn example() -> Result<(), NexoError> {
+/// let config = EmbassyTimeoutConfig::new()
+///     .with_connect(Duration::from_secs(5))
+///     .with_read(Duration::from_secs(30))
+///     .with_write(Duration::from_secs(10));
+///
+/// // Use timeout wrapper
+/// config.with_connect_timeout(async {
+///     // Connection logic here
+///     Ok(())
+/// }).await?;
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Debug, Clone, Copy)]
+pub struct EmbassyTimeoutConfig {
+    /// Timeout for connection operations
+    pub connect_timeout: Duration,
+
+    /// Timeout for read operations
+    pub read_timeout: Duration,
+
+    /// Timeout for write operations
+    pub write_timeout: Duration,
+}
+
+impl Default for EmbassyTimeoutConfig {
+    fn default() -> Self {
+        Self {
+            connect_timeout: Duration::from_secs(10),
+            read_timeout: Duration::from_secs(30),
+            write_timeout: Duration::from_secs(10),
+        }
+    }
+}
+
+impl EmbassyTimeoutConfig {
+    /// Create a new timeout configuration with default values
+    ///
+    /// Default timeouts:
+    /// - Connect: 10 seconds
+    /// - Read: 30 seconds
+    /// - Write: 10 seconds
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let config = EmbassyTimeoutConfig::new();
+    /// ```
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the connect timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `d` - Connection timeout duration
+    ///
+    /// # Returns
+    ///
+    /// Self for builder pattern chaining
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use embassy_time::Duration;
+    ///
+    /// let config = EmbassyTimeoutConfig::new()
+    ///     .with_connect(Duration::from_secs(5));
+    /// ```
+    pub fn with_connect(mut self, d: Duration) -> Self {
+        self.connect_timeout = d;
+        self
+    }
+
+    /// Set the read timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `d` - Read timeout duration
+    ///
+    /// # Returns
+    ///
+    /// Self for builder pattern chaining
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use embassy_time::Duration;
+    ///
+    /// let config = EmbassyTimeoutConfig::new()
+    ///     .with_read(Duration::from_secs(60));
+    /// ```
+    pub fn with_read(mut self, d: Duration) -> Self {
+        self.read_timeout = d;
+        self
+    }
+
+    /// Set the write timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `d` - Write timeout duration
+    ///
+    /// # Returns
+    ///
+    /// Self for builder pattern chaining
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use embassy_time::Duration;
+    ///
+    /// let config = EmbassyTimeoutConfig::new()
+    ///     .with_write(Duration::from_secs(20));
+    /// ```
+    pub fn with_write(mut self, d: Duration) -> Self {
+        self.write_timeout = d;
+        self
+    }
+
+    /// Wrap a future with read timeout
+    ///
+    /// Uses `embassy_futures::select` to race the future against a timer.
+    /// If the timer completes first, returns `NexoError::Timeout`.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `F` - Future type to wrap
+    /// * `T` - Result type
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - Future to execute with timeout
+    ///
+    /// # Returns
+    ///
+    /// Result of the future, or `NexoError::Timeout` if timeout expires
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// # async fn example() -> Result<(), NexoError> {
+    /// let config = EmbassyTimeoutConfig::new();
+    ///
+    /// let result = config.with_read_timeout(async {
+    ///     // Read operation here
+    ///     Ok(bytes_read)
+    /// }).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn with_read_timeout<F, T>(&self, f: F) -> Result<T, NexoError>
+    where
+        F: core::future::Future<Output = Result<T, NexoError>>,
+    {
+        match select(f, Timer::after(self.read_timeout)).await {
+            Either::First(result) => result,
+            Either::Second(_) => Err(NexoError::Timeout),
+        }
+    }
+
+    /// Wrap a future with write timeout
+    ///
+    /// Uses `embassy_futures::select` to race the future against a timer.
+    /// If the timer completes first, returns `NexoError::Timeout`.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `F` - Future type to wrap
+    /// * `T` - Result type
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - Future to execute with timeout
+    ///
+    /// # Returns
+    ///
+    /// Result of the future, or `NexoError::Timeout` if timeout expires
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// # async fn example() -> Result<(), NexoError> {
+    /// let config = EmbassyTimeoutConfig::new();
+    ///
+    /// let result = config.with_write_timeout(async {
+    ///     // Write operation here
+    ///     Ok(bytes_written)
+    /// }).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn with_write_timeout<F, T>(&self, f: F) -> Result<T, NexoError>
+    where
+        F: core::future::Future<Output = Result<T, NexoError>>,
+    {
+        match select(f, Timer::after(self.write_timeout)).await {
+            Either::First(result) => result,
+            Either::Second(_) => Err(NexoError::Timeout),
+        }
+    }
+
+    /// Wrap a future with connect timeout
+    ///
+    /// Uses `embassy_futures::select` to race the future against a timer.
+    /// If the timer completes first, returns `NexoError::Timeout`.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `F` - Future type to wrap
+    /// * `T` - Result type
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - Future to execute with timeout
+    ///
+    /// # Returns
+    ///
+    /// Result of the future, or `NexoError::Timeout` if timeout expires
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// # async fn example() -> Result<(), NexoError> {
+    /// let config = EmbassyTimeoutConfig::new();
+    ///
+    /// let result = config.with_connect_timeout(async {
+    ///     // Connect operation here
+    ///     Ok(())
+    /// }).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn with_connect_timeout<F, T>(&self, f: F) -> Result<T, NexoError>
+    where
+        F: core::future::Future<Output = Result<T, NexoError>>,
+    {
+        match select(f, Timer::after(self.connect_timeout)).await {
+            Either::First(result) => result,
+            Either::Second(_) => Err(NexoError::Timeout),
+        }
+    }
+}
+
 /// Embassy-based transport implementation for embedded environments
 ///
 /// This transport wraps `embassy_net::TcpSocket` and provides async read/write

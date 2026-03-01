@@ -20,7 +20,7 @@ pub use framing::{FramedTransport, LENGTH_PREFIX_SIZE, MAX_FRAME_SIZE};
 
 // Re-export Embassy transport when feature is enabled
 #[cfg(feature = "embassy-net")]
-pub use embassy::EmbassyTransport;
+pub use embassy::{EmbassyTransport, EmbassyTimeoutConfig};
 
 // Tokio transport (std feature only)
 #[cfg(feature = "std")]
