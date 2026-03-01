@@ -179,6 +179,43 @@
 //! - Jitter (std only) prevents thundering herd when multiple clients reconnect
 //! - Configurable max attempts allows infinite retry if set to u32::MAX
 //!
+//! ### Timeout Handling
+//!
+//! The client supports request timeout handling with unique message ID generation:
+//!
+//! ```rust,no_run
+//! use nexo_retailer_protocol::{NexoClient, TimeoutConfig, generate_message_id};
+//! use std::time::Duration;
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! // Generate unique message ID for replay protection
+//! let msg_id = generate_message_id();
+//! println!("Request ID: {}", msg_id);
+//!
+//! // Create client with timeout config
+//! let config = TimeoutConfig::new()
+//!     .with_request_timeout(Duration::from_secs(30));
+//!
+//! let mut client = NexoClient::new()
+//!     .with_timeout_config(config);
+//!
+//! client.connect("192.168.1.100:8080").await?;
+//!
+//! // Send request with timeout
+//! let request = Casp001Document::default();
+//! let response: Casp002Document = client.send_with_timeout(&request, Duration::from_secs(10)).await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! Timeout features:
+//! - Unique message ID generation: UUID v4 (std) or timestamp-counter (no_std)
+//! - Timeout wrapper: `send_with_timeout()` prevents indefinite waiting
+//! - Late response rejection: Responses arriving after timeout are rejected
+//! - Pending request cleanup: Prevents memory leaks from timed-out requests
+//! - Warning logs (std): Late responses trigger warnings for debugging
+//!
 //! ### Builder Pattern
 //!
 //! The library provides builder structs for fluent, type-safe message construction:
@@ -293,9 +330,10 @@ pub use transport::{Transport, FramedTransport};
 #[cfg(feature = "std")]
 pub use transport::TokioTransport;
 
-// Re-export TimeoutConfig when std feature is enabled
-#[cfg(feature = "std")]
-pub use transport::TimeoutConfig;
+// Re-export TimeoutConfig and generate_message_id
+// Export for std or embassy feature (not both to avoid conflicts)
+#[cfg(any(feature = "std", feature = "embassy-net"))]
+pub use client::timeout::{TimeoutConfig, generate_message_id};
 
 // Re-export Embassy transport when embassy-net feature is enabled
 #[cfg(feature = "embassy-net")]
