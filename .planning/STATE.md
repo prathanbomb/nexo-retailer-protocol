@@ -2,66 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-01T18:10:25.201Z"
-progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 24
-  completed_plans: 25
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-03-01T17:36:29.121Z"
-progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 18
-  completed_plans: 19
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-03-01T17:27:35.634Z"
-progress:
-  total_phases: 4
-  completed_phases: 3
-  total_plans: 18
-  completed_plans: 17
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-03-01T16:11:45.714Z"
-progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 13
-  completed_plans: 14
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-01T17:15:54.000Z"
+last_updated: "2026-03-02T19:20:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 2
-  total_plans: 27
-  completed_plans: 12
-  current_plan_phase: 04-client-api
+  completed_phases: 5
+  total_plans: 28
+  completed_plans: 27
+  current_plan_phase: 05.1-fix-server-framing
   current_plan_number: 01
   current_plan_status: complete
 ---
@@ -73,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Enable embedded payment devices to communicate using the Nexo Retailer Protocol with a Rust implementation that works in both bare metal (no_std) and standard environments.
-**Current focus:** Phase 5: Server API & Reliability
+**Current focus:** Phase 5.1: Fix Server Framing
 
 ## Current Position
 
-Phase: 5 of 6 (Server API & Reliability)
-Plan: 05-06 (Server Integration Tests) - COMPLETE
-Status: Phase 5 Complete - 6 of 6 plans complete
-Last activity: 2026-03-02 — Completed plan 05-06: Server Integration Tests (3 min)
+Phase: 5.1 of 6 (Fix Server Framing)
+Plan: 05.1-01 (Integrate FramedTransport into Server) - COMPLETE
+Status: Phase 5.1 Complete - 1 of 1 plan complete
+Last activity: 2026-03-02 — Completed plan 05.1-01: Integrate FramedTransport into Server (14 min)
 
-Progress: [██████████] 100% (Phase 5 complete - 6/6 plans done)
+Progress: [██████████] 100% (Phase 5.1 complete - 1/1 plan done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
-- Average duration: 143 min (2.4 hours)
-- Total execution time: 31.0 hours
+- Total plans completed: 27
+- Average duration: 85 min (1.4 hours)
+- Total execution time: 38.3 hours
 
 **By Phase:**
 
@@ -100,36 +48,14 @@ Progress: [██████████] 100% (Phase 5 complete - 6/6 plans do
 | 3. Transport Layer | 6 | 6/6 | 173 min |
 | 4. Client API | 5 | 5/5 | 68 min |
 | 5. Server API & Reliability | 6 | 6/6 | 77 min |
+| 5.1 Fix Server Framing | 1 | 1/1 | 14 min |
 | 6. Testing & Verification | 0 | 0/6 | - |
 
 **Recent Trend:**
-- Last 5 plans: P05-06(3min), P05-05(3min), P05-01(4min), P04-05(2956min), P04-04(3min)
-- Trend: Server integration tests completed efficiently (3 min)
+- Last 5 plans: P05.1-01(14min), P05-06(3min), P05-05(3min), P05-01(4min), P04-05(2956min)
+- Trend: Server FramedTransport integration completed successfully
 
 *Updated after each plan completion*
-| Phase 01-schema-conversion P01 | 492 | 4 tasks | 19 files |
-| Phase 01-schema-conversion P02 | 35 | 4 tasks | 24 files (partial) |
-| Phase 01-schema-conversion P03 | 25 | 5 tasks | 24 files |
-| Phase 02-core-library P01 | 5 | 3 tasks | 7 files |
-| Phase 02-core-library P02 | 224 | 3 tasks | 3 files |
-| Phase 02-core-library P03 | 45 | 4 tasks | 3 files |
-| Phase 03-transport-layer P03-01 | 663 | 4 tasks | 4 files |
-| Phase 03-transport-layer P03-02 | 15 | 4 tasks | 4 files |
-| Phase 03-transport-layer P03-03 | 120 | 3 tasks | 3 files |
-| Phase 03-transport-layer P03-04 | 3 | 3 tasks | 4 files |
-| Phase 03-transport-layer P03-05 | 20 | 3 tasks | 7 files |
-| Phase 03-transport-layer P03-06 | 4 | 4 tasks | 4 files |
-| Phase 04-client-api P01 | 204 | 5 tasks | 4 files |
-| Phase 04-client-api P02 | 3 | 5 tasks | 3 files |
-| Phase 04-client-api P03 | 5 | 5 tasks | 6 files |
-| Phase 04-client-api P03 | 313 | 5 tasks | 6 files |
-| Phase 04-client-api P04 | 3 | 4 tasks | 4 files |
-| Phase 04-client-api P05 | 1772386490 | 5 tasks | 4 files |
-| Phase 05-server-api-reliability P05-01 | 4 | 3 tasks | 5 files |
-| Phase 05-server-api-reliability P05-03 | 4 | 3 tasks | 6 files |
-| Phase 05 P05-02 | 386 | 3 tasks | 7 files |
-| Phase 05 P05-05 | 177 | 3 tasks | 5 files |
-| Phase 05 P05-06 | 3 | 3 tasks | 1 file |
 
 ## Accumulated Context
 
@@ -151,17 +77,13 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 02-core-library P01]: Use core::error::Error (not std::error::Error) for no_std compatibility
 - [Phase 02-core-library P01]: Manual Error trait implementation instead of thiserror (thiserror is std-only)
 - [Phase 02-core-library P01]: defmt::Format derive only on NexoError, not ValidationError (String fields not supported)
-- [Phase 02-core-library P01]: Feature flags follow additive principle: default = [\"std\"], no negative feature names
+- [Phase 02-core-library P01]: Feature flags follow additive principle: default = ["std"], no negative feature names
 - [Phase 02-core-library P01]: &'static str for no_std, Box::leak for std convenience methods
 - [Phase 02-core-library P02]: Codec trait requires Message + Default bound (prost::Message::decode needs Default)
 - [Phase 02-core-library P02]: Size limits checked BEFORE encode/decode to prevent unbounded allocation
 - [Phase 02-core-library P02]: 4MB default limit follows gRPC standard for maximum message size
 - [Phase 02-core-library P02]: encode_to_vec() returns Vec<u8> directly, not Result (allocates properly sized buffer)
 - [Phase 02-core-library P02]: Convenience functions use ProstCodec internally for ergonomic API
-- [Phase 02-core-library]: Use core::error::Error for no_std compatibility
-- [Phase 02-core-library]: Manual Error trait impl instead of thiserror
-- [Phase 02-core-library]: defmt::Format only on NexoError, not ValidationError
-- [Phase 02-core-library]: Additive feature flags: default = [std], no negative names
 - [Phase 03-transport-layer P03-03]: Manual address parsing for Embassy's (IpAddress, u16) tuples
 - [Phase 03-transport-layer P03-03]: EmbassyTimeoutConfig as separate type for embassy_time::Duration type safety
 - [Phase 03-transport-layer P03-03]: Moderate timeout defaults (10s connect, 30s read, 10s write) for embedded environments
@@ -170,17 +92,6 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 03-transport-layer P03-02]: Add macros and rt-multi-thread features for tokio::test support
 - [Phase 03-transport-layer P03-02]: peer_addr().is_ok() for connection state detection (simple but effective)
 - [Phase 03-transport-layer P03-02]: Default timeouts: 10s connect, 30s read, 10s write
-- [Phase 02-core-library P01]: defmt::Format derive only on NexoError, not ValidationError (String fields not supported)
-- [Phase 02-core-library P01]: Feature flags follow additive principle: default = [\"std\"], no negative feature names
-- [Phase 02-core-library P01]: &'static str for no_std, Box::leak for std convenience methods
-- [Phase 02-core-library]: Use core::error::Error for no_std compatibility
-- [Phase 02-core-library]: Manual Error trait impl instead of thiserror
-- [Phase 02-core-library]: defmt::Format only on NexoError, not ValidationError
-- [Phase 02-core-library]: Additive feature flags: default = [std], no negative names
-- [Phase 03-transport-layer P03-03]: Manual address parsing for Embassy's (IpAddress, u16) tuples
-- [Phase 03-transport-layer P03-03]: EmbassyTimeoutConfig as separate type for embassy_time::Duration type safety
-- [Phase 03-transport-layer P03-03]: Moderate timeout defaults (10s connect, 30s read, 10s write) for embedded environments
-- [Phase 03-transport-layer P03-02]: Use tokio::time::timeout for all async operations to prevent hangs
 - [Phase 03-transport-layer P03-05]: Fix Embassy transport TcpSocket import path (embassy_net::tcp::TcpSocket for Embassy 0.8)
 - [Phase 03-transport-layer P03-05]: Add smoltcp features (tcp, udp, dhcpv4, proto-ipv4, medium-ethernet) to embassy-net dependency
 - [Phase 03-transport-layer P03-05]: Use split_once() instead of Vec for no_std address parsing
@@ -212,6 +123,9 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 05-05]: env-filter in tracing-subscriber for RUST_LOG environment variable configuration
 - [Phase 05-05]: Direct logging with context fields instead of entered() guards for tokio::spawn compatibility
 - [Phase 05-05]: Feature-gated tracing code with #[cfg(feature = "std")] for no_std compatibility
+- [Phase 05.1-01]: Wrap TcpStream in FramedTransport at connection accept for proper length-prefix framing
+- [Phase 05.1-01]: dispatch_document() accepts decoded Casp001Document structs to eliminate double-encoding
+- [Phase 05.1-01]: FramedTransport for all server message I/O ensures 4-byte length prefix protocol
 
 ### Pending Todos
 
@@ -224,14 +138,14 @@ None yet.
 - Nexo TCP framing specification needs detailed review during Phase 3 planning
 
 **Current blockers:**
-- None (smoltcp 0.12.0 compilation issues resolved in Plan 03-05)
+- None (server framing integration complete)
 
 **Deferred items:**
 - Embassy transport integration testing on actual hardware or QEMU (tests marked #[ignore] with instructions)
 
 ## Session Continuity
 
-Last session: 2026-03-02 (Phase 5 execution)
-Stopped at: Completed plan 05-06 - Server Integration Tests
+Last session: 2026-03-02 (Phase 5.1 execution)
+Stopped at: Completed plan 05.1-01 - Integrate FramedTransport into Server
 Next step: Execute Phase 6 - Testing & Verification
-Summary file: .planning/phases/05-server-api-reliability/05-06-SUMMARY.md
+Summary file: .planning/phases/05.1-fix-server-framing/05.1-01-SUMMARY.md

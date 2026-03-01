@@ -17,6 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Transport Layer** - Build dual runtime (Tokio/Embassy) transport abstraction with custom TCP framing ✓ (2026-03-02)
 - [x] **Phase 4: Client API** - Deliver POS initiator API with connection management and reconnection ✓ (2026-03-02)
 - [x] **Phase 5: Server API & Reliability** - Implement concurrent server, heartbeat, logging, and deduplication ✓ (2026-03-02)
+- [x] **Phase 5.1: Fix Server Framing Integration** - Gap closure: Integrate FramedTransport into server for E2E communication ✓ (2026-03-02)
 - [ ] **Phase 6: Testing & Verification** - Comprehensive test suite with property-based, integration, and embedded CI
 
 ## Phase Details
@@ -143,6 +144,31 @@ Plans:
 - [x] 05-05-PLAN.md — Integrate structured logging (tracing for std, defmt for no_std) (LOG-01, LOG-02, LOG-03)
 - [x] 05-06-PLAN.md — Write server integration tests with concurrent clients (SERVER-05)
 
+### Phase 5.1: Fix Server Framing Integration
+
+**INSERTED** — Gap closure phase to fix critical E2E communication issue identified in milestone audit.
+
+**Goal**: Integrate FramedTransport from Phase 3 into Phase 5 server implementation to enable client-server communication.
+
+**Depends on**: Phase 5 (server implementation), Phase 3 (FramedTransport)
+
+**Requirements**: TRANS-02, SERVER-01, SERVER-03, SERVER-05 (partial → complete)
+
+**Gap Closure**: Closes 4 partial requirements, 3 integration gaps, 3 broken E2E flows from v1.0 audit
+
+**Success Criteria** (what must be TRUE):
+  1. Server uses FramedTransport to receive framed messages from clients
+  2. Server uses FramedTransport to send framed responses to clients
+  3. Heartbeat messages use FramedTransport for proper framing
+  4. E2E integration test verifies real client → real server communication
+  5. Client can successfully send payment requests and receive responses
+  6. All 3 broken flows from audit now work end-to-end
+
+**Plans**: 1 plan
+
+Plans:
+- [x] 05.1-01-PLAN.md — Integrate FramedTransport into server for message receiving, response sending, and heartbeat (TRANS-02, SERVER-01, SERVER-03, SERVER-05)
+
 ### Phase 6: Testing & Verification
 
 **Goal**: Comprehensive test suite covering unit tests for all message types, validation logic, transport layer, client/server communication, and property-based tests for serialization edge cases.
@@ -176,9 +202,10 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Schema Conversion | 3/3 | ✓ Complete | 2026-02-28 |
+| 1. Schema Conversion | 3/3 | Complete | 2026-02-28 |
 | 2. Core Library | 0/4 | Planning complete | 2026-02-28 |
 | 3. Transport Layer | 0/4 | Not started | - |
 | 4. Client API | 0/5 | Not started | - |
-| 5. Server API & Reliability | 4/6 | In Progress|  |
+| 5. Server API & Reliability | 6/6 | Complete | 2026-03-02 |
+| 5.1. Fix Server Framing Integration | 1/1 | Complete | 2026-03-02 |
 | 6. Testing & Verification | 0/6 | Not started | - |
