@@ -43,6 +43,9 @@ pub mod builder;
 // Reconnection logic with exponential backoff
 pub mod reconnect;
 
+// Timeout handling and message ID generation
+pub mod timeout;
+
 // Runtime-specific implementations
 #[cfg(feature = "std")]
 pub mod std;

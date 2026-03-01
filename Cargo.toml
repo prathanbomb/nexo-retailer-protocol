@@ -18,7 +18,7 @@ categories = ["no-std", "parser-implementations", "api-bindings"]
 # All features are additive - no negative feature names
 [features]
 default = ["std"]
-std = ["prost/std", "tokio", "tokio-util", "rand"]
+std = ["prost/std", "tokio", "tokio-util", "rand", "uuid/std"]
 alloc = []
 defmt = ["dep:defmt"]
 
@@ -45,6 +45,7 @@ heapless = { version = "0.8", optional = true }
 tokio = { version = "1", optional = true, features = ["net", "time", "io-util", "macros", "rt-multi-thread"], default-features = false }
 tokio-util = { version = "0.7", optional = true, features = ["codec"], default-features = false }
 rand = { version = "0.8", optional = true }
+uuid = { version = "1.0", optional = true, default-features = false, features = ["v4"] }
 embassy-executor = { version = "0.9", optional = true, default-features = false, features = ["defmt", "arch-cortex-m", "executor-thread"] }
 embassy-time = { version = "0.5", optional = true, default-features = false, features = ["defmt"] }
 embassy-net = { version = "0.8", optional = true, default-features = false, features = ["tcp", "udp", "dhcpv4", "proto-ipv4", "medium-ethernet"] }
@@ -69,9 +70,19 @@ name = "echo_server"
 path = "examples/echo_server.rs"
 required-features = ["std"]
 
+# Integration tests
+[[test]]
+name = "client_integration"
+path = "tests/client_integration.rs"
+required-features = ["std"]
+
 # Dev dependencies for testing (Phase 2+)
 [dev-dependencies]
 # prost-types for testing framing layer
 prost-types = "0.14"
 # futures executor for running async tests in no_std environment
 futures-executor = "0.3"
+# futures for StreamExt trait in integration tests
+futures = "0.3"
+# env_logger for logging in integration tests
+env_logger = "0.11"
