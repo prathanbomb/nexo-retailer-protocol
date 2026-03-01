@@ -54,3 +54,12 @@ pub use std::NexoClient;
 
 #[cfg(all(feature = "embassy-net", not(feature = "std")))]
 pub use embassy::NexoClient;
+
+// Re-export builders at module level for ergonomic access
+pub use builder::{
+    MessageBuilder,
+    Header4Builder,
+    PaymentRequestBuilder,
+    SaleToPoiServiceRequestV06Builder,
+    SaleToPoiServiceResponseV06Builder,
+};

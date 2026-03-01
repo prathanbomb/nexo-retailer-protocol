@@ -146,6 +146,45 @@
 //! - Handles request/response correlation automatically
 //! - Uses length-prefixed framing for message transmission
 //!
+//! ### Builder Pattern
+//!
+//! The library provides builder structs for fluent, type-safe message construction:
+//!
+//! ```rust,no_run
+//! use nexo_retailer_protocol::{
+//!     Header4Builder, PaymentRequestBuilder, SaleToPoiServiceRequestV06Builder
+//! };
+//!
+//! // Build a header with fluent API
+//! let header = Header4Builder::new()
+//!     .message_function("DREQ".to_string())
+//!     .protocol_version("6.0".to_string())
+//!     .transaction_id("TX-12345".to_string())
+//!     .build()
+//!     .unwrap();
+//!
+//! // Build a payment request
+//! let payment = PaymentRequestBuilder::new()
+//!     .transaction_id("TX-12345".to_string())
+//!     .build()
+//!     .unwrap();
+//!
+//! // Build a complete service request
+//! let request = SaleToPoiServiceRequestV06Builder::new()
+//!     .header(header)
+//!     .build()
+//!     .unwrap();
+//! ```
+//!
+//! Available builders:
+//! - `Header4Builder` - Protocol headers
+//! - `PaymentRequestBuilder` - Payment request messages
+//! - `SaleToPoiServiceRequestV06Builder` - Service requests
+//! - `SaleToPoiServiceResponseV06Builder` - Service responses
+//!
+//! Builders validate required fields at build time and return `Result<T, NexoError>`
+//! for proper error handling.
+//!
 //! ## Usage
 //!
 //! ```rust,no_run
@@ -237,6 +276,15 @@ pub use client::NexoClient;
 #[cfg(all(feature = "embassy-net", not(feature = "std")))]
 pub use client::NexoClient;
 
+// Re-export builders at crate root for ergonomic message construction
+pub use client::builder::{
+    MessageBuilder,
+    Header4Builder,
+    PaymentRequestBuilder,
+    SaleToPoiServiceRequestV06Builder,
+    SaleToPoiServiceResponseV06Builder,
+};
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -251,6 +299,18 @@ mod tests {
         // Verify NexoClient is accessible from crate root
         let client = NexoClient::new();
         assert!(!client.is_connected());
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_builders_exported_at_crate_root() {
+        // Verify builders are accessible from crate root
+        let _header_builder = Header4Builder::new();
+        let _payment_builder = PaymentRequestBuilder::new();
+
+        // Verify service request/response builders are exported
+        let _request_builder = SaleToPoiServiceRequestV06Builder::new();
+        let _response_builder = SaleToPoiServiceResponseV06Builder::new();
     }
 
     #[test]
