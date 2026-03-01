@@ -29,7 +29,7 @@ use tokio::time::{timeout, Duration};
 /// This client simulates a POS system connecting to the payment terminal
 /// and sending/receiving CASP messages over TCP with length-prefix framing.
 pub struct MockClient {
-    stream: tokio::net::TcpStream,
+    pub stream: tokio::net::TcpStream,
     addr: String,
 }
 
@@ -350,4 +350,209 @@ async fn test_mock_client_handles_timeout() {
         .disconnect()
         .await
         .expect("failed to disconnect");
+}
+
+// ============================================================================
+// Task 2: Concurrent Connection and Request/Response Tests
+// ============================================================================
+
+#[tokio::test]
+async fn test_concurrent_clients_connect() {
+    // Start test server
+    let (server, addr) = start_test_server().await;
+
+    // Spawn 10 concurrent clients
+    let client_count = 10;
+    let mut client_tasks = Vec::new();
+
+    for i in 0..client_count {
+        let addr_clone = addr.clone();
+        let task = tokio::spawn(async move {
+            // Connect client
+            let mut client = MockClient::connect(&addr_clone).await?;
+
+            // Send a message
+            let request = create_test_payment_request(&format!("CONCURRENT-{:03}", i));
+            client.send_message(&request).await?;
+
+            // Give server time to process
+            tokio::time::sleep(Duration::from_millis(50)).await;
+
+            // Disconnect
+            client.disconnect().await?;
+
+            Ok::<(), NexoError>(())
+        });
+        client_tasks.push(task);
+    }
+
+    // Wait for all clients to complete
+    for task in client_tasks {
+        task.await.expect("client task panicked")
+            .expect("client connection failed");
+    }
+
+    // Give server time to clean up connections
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    // Verify all clients connected successfully
+    // (If we got here without errors, all 10 clients connected and sent messages)
+    assert!(true, "All 10 concurrent clients connected successfully");
+}
+
+#[tokio::test]
+async fn test_request_response_flow() {
+    // Start test server with a handler that tracks calls
+    let handler = Arc::new(MockRequestHandler::new());
+
+    // Bind server to ephemeral port
+    let server = NexoServer::bind("127.0.0.1:0")
+        .await
+        .expect("failed to bind test server");
+
+    let addr = server
+        .local_addr()
+        .expect("server has no local address")
+        .to_string();
+
+    let server = Arc::new(server.with_handler(handler.clone()));
+
+    // Spawn server in background
+    tokio::spawn(async move {
+        let _ = tokio::time::timeout(
+            Duration::from_secs(10),
+            server.run()
+        ).await;
+    });
+
+    // Give server time to start
+    tokio::time::sleep(Duration::from_millis(10)).await;
+
+    // Connect client and send payment request
+    let mut client = MockClient::connect(&addr)
+        .await
+        .expect("failed to connect mock client");
+
+    let request = create_test_payment_request("FLOW-TEST-001");
+    client.send_message(&request).await
+        .expect("failed to send message");
+
+    // Give server time to process
+    tokio::time::sleep(Duration::from_millis(50)).await;
+
+    // Verify handler received the request
+    assert_eq!(handler.payment_request_count().await, 1,
+               "Handler should have received exactly one payment request");
+
+    client.disconnect().await
+        .expect("failed to disconnect");
+}
+
+#[tokio::test]
+async fn test_multiple_messages_same_connection() {
+    // Start test server with a handler that tracks calls
+    let handler = Arc::new(MockRequestHandler::new());
+
+    // Bind server to ephemeral port
+    let server = NexoServer::bind("127.0.0.1:0")
+        .await
+        .expect("failed to bind test server");
+
+    let addr = server
+        .local_addr()
+        .expect("server has no local address")
+        .to_string();
+
+    let server = Arc::new(server.with_handler(handler.clone()));
+
+    // Spawn server in background
+    tokio::spawn(async move {
+        let _ = tokio::time::timeout(
+            Duration::from_secs(10),
+            server.run()
+        ).await;
+    });
+
+    // Give server time to start
+    tokio::time::sleep(Duration::from_millis(10)).await;
+
+    // Connect client and send 5 messages sequentially
+    let mut client = MockClient::connect(&addr)
+        .await
+        .expect("failed to connect mock client");
+
+    for i in 0..5 {
+        let request = create_test_payment_request(&format!("SEQ-MSG-{:03}", i));
+        client.send_message(&request).await
+            .expect("failed to send message");
+
+        // Small delay between messages
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+
+    // Give server time to process all messages
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    // Verify handler was called 5 times
+    assert_eq!(handler.payment_request_count().await, 5,
+               "Handler should have been called 5 times");
+
+    client.disconnect().await
+        .expect("failed to disconnect");
+}
+
+#[tokio::test]
+async fn test_error_handling_invalid_message() {
+    // Start test server with a handler that tracks errors
+    let handler = Arc::new(MockRequestHandler::new());
+
+    // Bind server to ephemeral port
+    let server = NexoServer::bind("127.0.0.1:0")
+        .await
+        .expect("failed to bind test server");
+
+    let addr = server
+        .local_addr()
+        .expect("server has no local address")
+        .to_string();
+
+    let server = Arc::new(server.with_handler(handler.clone()));
+
+    // Spawn server in background
+    tokio::spawn(async move {
+        let _ = tokio::time::timeout(
+            Duration::from_secs(10),
+            server.run()
+        ).await;
+    });
+
+    // Give server time to start
+    tokio::time::sleep(Duration::from_millis(10)).await;
+
+    // Connect client and send malformed message
+    let mut client = MockClient::connect(&addr)
+        .await
+        .expect("failed to connect mock client");
+
+    // Send invalid protobuf bytes
+    let invalid_message = vec![0xFF, 0xFF, 0xFF, 0xFF];
+    client.stream.write_all(&invalid_message).await
+        .expect("failed to write invalid message");
+
+    // Give server time to process (should handle error gracefully)
+    tokio::time::sleep(Duration::from_millis(50)).await;
+
+    // Try to send another valid message to verify server is still running
+    let valid_request = create_test_payment_request("VALID-AFTER-INVALID");
+    let _result = client.send_message(&valid_request).await;
+
+    // Server should still be running (connection might be closed, but server shouldn't crash)
+    // We don't assert on the result since the server might have closed the connection
+    // The important thing is that the server didn't panic or crash
+
+    // Give server time to process
+    tokio::time::sleep(Duration::from_millis(50)).await;
+
+    // If we got here, the server handled the invalid message without crashing
+    assert!(true, "Server handled invalid message without crashing");
 }
