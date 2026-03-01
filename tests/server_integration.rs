@@ -7,18 +7,23 @@
 //! - Heartbeat protocol
 //! - Error handling
 //! - Load testing
+//!
+//! NOTE: These tests use proper FramedTransport for message communication.
+//! The server requires length-prefixed framing.
 
 #![cfg(feature = "std")]
 
 use nexo_retailer_protocol::server::RequestHandler;
 use nexo_retailer_protocol::{
-    Casp001Document, Casp002Document, Casp003Document, Casp004Document, NexoError,
+    Casp001Document, Casp001DocumentDocument, Casp002Document, Casp003Document, Casp004Document,
+    Header4, SaleToPoiServiceRequestV06, NexoError,
     NexoServer, encode_message, decode_message,
 };
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::time::{timeout, Duration};
+use prost::Message;
 
 // ============================================================================
 // Mock Client Implementation
@@ -52,10 +57,7 @@ impl MockClient {
         })
     }
 
-    /// Send a CASP message (without length-prefix framing)
-    ///
-    /// Note: The current server implementation doesn't use length-prefix framing.
-    /// Messages are sent as raw protobuf bytes.
+    /// Send a CASP message with length-prefix framing
     ///
     /// # Arguments
     ///
@@ -63,19 +65,23 @@ impl MockClient {
     pub async fn send_message<T: prost::Message + Default>(&mut self, msg: &T) -> Result<(), NexoError> {
         let bytes = encode_message(msg)?;
 
-        // Write message bytes directly (no length prefix)
+        // Write length prefix (4-byte big-endian)
+        let len = bytes.len() as u32;
+        self.stream
+            .write_all(&len.to_be_bytes())
+            .await
+            .map_err(|e| NexoError::connection_owned(format!("write length failed: {}", e)))?;
+
+        // Write message body
         self.stream
             .write_all(&bytes)
             .await
-            .map_err(|e| NexoError::connection_owned(format!("write failed: {}", e)))?;
+            .map_err(|e| NexoError::connection_owned(format!("write body failed: {}", e)))?;
 
         Ok(())
     }
 
-    /// Receive a CASP response (without length-prefix framing)
-    ///
-    /// Note: The current server implementation doesn't use length-prefix framing.
-    /// This method reads all available bytes and attempts to decode them.
+    /// Receive a CASP response with length-prefix framing
     ///
     /// # Type Parameters
     ///
@@ -87,22 +93,33 @@ impl MockClient {
     pub async fn receive_response<T: prost::Message + Default>(
         &mut self,
     ) -> Result<T, NexoError> {
-        // Read message bytes (up to 4MB)
-        let mut buffer = vec![0u8; 4096];
-        let n = timeout(
+        // Read length prefix (4-byte big-endian)
+        let mut len_buf = [0u8; 4];
+        timeout(
             Duration::from_secs(5),
-            self.stream.read(&mut buffer)
+            self.stream.read_exact(&mut len_buf)
         )
         .await
-        .map_err(|_| NexoError::connection_owned("read timeout"))?
-        .map_err(|e| NexoError::connection_owned(format!("read failed: {}", e)))?;
+        .map_err(|_| NexoError::connection_owned("read length timeout"))?
+        .map_err(|e| NexoError::connection_owned(format!("read length failed: {}", e)))?;
 
-        if n == 0 {
-            return Err(NexoError::connection_owned("connection closed by server"));
+        let len = u32::from_be_bytes(len_buf) as usize;
+        if len > 4 * 1024 * 1024 {
+            return Err(NexoError::connection_owned("message too large"));
         }
 
+        // Read message body
+        let mut buffer = vec![0u8; len];
+        timeout(
+            Duration::from_secs(5),
+            self.stream.read_exact(&mut buffer)
+        )
+        .await
+        .map_err(|_| NexoError::connection_owned("read body timeout"))?
+        .map_err(|e| NexoError::connection_owned(format!("read body failed: {}", e)))?;
+
         // Decode message
-        decode_message(&buffer[..n])
+        decode_message(&buffer)
     }
 
     /// Disconnect from the server
@@ -270,14 +287,24 @@ pub async fn start_test_server() -> (Arc<NexoServer>, String) {
 ///
 /// # Arguments
 ///
-/// * `message_id` - Unique message identifier for deduplication testing
+/// * `message_id` - Unique message identifier for deduplication testing (used as tx_id)
 ///
 /// # Returns
 ///
 /// A valid Casp001Document with all required fields
-pub fn create_test_payment_request(_message_id: &str) -> Casp001Document {
+pub fn create_test_payment_request(message_id: &str) -> Casp001Document {
     Casp001Document {
-        document: Some(nexo_retailer_protocol::Casp001DocumentDocument::default()),
+        document: Some(Casp001DocumentDocument {
+            sale_to_poi_svc_req: Some(SaleToPoiServiceRequestV06 {
+                hdr: Some(Header4 {
+                    msg_fctn: Some("DREQ".to_string()),
+                    proto_vrsn: Some("6.0".to_string()),
+                    tx_id: Some(message_id.to_string()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+        }),
     }
 }
 
