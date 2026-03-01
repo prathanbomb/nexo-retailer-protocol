@@ -44,6 +44,14 @@ pub mod limits;
 use crate::NexoError;
 use prost::Message;
 
+// Import Vec for no_std + alloc builds
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use alloc::vec::Vec;
+
+// Import Vec for std builds
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
 /// Codec trait for encoding/decoding protobuf messages
 ///
 /// This trait abstracts the underlying codec implementation, enabling:
@@ -67,6 +75,7 @@ use prost::Message;
 ///     codec.decode(bytes)
 /// }
 /// ```
+#[cfg(feature = "alloc")]
 pub trait Codec<M: Message + Default> {
     /// Encode a message to bytes
     ///
@@ -112,8 +121,10 @@ pub trait Codec<M: Message + Default> {
 /// let bytes = codec.encode(&message)?;
 /// let decoded = codec.decode::<Casp001Document>(&bytes)?;
 /// ```
+#[cfg(feature = "alloc")]
 pub struct ProstCodec;
 
+#[cfg(feature = "alloc")]
 impl<M: Message + Default> Codec<M> for ProstCodec {
     fn encode(&self, msg: &M) -> Result<Vec<u8>, NexoError> {
         // Check size limit BEFORE encoding (CODEC-03)
@@ -160,6 +171,7 @@ impl<M: Message + Default> Codec<M> for ProstCodec {
 ///
 /// let bytes = encode(&message)?;
 /// ```
+#[cfg(feature = "alloc")]
 pub fn encode<M: Message + Default>(msg: &M) -> Result<Vec<u8>, NexoError> {
     ProstCodec.encode(msg)
 }
@@ -176,11 +188,12 @@ pub fn encode<M: Message + Default>(msg: &M) -> Result<Vec<u8>, NexoError> {
 ///
 /// let decoded = decode::<Casp001Document>(&bytes)?;
 /// ```
+#[cfg(feature = "alloc")]
 pub fn decode<M: Message + Default>(bytes: &[u8]) -> Result<M, NexoError> {
     ProstCodec.decode(bytes)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::*;
     use crate::Casp001Document;
