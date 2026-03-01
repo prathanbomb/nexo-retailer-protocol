@@ -5,20 +5,25 @@
 //! in later plans for deduplication and heartbeat tracking.
 
 use std::net::SocketAddr;
-use std::time::Instant;
+use std::time::{Duration, Instant};
+
+use crate::server::dedup::DeduplicationCache;
+
+/// Default TTL for deduplication cache (5 minutes)
+const DEFAULT_DEDUP_TTL: Duration = Duration::from_secs(5 * 60);
 
 /// Per-connection state tracking
 ///
 /// This struct maintains state information for each connected client,
-/// including the client's address, connection timestamp, and message count.
-/// Additional fields for deduplication and heartbeat tracking will be added
-/// in subsequent plans.
+/// including the client's address, connection timestamp, message count,
+/// and deduplication cache for replay attack prevention.
 ///
 /// # Fields
 ///
 /// * `addr` - The socket address of the connected client
 /// * `connected_at` - Timestamp when the connection was established
 /// * `message_count` - Number of messages received from this client
+/// * `seen_message_ids` - Deduplication cache for tracking seen message IDs
 ///
 /// # Examples
 ///
@@ -41,6 +46,8 @@ pub struct ConnectionState {
     connected_at: Instant,
     /// Number of messages received from this client
     message_count: u64,
+    /// Deduplication cache for tracking seen message IDs
+    seen_message_ids: DeduplicationCache,
 }
 
 impl ConnectionState {
@@ -64,6 +71,34 @@ impl ConnectionState {
             addr,
             connected_at: Instant::now(),
             message_count: 0,
+            seen_message_ids: DeduplicationCache::default(),
+        }
+    }
+
+    /// Create a new connection state with custom deduplication TTL
+    ///
+    /// # Arguments
+    ///
+    /// * `addr` - The socket address of the connected client
+    /// * `dedup_ttl` - Time-to-live for deduplication cache entries
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nexo_retailer_protocol::server::ConnectionState;
+    /// use std::net::SocketAddr;
+    /// use std::time::Duration;
+    ///
+    /// let addr = "127.0.0.1:8080".parse().unwrap();
+    /// let ttl = Duration::from_secs(60);
+    /// let state = ConnectionState::with_ttl(addr, ttl);
+    /// ```
+    pub fn with_ttl(addr: SocketAddr, dedup_ttl: Duration) -> Self {
+        Self {
+            addr,
+            connected_at: Instant::now(),
+            message_count: 0,
+            seen_message_ids: DeduplicationCache::new(dedup_ttl),
         }
     }
 
@@ -97,6 +132,41 @@ impl ConnectionState {
     /// Increment the message count (called when a message is received)
     pub(crate) fn increment_message_count(&mut self) {
         self.message_count += 1;
+    }
+
+    /// Get a mutable reference to the deduplication cache
+    ///
+    /// This allows the server to check for duplicate message IDs before
+    /// processing incoming messages.
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to the deduplication cache
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nexo_retailer_protocol::server::ConnectionState;
+    /// use std::net::SocketAddr;
+    ///
+    /// let addr = "127.0.0.1:8080".parse().unwrap();
+    /// let mut state = ConnectionState::new(addr);
+    ///
+    /// // Check for duplicate message ID
+    /// let result = state.dedup_cache().check_and_insert_static("MSG-001");
+    /// assert!(result.is_ok());
+    /// ```
+    #[cfg(feature = "alloc")]
+    pub fn dedup_cache(&mut self) -> &mut DeduplicationCache {
+        &mut self.seen_message_ids
+    }
+
+    /// Get a mutable reference to the deduplication cache (no_std version)
+    ///
+    /// This no_std-compatible version uses static strings for error messages.
+    #[cfg(not(feature = "alloc"))]
+    pub fn dedup_cache(&mut self) -> &mut DeduplicationCache {
+        &mut self.seen_message_ids
     }
 
     /// Get the duration since the connection was established
@@ -164,5 +234,89 @@ mod tests {
 
         // Test message_count accessor
         assert_eq!(state.message_count(), 0);
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_connection_state_new_has_empty_dedup_cache() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let mut state = ConnectionState::new(addr);
+
+        // New connection should have empty dedup cache
+        assert_eq!(state.dedup_cache().count(), 0);
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_connection_state_dedup_cache_insertion_and_retrieval() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let mut state = ConnectionState::new(addr);
+
+        // Insert message ID
+        assert!(state.dedup_cache().check_and_insert("MSG-001").is_ok());
+        assert_eq!(state.dedup_cache().count(), 1);
+        assert!(state.dedup_cache().contains("MSG-001"));
+
+        // Duplicate should be rejected
+        assert!(state.dedup_cache().check_and_insert("MSG-001").is_err());
+        assert_eq!(state.dedup_cache().count(), 1);
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_connection_state_with_custom_ttl() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let ttl = Duration::from_secs(60);
+        let mut state = ConnectionState::with_ttl(addr, ttl);
+
+        // Verify custom TTL is set
+        assert_eq!(state.dedup_cache().ttl(), ttl);
+
+        // Insert message ID
+        assert!(state.dedup_cache().check_and_insert("MSG-001").is_ok());
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_connection_state_expired_message_ids_accepted() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let ttl = Duration::from_millis(100);
+        let mut state = ConnectionState::with_ttl(addr, ttl);
+
+        // Insert message ID
+        assert!(state.dedup_cache().check_and_insert("MSG-001").is_ok());
+        assert_eq!(state.dedup_cache().count(), 1);
+
+        // Wait for expiry
+        std::thread::sleep(Duration::from_millis(150));
+
+        // Insert should succeed after expiry (cleanup happens on insert)
+        assert!(state.dedup_cache().check_and_insert("MSG-001").is_ok());
+        assert_eq!(state.dedup_cache().count(), 1);
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_connection_state_different_message_ids_accepted() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let mut state = ConnectionState::new(addr);
+
+        // Different message IDs should all be accepted
+        assert!(state.dedup_cache().check_and_insert("MSG-001").is_ok());
+        assert!(state.dedup_cache().check_and_insert("MSG-002").is_ok());
+        assert!(state.dedup_cache().check_and_insert("MSG-003").is_ok());
+
+        assert_eq!(state.dedup_cache().count(), 3);
+    }
+
+    #[test]
+    fn test_connection_state_with_ttl_creates_valid_state() {
+        let addr = "127.0.0.1:8080".parse().unwrap();
+        let ttl = Duration::from_secs(30);
+        let state = ConnectionState::with_ttl(addr, ttl);
+
+        assert_eq!(state.addr(), addr);
+        assert_eq!(state.message_count(), 0);
+        assert!(state.connection_duration().as_secs() < 1);
     }
 }
