@@ -48,6 +48,13 @@
 use crate::error::NexoError;
 use crate::Header4;
 use crate::PaymentRequest29;
+use crate::SaleToPoiServiceRequestV06;
+use crate::SaleToPoiServiceResponseV06;
+use crate::Transaction23;
+use crate::TransactionResponse23;
+use crate::SecurityTrailer4;
+use crate::LoginRequest3;
+use crate::LoginResponse3;
 
 /// Trait for message builders
 ///
@@ -355,9 +362,232 @@ impl Default for PaymentRequestBuilder {
     }
 }
 
+/// Builder for SaleToPoiServiceRequestV06 message
+///
+/// SaleToPoiServiceRequestV06 is the top-level service request container
+/// that includes a header and one or more transaction requests.
+///
+/// # Required Fields
+///
+/// * `hdr` - Message header (required)
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use nexo_retailer_protocol::{SaleToPoiServiceRequestV06Builder, Header4Builder};
+///
+/// let header = Header4Builder::new()
+///     .message_function("DREQ".to_string())
+///     .protocol_version("6.0".to_string())
+///     .transaction_id("TX-12345".to_string())
+///     .build()
+///     .unwrap();
+///
+/// let request = SaleToPoiServiceRequestV06Builder::new()
+///     .header(header)
+///     .build()
+///     .unwrap();
+/// ```
+pub struct SaleToPoiServiceRequestV06Builder {
+    inner: SaleToPoiServiceRequestV06,
+}
+
+impl SaleToPoiServiceRequestV06Builder {
+    /// Create a new SaleToPoiServiceRequest builder with default values
+    pub fn new() -> Self {
+        Self {
+            inner: SaleToPoiServiceRequestV06::default(),
+        }
+    }
+
+    /// Set the message header
+    ///
+    /// # Arguments
+    ///
+    /// * `header` - Header4 message with protocol metadata
+    ///
+    /// # Required
+    ///
+    /// The header is REQUIRED and must contain message function, protocol version,
+    /// and transaction ID.
+    pub fn header(mut self, header: Header4) -> Self {
+        self.inner.hdr = Some(header);
+        self
+    }
+
+    /// Add a transaction to the request
+    ///
+    /// # Arguments
+    ///
+    /// * `transaction` - Transaction23 message (e.g., PaymentRequest29)
+    pub fn add_transaction(mut self, transaction: Transaction23) -> Self {
+        self.inner.tx.push(transaction);
+        self
+    }
+
+    /// Set the security trailer
+    ///
+    /// # Arguments
+    ///
+    /// * `trailer` - SecurityTrailer4 for message authentication
+    pub fn security_trailer(mut self, trailer: SecurityTrailer4) -> Self {
+        self.inner.scty_trlr = Some(trailer);
+        self
+    }
+
+    /// Set the login request
+    ///
+    /// # Arguments
+    ///
+    /// * `login` - LoginRequest3 for authentication
+    pub fn login_request(mut self, login: LoginRequest3) -> Self {
+        self.inner.login_req = Some(login);
+        self
+    }
+}
+
+impl MessageBuilder<SaleToPoiServiceRequestV06> for SaleToPoiServiceRequestV06Builder {
+    /// Build the SaleToPoiServiceRequestV06, validating required fields
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(NexoError::Validation)` if:
+    /// - `hdr` is not set
+    fn build(self) -> Result<SaleToPoiServiceRequestV06, NexoError> {
+        // Validate required fields
+        if self.inner.hdr.is_none() {
+            return Err(NexoError::Validation {
+                field: "hdr",
+                reason: "header is required",
+            });
+        }
+
+        Ok(self.inner)
+    }
+}
+
+impl Default for SaleToPoiServiceRequestV06Builder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Builder for SaleToPoiServiceResponseV06 message
+///
+/// SaleToPoiServiceResponseV06 is the top-level service response container
+/// that includes a header and one or more transaction responses.
+///
+/// # Required Fields
+///
+/// * `hdr` - Message header (required)
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use nexo_retailer_protocol::{SaleToPoiServiceResponseV06Builder, Header4Builder};
+///
+/// let header = Header4Builder::new()
+///     .message_function("DRSP".to_string())
+///     .protocol_version("6.0".to_string())
+///     .transaction_id("TX-12345".to_string())
+///     .build()
+///     .unwrap();
+///
+/// let response = SaleToPoiServiceResponseV06Builder::new()
+///     .header(header)
+///     .build()
+///     .unwrap();
+/// ```
+pub struct SaleToPoiServiceResponseV06Builder {
+    inner: SaleToPoiServiceResponseV06,
+}
+
+impl SaleToPoiServiceResponseV06Builder {
+    /// Create a new SaleToPoiServiceResponse builder with default values
+    pub fn new() -> Self {
+        Self {
+            inner: SaleToPoiServiceResponseV06::default(),
+        }
+    }
+
+    /// Set the message header
+    ///
+    /// # Arguments
+    ///
+    /// * `header` - Header4 message with protocol metadata
+    ///
+    /// # Required
+    ///
+    /// The header is REQUIRED and must contain message function, protocol version,
+    /// and transaction ID.
+    pub fn header(mut self, header: Header4) -> Self {
+        self.inner.hdr = Some(header);
+        self
+    }
+
+    /// Add a transaction response
+    ///
+    /// # Arguments
+    ///
+    /// * `response` - TransactionResponse23 message
+    pub fn add_response(mut self, response: TransactionResponse23) -> Self {
+        self.inner.tx_rsp.push(response);
+        self
+    }
+
+    /// Set the security trailer
+    ///
+    /// # Arguments
+    ///
+    /// * `trailer` - SecurityTrailer4 for message authentication
+    pub fn security_trailer(mut self, trailer: SecurityTrailer4) -> Self {
+        self.inner.scty_trlr = Some(trailer);
+        self
+    }
+
+    /// Set the login response
+    ///
+    /// # Arguments
+    ///
+    /// * `login` - LoginResponse3 for authentication result
+    pub fn login_response(mut self, login: LoginResponse3) -> Self {
+        self.inner.login_rsp = Some(login);
+        self
+    }
+}
+
+impl MessageBuilder<SaleToPoiServiceResponseV06> for SaleToPoiServiceResponseV06Builder {
+    /// Build the SaleToPoiServiceResponseV06, validating required fields
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(NexoError::Validation)` if:
+    /// - `hdr` is not set
+    fn build(self) -> Result<SaleToPoiServiceResponseV06, NexoError> {
+        // Validate required fields
+        if self.inner.hdr.is_none() {
+            return Err(NexoError::Validation {
+                field: "hdr",
+                reason: "header is required",
+            });
+        }
+
+        Ok(self.inner)
+    }
+}
+
+impl Default for SaleToPoiServiceResponseV06Builder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::client::builder::{Header4Builder, MessageBuilder, PaymentRequestBuilder};
+    use crate::client::builder::{
+        Header4Builder, MessageBuilder, PaymentRequestBuilder,
+        SaleToPoiServiceRequestV06Builder, SaleToPoiServiceResponseV06Builder,
+    };
     use crate::error::NexoError;
 
     #[test]
@@ -502,5 +732,81 @@ mod tests {
         assert_eq!(request.tx_id, Some("TX-99999".to_string()));
         assert_eq!(request.rcncltn_id, Some("RECON-123".to_string()));
         assert_eq!(request.pmt_tp, Some("Sale".to_string()));
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_sale_to_poi_service_request_builder_valid_construction() {
+        use prost::alloc::string::ToString;
+
+        let header = Header4Builder::new()
+            .message_function("DREQ".to_string())
+            .protocol_version("6.0".to_string())
+            .transaction_id("TX-12345".to_string())
+            .build()
+            .unwrap();
+
+        let request = SaleToPoiServiceRequestV06Builder::new()
+            .header(header)
+            .build()
+            .unwrap();
+
+        assert!(request.hdr.is_some());
+        assert_eq!(
+            request.hdr.as_ref().unwrap().msg_fctn,
+            Some("DREQ".to_string())
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_sale_to_poi_service_request_builder_missing_header() {
+        let result = SaleToPoiServiceRequestV06Builder::new().build();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            NexoError::Validation { field, .. } => {
+                assert_eq!(field, "hdr");
+            }
+            _ => panic!("Expected ValidationError"),
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_sale_to_poi_service_response_builder_valid_construction() {
+        use prost::alloc::string::ToString;
+
+        let header = Header4Builder::new()
+            .message_function("DRSP".to_string())
+            .protocol_version("6.0".to_string())
+            .transaction_id("TX-12345".to_string())
+            .build()
+            .unwrap();
+
+        let response = SaleToPoiServiceResponseV06Builder::new()
+            .header(header)
+            .build()
+            .unwrap();
+
+        assert!(response.hdr.is_some());
+        assert_eq!(
+            response.hdr.as_ref().unwrap().msg_fctn,
+            Some("DRSP".to_string())
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_sale_to_poi_service_response_builder_missing_header() {
+        let result = SaleToPoiServiceResponseV06Builder::new().build();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            NexoError::Validation { field, .. } => {
+                assert_eq!(field, "hdr");
+            }
+            _ => panic!("Expected ValidationError"),
+        }
     }
 }
