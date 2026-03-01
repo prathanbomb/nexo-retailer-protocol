@@ -18,7 +18,7 @@ categories = ["no-std", "parser-implementations", "api-bindings"]
 # All features are additive - no negative feature names
 [features]
 default = ["std"]
-std = ["prost/std", "tokio", "tokio-util", "rand", "uuid/std", "async-trait", "alloc"]
+std = ["prost/std", "tokio", "tokio-util", "rand", "uuid/std", "async-trait", "alloc", "tracing", "tracing-subscriber"]
 alloc = []
 defmt = ["dep:defmt"]
 
@@ -47,6 +47,8 @@ tokio-util = { version = "0.7", optional = true, features = ["codec"], default-f
 rand = { version = "0.8", optional = true }
 uuid = { version = "1.0", optional = true, default-features = false, features = ["v4"] }
 async-trait = { version = "0.1", optional = true }
+tracing = { version = "0.1", optional = true, default-features = false }
+tracing-subscriber = { version = "0.3", optional = true, features = ["env-filter"], default-features = false }
 embassy-executor = { version = "0.9", optional = true, default-features = false, features = ["defmt", "arch-cortex-m", "executor-thread"] }
 embassy-time = { version = "0.5", optional = true, default-features = false, features = ["defmt"] }
 embassy-net = { version = "0.8", optional = true, default-features = false, features = ["tcp", "udp", "dhcpv4", "proto-ipv4", "medium-ethernet"] }
