@@ -2,28 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-01T16:08:25.076Z"
-progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-01T16:07:32.000Z"
+last_updated: "2026-03-01T16:13:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 27
-  completed_plans: 12
+  completed_plans: 11
   current_plan_phase: 03-transport-layer
-  current_plan_number: 06
+  current_plan_number: 05
   current_plan_status: complete
 ---
 
@@ -39,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 3 of 6 (Transport Layer)
-Plan: 6 of 6 in current phase (COMPLETE)
-Status: In Progress - Transport layer examples complete
-Last activity: 2026-03-01 — Plan 03-06 complete (4/4 tasks, transport examples and documentation)
+Plan: 5 of 6 in current phase (COMPLETE)
+Status: In Progress - Embassy transport export and tests complete
+Last activity: 2026-03-01 — Plan 03-05 complete (3/3 tasks, Embassy transport exported, unit and integration tests)
 
-Progress: [████░░░░░░░] 44% (Phase 3: 100% complete - All 6 plans done)
+Progress: [████░░░░░░░] 41% (Phase 3: 83% complete - Plans 01-05 done, 1 plan remaining)
 
 ## Performance Metrics
 
@@ -78,6 +65,7 @@ Progress: [████░░░░░░░] 44% (Phase 3: 100% complete - All 
 | Phase 03-transport-layer P03-02 | 15 | 4 tasks | 4 files |
 | Phase 03-transport-layer P03-03 | 120 | 3 tasks | 3 files |
 | Phase 03-transport-layer P03-04 | 3 | 3 tasks | 4 files |
+| Phase 03-transport-layer P03-05 | 20 | 3 tasks | 7 files |
 | Phase 03-transport-layer P03-06 | 4 | 4 tasks | 4 files |
 
 ## Accumulated Context
@@ -130,10 +118,12 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 03-transport-layer P03-03]: EmbassyTimeoutConfig as separate type for embassy_time::Duration type safety
 - [Phase 03-transport-layer P03-03]: Moderate timeout defaults (10s connect, 30s read, 10s write) for embedded environments
 - [Phase 03-transport-layer P03-02]: Use tokio::time::timeout for all async operations to prevent hangs
-- [Phase 03-transport-layer P03-02]: Import AsyncReadExt and AsyncWriteExt traits for read/write methods
-- [Phase 03-transport-layer P03-02]: Add macros and rt-multi-thread features for tokio::test support
-- [Phase 03-transport-layer P03-02]: peer_addr().is_ok() for connection state detection (simple but effective)
-- [Phase 03-transport-layer P03-02]: Default timeouts: 10s connect, 30s read, 10s write
+- [Phase 03-transport-layer P03-05]: Fix Embassy transport TcpSocket import path (embassy_net::tcp::TcpSocket for Embassy 0.8)
+- [Phase 03-transport-layer P03-05]: Add smoltcp features (tcp, udp, dhcpv4, proto-ipv4, medium-ethernet) to embassy-net dependency
+- [Phase 03-transport-layer P03-05]: Use split_once() instead of Vec for no_std address parsing
+- [Phase 03-transport-layer P03-05]: Remove is_open() calls (API changed in Embassy 0.8)
+- [Phase 03-transport-layer P03-05]: Add ToString import to test modules for no_std compatibility
+- [Phase 03-transport-layer P03-05]: Gate tokio tests with #[cfg(all(test, feature = "std"))]
 
 ### Pending Todos
 
@@ -146,15 +136,13 @@ None yet.
 - Nexo TCP framing specification needs detailed review during Phase 3 planning
 
 **Current blockers:**
-- smoltcp 0.12.0 compilation errors blocking Embassy transport (transitive dependency from embassy-net)
+- None (smoltcp 0.12.0 compilation issues resolved in Plan 03-05)
 
 **Deferred items:**
-- None - all transport layer work complete
+- Embassy transport integration testing on actual hardware or QEMU (tests marked #[ignore] with instructions)
 
 ## Session Continuity
 
-Last session: 2026-03-01 (Plan 03-06 execution)
-Stopped at: Plan 03-06 complete - all 4 tasks done, transport examples and documentation created
-Resume file: .planning/phases/03-transport-layer/03-06-SUMMARY.md
-Stopped at: Plan 03-02 complete - all 4 tasks done, Tokio transport with timeouts and tests
-Resume file: .planning/phases/03-transport-layer/03-02-SUMMARY.md
+Last session: 2026-03-01 (Plan 03-05 execution)
+Stopped at: Plan 03-05 complete - all 3 tasks done, Embassy transport exported and tested
+Resume file: .planning/phases/03-transport-layer/03-05-SUMMARY.md
