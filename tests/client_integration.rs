@@ -300,3 +300,93 @@ async fn test_client_times_out_on_slow_response() {
     let _ = client.disconnect().await;
     server.stop().await;
 }
+
+// ============================================================================
+// Task 4: Builder Pattern and Message ID Uniqueness
+// ============================================================================
+
+#[tokio::test]
+async fn test_client_sends_built_message() {
+    let _ = env_logger::try_init();
+
+    // Start mock server
+    let server = mock_server::MockNexoServer::start()
+        .await
+        .expect("Failed to start mock server");
+
+    let server_clone = server.clone();
+    tokio::spawn(async move {
+        let _ = server_clone.run().await;
+    });
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
+    // Connect client
+    let mut client = NexoClient::new();
+    let addr = server.addr().to_string();
+    client.connect(&addr).await
+        .expect("Client should connect");
+
+    // Build a header using builder pattern
+    let header = Header4Builder::new()
+        .message_function("DREQ".to_string())
+        .protocol_version("6.0".to_string())
+        .transaction_id("TX-12345".to_string())
+        .build()
+        .expect("Header should build successfully");
+
+    // Build a payment request using builder pattern
+    let payment = PaymentRequestBuilder::new()
+        .transaction_id("TX-12345".to_string())
+        .build()
+        .expect("Payment request should build successfully");
+
+    // Create a Transaction23 wrapper for the payment request
+    let transaction = nexo_retailer_protocol::Transaction23 {
+        tx_oneof: Some(nexo_retailer_protocol::transaction23::TxOneof::PmtReq(payment)),
+    };
+
+    // Create a SaleToPoiServiceRequestV06 with the header and payment transaction
+    let service_request = nexo_retailer_protocol::SaleToPoiServiceRequestV06 {
+        hdr: Some(header),
+        tx: vec![transaction],
+        scty_trlr: None,
+        login_req: None,
+    };
+
+    // Wrap in Casp001Document
+    let request = nexo_retailer_protocol::Casp001Document {
+        document: Some(nexo_retailer_protocol::Casp001DocumentDocument {
+            sale_to_poi_svc_req: Some(service_request),
+        }),
+    };
+
+    // Send the built message
+    client.send_request(&request).await
+        .expect("Send should succeed");
+
+    // Cleanup
+    let _ = client.disconnect().await;
+    server.stop().await;
+}
+
+#[tokio::test]
+async fn test_builder_rejects_invalid_message() {
+    let _ = env_logger::try_init();
+
+    // Try to build a header with missing required fields
+    let header_result = Header4Builder::new()
+        // Missing message_function, protocol_version, transaction_id
+        .build();
+
+    assert!(header_result.is_err(), "Builder should reject invalid message");
+    match header_result {
+        Err(NexoError::Validation { field, .. }) => {
+            assert!(field.contains("msg_fctn") || field.contains("proto_vrsn") || field.contains("tx_id"),
+                   "Should validate required fields");
+        }
+        _ => {
+            panic!("Expected validation error, got: {:?}", header_result);
+        }
+    }
+}
