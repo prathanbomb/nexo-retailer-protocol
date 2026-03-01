@@ -47,6 +47,7 @@
 
 use crate::error::NexoError;
 use crate::Header4;
+use crate::PaymentRequest29;
 
 /// Trait for message builders
 ///
@@ -221,9 +222,142 @@ impl Default for Header4Builder {
     }
 }
 
+/// Builder for PaymentRequest29 message
+///
+/// PaymentRequest29 represents a payment request in the CASP protocol.
+/// This builder provides a fluent API for constructing payment requests
+/// with proper validation of required fields.
+///
+/// # Required Fields
+///
+/// * `tx_id` - Transaction identifier (required)
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use nexo_retailer_protocol::PaymentRequestBuilder;
+///
+/// let request = PaymentRequestBuilder::new()
+///     .transaction_id("TX-12345".to_string())
+///     .build()
+///     .unwrap();
+/// ```
+pub struct PaymentRequestBuilder {
+    inner: PaymentRequest29,
+}
+
+impl PaymentRequestBuilder {
+    /// Create a new PaymentRequest builder with default values
+    pub fn new() -> Self {
+        Self {
+            inner: PaymentRequest29::default(),
+        }
+    }
+
+    /// Set the transaction ID
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Unique transaction identifier
+    ///
+    /// # Required
+    ///
+    /// This field is REQUIRED for proper transaction tracking.
+    pub fn transaction_id(mut self, id: String) -> Self {
+        self.inner.tx_id = Some(id);
+        self
+    }
+
+    /// Set the reconciliation ID
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Reconciliation identifier
+    pub fn reconciliation_id(mut self, id: String) -> Self {
+        self.inner.rcncltn_id = Some(id);
+        self
+    }
+
+    /// Set the original message ID
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Original message identifier (for follow-up transactions)
+    pub fn original_message_id(mut self, id: String) -> Self {
+        self.inner.orgnl_msg_id = Some(id);
+        self
+    }
+
+    /// Set the original transaction ID
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Original transaction identifier (for follow-up transactions)
+    pub fn original_transaction_id(mut self, id: String) -> Self {
+        self.inner.orgnl_tx_id = Some(id);
+        self
+    }
+
+    /// Set the original business message type
+    ///
+    /// # Arguments
+    ///
+    /// * `msg_type` - Original business message type
+    pub fn original_business_message(mut self, msg_type: String) -> Self {
+        self.inner.orgnl_biz_t_msg = Some(msg_type);
+        self
+    }
+
+    /// Set the payment type
+    ///
+    /// # Arguments
+    ///
+    /// * `payment_type` - Payment type code
+    pub fn payment_type(mut self, payment_type: String) -> Self {
+        self.inner.pmt_tp = Some(payment_type);
+        self
+    }
+
+    /// Set the merchant category code
+    ///
+    /// # Arguments
+    ///
+    /// * `code` - Merchant category code (MCC)
+    pub fn merchant_category_code(mut self, code: String) -> Self {
+        self.inner.mrchnt_categ_cd = Some(code);
+        self
+    }
+}
+
+impl MessageBuilder<PaymentRequest29> for PaymentRequestBuilder {
+    /// Build the PaymentRequest29, validating required fields
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(NexoError::Validation)` if:
+    /// - `tx_id` is not set
+    fn build(self) -> Result<PaymentRequest29, NexoError> {
+        // Validate required fields
+        if self.inner.tx_id.is_none() {
+            return Err(NexoError::Validation {
+                field: "tx_id",
+                reason: "transaction_id is required",
+            });
+        }
+
+        Ok(self.inner)
+    }
+}
+
+impl Default for PaymentRequestBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::client::builder::{Header4Builder, MessageBuilder};
+    use crate::client::builder::{Header4Builder, MessageBuilder, PaymentRequestBuilder};
     use crate::error::NexoError;
 
     #[test]
@@ -321,5 +455,52 @@ mod tests {
         // Each method should return Self for chaining
         let header = builder.build().unwrap();
         assert_eq!(header.msg_fctn, Some("AQRY".to_string()));
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_payment_builder_valid_construction() {
+        use prost::alloc::string::ToString;
+
+        let request = PaymentRequestBuilder::new()
+            .transaction_id("TX-12345".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(request.tx_id, Some("TX-12345".to_string()));
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_payment_builder_missing_transaction_id() {
+        use prost::alloc::string::ToString;
+
+        let result = PaymentRequestBuilder::new().build();
+
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            NexoError::Validation { field, .. } => {
+                assert_eq!(field, "tx_id");
+            }
+            _ => panic!("Expected ValidationError"),
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "alloc")]
+    fn test_payment_builder_fluent_api() {
+        use prost::alloc::string::ToString;
+
+        // Test that fluent chaining works properly with optional fields
+        let request = PaymentRequestBuilder::new()
+            .transaction_id("TX-99999".to_string())
+            .reconciliation_id("RECON-123".to_string())
+            .payment_type("Sale".to_string())
+            .build()
+            .unwrap();
+
+        assert_eq!(request.tx_id, Some("TX-99999".to_string()));
+        assert_eq!(request.rcncltn_id, Some("RECON-123".to_string()));
+        assert_eq!(request.pmt_tp, Some("Sale".to_string()));
     }
 }
