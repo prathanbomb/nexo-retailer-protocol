@@ -3,6 +3,63 @@
 //! This module provides a runtime-agnostic transport trait that can be implemented
 //! for both Tokio (std) and Embassy (no_std) async runtimes, enabling protocol
 //! message transmission over TCP connections.
+//!
+//! # Transport Implementations
+//!
+//! ## Tokio Transport (std)
+//!
+//! For server environments with the standard library:
+//!
+//! ```rust,no_run
+//! use nexo_retailer_protocol::transport::TokioTransport;
+//!
+//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! let transport = TokioTransport::new();
+//! let mut framed = FramedTransport::new(transport);
+//!
+//! // Connect and send messages
+//! framed.connect("192.168.1.100:8080").await?;
+//! // Use send_message/recv_message...
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Embassy Transport (no_std)
+//!
+//! For bare-metal embedded environments:
+//!
+//! ```rust,ignore
+//! use nexo_retailer_protocol::transport::EmbassyTransport;
+//! use embassy_net::TcpSocket;
+//! use embassy_time::Duration;
+//!
+//! # async fn example() -> Result<(), NexoError> {
+//! // Allocate buffers (caller manages memory in no_std)
+//! let mut rx_buffer = [0u8; 4096];
+//! let mut tx_buffer = [0u8; 4096];
+//!
+//! // Create socket with Embassy stack
+//! let socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
+//!
+//! // Create transport with custom timeouts
+//! let mut transport = EmbassyTransport::new(socket, &mut rx_buffer, &mut tx_buffer)
+//!     .with_timeouts(Duration::from_secs(30), Duration::from_secs(10));
+//!
+//! // Wrap with framed transport for message handling
+//! let mut framed = FramedTransport::new(transport);
+//!
+//! // Connect and send/receive messages
+//! framed.connect("192.168.1.100:8080").await?;
+//! // Use send_message/recv_message...
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! **Note:** Embassy transport requires:
+//! - Lifetime parameters (`'a`) for buffer references
+//! - Caller-managed buffer allocation (no heap in embedded)
+//! - Embassy network stack and executor
+//! - `embassy-net` feature flag
 
 #![cfg_attr(not(feature = "std"), no_std)]
 

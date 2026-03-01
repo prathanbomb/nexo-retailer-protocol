@@ -193,6 +193,10 @@ pub use transport::TokioTransport;
 #[cfg(feature = "std")]
 pub use transport::TimeoutConfig;
 
+// Re-export Embassy transport when embassy-net feature is enabled
+#[cfg(feature = "embassy-net")]
+pub use transport::{EmbassyTransport, EmbassyTimeoutConfig};
+
 #[cfg(test)]
 mod tests {
     use super::*;
