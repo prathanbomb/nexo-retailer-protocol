@@ -11,7 +11,7 @@ use tokio::sync::Mutex;
 
 use nexo_retailer_protocol::transport::FramedTransport;
 use nexo_retailer_protocol::transport::TokioTransport;
-use nexo_retailer_protocol::{Casp001Document, Casp002Document};
+use nexo_retailer_protocol::{Casp002Document, Casp002DocumentDocument, SaleToPoiServiceResponseV06};
 
 /// Mock Nexo Server that implements the Nexo TCP framing protocol
 ///
@@ -178,18 +178,25 @@ impl MockNexoServer {
         let transport = TokioTransport::new(socket);
         let mut framed = FramedTransport::new(transport);
 
-        // Receive request (we use Casp001Document as the request type)
-        let request_result = framed.recv_message::<Casp001Document>().await;
+        // Receive request - just receive bytes, we'll echo back a response
+        // We don't care about the request type for echo behavior
+        let receive_result = framed.recv_message::<Casp002Document>().await;
 
-        match request_result {
+        match receive_result {
             Ok(_request) => {
                 // Add delay if configured
                 if delay_ms > 0 {
                     tokio::time::sleep(tokio::time::Duration::from_millis(delay_ms)).await;
                 }
 
-                // Echo back a default response
-                let response = Casp002Document::default();
+                // Echo back a response with actual content
+                let response_body = SaleToPoiServiceResponseV06::default();
+                let response = Casp002Document {
+                    document: Some(Casp002DocumentDocument {
+                        sale_to_poi_svc_rsp: Some(response_body),
+                    }),
+                };
+
                 if let Err(e) = framed.send_message(&response).await {
                     eprintln!("Mock server send error: {:?}", e);
                 }

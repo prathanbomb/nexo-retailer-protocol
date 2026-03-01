@@ -170,6 +170,9 @@ async fn test_client_receives_response() {
     client.send_request(&request).await
         .expect("Send should succeed");
 
+    // Give server time to process and respond
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
     // Receive echoed response
     let response: nexo_retailer_protocol::Casp002Document = client.receive_response()
         .await
