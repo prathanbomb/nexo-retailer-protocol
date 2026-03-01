@@ -2,55 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-01T15:11:40.704Z"
-progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-02-28T16:47:11.929Z"
-progress:
-  total_phases: 2
-  completed_phases: 1
-  total_plans: 7
-  completed_plans: 5
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-02-28T16:20:10.278Z"
-progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
 status: in_progress
-last_updated: "2026-02-28T16:37:00.000Z"
+last_updated: "2026-03-01T15:47:21.000Z"
 progress:
-  total_phases: 1
-  completed_phases: 0
-  total_plans: 2
-  completed_plans: 1
-  current_plan_phase: 01-schema-conversion
+  total_phases: 6
+  completed_phases: 2
+  total_plans: 27
+  completed_plans: 8
+  current_plan_phase: 03-transport-layer
   current_plan_number: 02
-  current_plan_status: partial_completion
+  current_plan_status: ready_to_start
 ---
 
 # Project State
@@ -60,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Enable embedded payment devices to communicate using the Nexo Retailer Protocol with a Rust implementation that works in both bare metal (no_std) and standard environments.
-**Current focus:** Phase 2: Core Library
+**Current focus:** Phase 3: Transport Layer
 
 ## Current Position
 
-Phase: 2 of 6 (Core Library)
-Plan: 2 of 4 in current phase (COMPLETE)
-Status: In Progress - Codec layer with size limits complete
-Last activity: 2026-02-28 — Plan 02-02 complete (3/3 tasks, codec trait, ProstCodec, size limits, round-trip tests)
+Phase: 3 of 6 (Transport Layer)
+Plan: 1 of 6 in current phase (COMPLETE)
+Status: In Progress - Transport trait and framing layer complete
+Last activity: 2026-03-01 — Plan 03-01 complete (4/4 tasks, Transport trait, FramedTransport, tests)
 
-Progress: [████░░░░░░░] 20% (Phase 2: 50% complete - Plans 01-02 done, 2 plans remaining)
+Progress: [████░░░░░░░] 30% (Phase 3: 17% complete - Plan 01 done, 5 plans remaining)
 
 ## Performance Metrics
 
@@ -101,6 +62,7 @@ Progress: [████░░░░░░░] 20% (Phase 2: 50% complete - Plans
 | Phase 02-core-library P01 | 5min | 3 tasks | 7 files |
 | Phase 02-core-library P02 | 224 | 3 tasks | 3 files |
 | Phase 02-core-library P03 | 45 | 4 tasks | 3 files |
+| Phase 03 P01 | 663 | 4 tasks | 4 files |
 
 ## Accumulated Context
 

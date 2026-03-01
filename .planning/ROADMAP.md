@@ -13,7 +13,7 @@ This roadmap delivers a Rust implementation of the Nexo Retailer Protocol (ISO 2
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Schema Conversion** - Convert 17 CASP XSD files to protobuf with field number registry and code generation ✓ (2026-02-28)
-- [ ] **Phase 2: Core Library** - Implement codec, validation, error handling, and platform feature flags
+- [x] **Phase 2: Core Library** - Implement codec, validation, error handling, and platform feature flags ✓ (2026-03-01)
 - [ ] **Phase 3: Transport Layer** - Build dual runtime (Tokio/Embassy) transport abstraction with custom TCP framing
 - [ ] **Phase 4: Client API** - Deliver POS initiator API with connection management and reconnection
 - [ ] **Phase 5: Server API & Reliability** - Implement concurrent server, heartbeat, logging, and deduplication
@@ -62,10 +62,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Implement no_std-compatible error types and platform feature flags (ERROR-01, ERROR-02, ERROR-03, ERROR-04, PLAT-01, PLAT-02, PLAT-03)
-- [ ] 02-02-PLAN.md — Implement protobuf codec layer with size limits (CODEC-01, CODEC-02, CODEC-03, CODEC-04, CODEC-05)
-- [ ] 02-03-PLAN.md — Implement message validation for XSD constraints (VAL-01, VAL-02, VAL-03, VAL-04, VAL-05, VAL-06)
-- [ ] 02-04-PLAN.md — Establish bare-metal CI and dependency audit (PLAT-04, PLAT-05)
+- [x] 02-01-PLAN.md — Implement no_std-compatible error types and platform feature flags (ERROR-01, ERROR-02, ERROR-03, ERROR-04, PLAT-01, PLAT-02, PLAT-03)
+- [x] 02-02-PLAN.md — Implement protobuf codec layer with size limits (CODEC-01, CODEC-02, CODEC-03, CODEC-04, CODEC-05)
+- [x] 02-03-PLAN.md — Implement message validation for XSD constraints (VAL-01, VAL-02, VAL-03, VAL-04, VAL-05, VAL-06)
+- [x] 02-04-PLAN.md — Establish bare-metal CI and dependency audit (PLAT-04, PLAT-05)
 
 ### Phase 3: Transport Layer
 
