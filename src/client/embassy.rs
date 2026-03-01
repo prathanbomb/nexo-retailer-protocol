@@ -9,7 +9,7 @@
 extern crate alloc;
 
 use crate::client::reconnect::{ReconnectConfig, Backoff};
-use crate::client::timeout::generate_message_id;
+use crate::client::timeout::{TimeoutConfig, generate_message_id};
 use crate::error::NexoError;
 use crate::transport::{FramedTransport, Transport, EmbassyTransport};
 
@@ -79,6 +79,8 @@ pub struct NexoClient<'a, T: Transport> {
     pending: PendingRequests,
     /// Reconnection configuration
     reconnect_config: Option<ReconnectConfig>,
+    /// Timeout configuration for requests
+    timeout_config: Option<TimeoutConfig>,
     _phantom: core::marker::PhantomData<&'a ()>,
 }
 
@@ -96,6 +98,7 @@ impl<'a> NexoClient<'a, EmbassyTransport<'a>> {
             server_addr: String::new(),
             pending: PendingRequests::new(),
             reconnect_config: None,
+            timeout_config: None,
             _phantom: core::marker::PhantomData,
         }
     }
@@ -114,6 +117,7 @@ impl<'a, T: Transport> NexoClient<'a, T> {
             server_addr: String::new(),
             pending: PendingRequests::new(),
             reconnect_config: None,
+            timeout_config: None,
             _phantom: core::marker::PhantomData,
         }
     }
@@ -125,6 +129,16 @@ impl<'a, T: Transport> NexoClient<'a, T> {
     /// * `config` - Reconnection configuration with backoff parameters
     pub fn with_reconnect_config(mut self, config: ReconnectConfig) -> Self {
         self.reconnect_config = Some(config);
+        self
+    }
+
+    /// Set timeout configuration for requests
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Timeout configuration with request timeout duration
+    pub fn with_timeout_config(mut self, config: TimeoutConfig) -> Self {
+        self.timeout_config = Some(config);
         self
     }
 

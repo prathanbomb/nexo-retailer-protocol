@@ -67,6 +67,8 @@ impl PendingRequests {
         if let Some(tx) = self.inner.remove(&id) {
             tx.send(response)
         } else {
+            // Late response: request already cleaned up (timeout or unknown ID)
+            eprintln!("Warning: Rejected late response for unknown request ID: {}", id);
             Err(response)
         }
     }
@@ -122,6 +124,8 @@ pub struct NexoClient<T: Transport = TokioTransport> {
     pending: PendingRequests,
     /// Reconnection configuration
     reconnect_config: Option<ReconnectConfig>,
+    /// Timeout configuration for requests
+    timeout_config: Option<TimeoutConfig>,
 }
 
 impl NexoClient<TokioTransport> {
@@ -142,6 +146,7 @@ impl NexoClient<TokioTransport> {
             server_addr: String::new(),
             pending: PendingRequests::new(),
             reconnect_config: None,
+            timeout_config: None,
         }
     }
 
@@ -198,6 +203,30 @@ impl NexoClient<TokioTransport> {
     /// ```
     pub fn with_reconnect_config(mut self, config: ReconnectConfig) -> Self {
         self.reconnect_config = Some(config);
+        self
+    }
+
+    /// Set timeout configuration for requests
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Timeout configuration with request timeout duration
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nexo_retailer_protocol::{NexoClient, client::timeout::TimeoutConfig};
+    /// # use std::time::Duration;
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let mut client = NexoClient::new();
+    /// let config = TimeoutConfig::new()
+    ///     .with_request_timeout(Duration::from_secs(45));
+    /// client = client.with_timeout_config(config);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn with_timeout_config(mut self, config: TimeoutConfig) -> Self {
+        self.timeout_config = Some(config);
         self
     }
 
@@ -275,6 +304,7 @@ impl<T: Transport> NexoClient<T> {
             server_addr: String::new(),
             pending: PendingRequests::new(),
             reconnect_config: None,
+            timeout_config: None,
         }
     }
 
@@ -880,5 +910,41 @@ mod tests {
             }
             _ => panic!("Expected Connection error"),
         }
+    }
+
+    #[test]
+    fn test_late_response_rejection() {
+        let mut pending = PendingRequests::new();
+
+        // Try to complete an unknown request (late response)
+        let response = vec![1, 2, 3, 4];
+        let result = pending.complete("unknown-id".to_string(), response.clone());
+
+        // Should return Err with the response bytes
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), response);
+
+        // Verify the pending requests HashMap is still empty
+        assert_eq!(pending.inner.len(), 0);
+    }
+
+    #[test]
+    fn test_pending_requests_cleanup_then_complete() {
+        let mut pending = PendingRequests::new();
+
+        // Register a request
+        let _rx = pending.register("msg-1".to_string());
+        assert_eq!(pending.inner.len(), 1);
+
+        // Clean up (simulates timeout)
+        pending.cleanup("msg-1".to_string());
+        assert_eq!(pending.inner.len(), 0);
+
+        // Try to complete the cleaned-up request (late response)
+        let response = vec![5, 6, 7, 8];
+        let result = pending.complete("msg-1".to_string(), response);
+
+        // Should return Err - request was cleaned up
+        assert!(result.is_err());
     }
 }
