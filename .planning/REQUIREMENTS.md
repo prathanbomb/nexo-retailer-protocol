@@ -72,7 +72,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SERVER-01**: Server API for device listeners (concurrent connection handling)
 - [ ] **SERVER-02**: Connection manager with per-connection state tracking
 - [ ] **SERVER-03**: Request dispatcher routing to application handlers
-- [ ] **SERVER-04**: Message deduplication for replay attack prevention
+- [x] **SERVER-04**: Message deduplication for replay attack prevention
 - [ ] **SERVER-05**: Server integration tests with concurrent clients
 
 ### Reliability Features
@@ -180,7 +180,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SERVER-01 | Phase 5 | Pending |
 | SERVER-02 | Phase 5 | Pending |
 | SERVER-03 | Phase 5 | Pending |
-| SERVER-04 | Phase 5 | Pending |
+| SERVER-04 | Phase 5 | Complete |
 | SERVER-05 | Phase 5 | Pending |
 | RELY-01 | Phase 5 | Pending |
 | RELY-02 | Phase 5 | Pending |
