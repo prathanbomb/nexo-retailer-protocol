@@ -10,6 +10,11 @@ use core::time::Duration;
 
 use crate::error::NexoError;
 
+pub mod framing;
+
+// Re-export framing types at module level
+pub use framing::{FramedTransport, LENGTH_PREFIX_SIZE, MAX_FRAME_SIZE};
+
 /// Runtime-agnostic transport trait for async I/O operations
 ///
 /// This trait defines the interface for both Tokio and Embassy implementations,

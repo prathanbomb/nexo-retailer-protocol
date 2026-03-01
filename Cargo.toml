@@ -10,12 +10,23 @@ repository = "https://github.com/your-org/nexo-retailer-protocol"
 keywords = ["nexo", "payment", "iso20022", "casp", "protobuf"]
 categories = ["no-std", "parser-implementations", "api-bindings"]
 
+# Feature flags for no_std compatibility
+# - default: Enable std for standard environment builds
+# - std: Enables std library support (prost with std)
+# - alloc: Enables allocations for no_std environments with heap
+# - defmt: Enables embedded logging support
+# All features are additive - no negative feature names
 [features]
 default = ["std"]
 std = ["prost/std"]
 alloc = []
 defmt = ["dep:defmt"]
 
+# Dependencies with no_std support
+# All dependencies use default-features = false to ensure no_std compatibility
+# prost: protobuf codec with no_std support
+# defmt: embedded logging (optional, for no_std environments)
+# heapless: data structures without heap allocation (optional)
 [dependencies]
 prost = { version = "0.14", default-features = false, features = ["derive"] }
 defmt = { version = "0.3", optional = true }
@@ -26,4 +37,7 @@ prost-build = "0.14"
 
 # Dev dependencies for testing (Phase 2+)
 [dev-dependencies]
-# Empty for now - tests added in Phase 6
+# prost-types for testing framing layer
+prost-types = "0.14"
+# futures executor for running async tests in no_std environment
+futures-executor = "0.3"
