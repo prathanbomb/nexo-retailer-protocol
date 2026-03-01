@@ -11,12 +11,15 @@ use crate::error::NexoError;
 use crate::server::ConnectionState;
 use crate::server::handler::RequestHandler;
 use crate::server::dispatcher::Dispatcher;
+use crate::server::heartbeat::{HeartbeatConfig, HeartbeatMonitor};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::Mutex;
+use prost::Message;
 
 /// Nexo Retailer Protocol server for Tokio runtime
 ///
@@ -187,8 +190,12 @@ impl NexoServer {
 
         // Spawn connection handler task
         tokio::spawn(async move {
-            // Create connection state
+            // Create connection state with default heartbeat config
             let mut state = ConnectionState::new(addr);
+            state.set_heartbeat_config(Some(HeartbeatConfig::new()));
+
+            // Create heartbeat monitor
+            let heartbeat_monitor = HeartbeatMonitor::new(HeartbeatConfig::new());
 
             // Insert connection state into the HashMap
             connections.lock().await.insert(addr, state.clone());
@@ -196,10 +203,10 @@ impl NexoServer {
             // Handle connection with dispatcher if handler is set
             let result = if let Some(handler) = handler {
                 let dispatcher = Dispatcher::new(handler);
-                Self::handle_connection_with_dispatcher(stream, &mut state, dispatcher).await
+                Self::handle_connection_with_dispatcher(stream, &mut state, dispatcher, heartbeat_monitor).await
             } else {
                 // No handler set - use basic echo handler
-                Self::handle_connection(stream, &mut state).await
+                Self::handle_connection(stream, &mut state, heartbeat_monitor).await
             };
 
             // Clean up connection state when handler exits
@@ -217,49 +224,101 @@ impl NexoServer {
     /// This method reads messages from the client, dispatches them to the handler,
     /// and sends responses back. It continues until the client disconnects.
     ///
+    /// Uses tokio::select! to concurrently handle incoming messages and heartbeat
+    /// monitoring, ensuring the connection loop remains responsive.
+    ///
     /// # Arguments
     ///
     /// * `stream` - The TCP stream for the connection
     /// * `state` - The connection state (updated in-place)
     /// * `dispatcher` - Message dispatcher for routing to handlers
+    /// * `heartbeat_monitor` - Heartbeat monitor for dead connection detection
     async fn handle_connection_with_dispatcher(
         mut stream: tokio::net::TcpStream,
         state: &mut ConnectionState,
         dispatcher: Dispatcher,
+        mut heartbeat_monitor: HeartbeatMonitor,
     ) -> Result<(), NexoError> {
         let mut buffer = [0u8; 4096];
+
+        // Create heartbeat ticker
+        let config = heartbeat_monitor.config().clone();
+        let mut heartbeat_interval = if config.is_enabled() {
+            tokio::time::interval(config.interval())
+        } else {
+            // Create a dummy interval that never ticks if heartbeat is disabled
+            tokio::time::interval(Duration::from_secs(u64::MAX))
+        };
+
         loop {
-            let n = stream.read(&mut buffer).await.map_err(|e| {
-                NexoError::connection_owned(format!("read error: {}", e))
-            })?;
-
-            if n == 0 {
-                // EOF - client disconnected
-                return Ok(());
-            }
-
-            // Increment message count
-            state.increment_message_count();
-
-            // Dispatch message to handler and get response
-            let response_bytes = dispatcher.dispatch(&buffer[..n]).await;
-
-            match response_bytes {
-                Ok(bytes) => {
-                    // Send response back to client
-                    if !bytes.is_empty() {
-                        stream.write_all(&bytes).await.map_err(|e| {
-                            NexoError::connection_owned(format!("write error: {}", e))
-                        })?;
+            // Use tokio::select! to concurrently handle messages and heartbeat
+            tokio::select! {
+                // Heartbeat tick
+                _ = heartbeat_interval.tick() => {
+                    // Check for timeout
+                    if heartbeat_monitor.check_timeout() {
+                        return Err(NexoError::connection_owned(
+                            format!("connection timeout: no activity for {:?}", heartbeat_monitor.time_since_activity())
+                        ));
                     }
-                    // If bytes is empty (None acknowledgment), don't send anything
+
+                    // Send heartbeat if needed
+                    if heartbeat_monitor.should_send_heartbeat() {
+                        // Create heartbeat message (empty document with MessageFunction="HRTB")
+                        // For now, we'll just send an empty byte array as a placeholder
+                        // In a real implementation, this would be a proper CASP heartbeat message
+                        let heartbeat_msg = create_heartbeat_message();
+
+                        // Send heartbeat
+                        if let Err(e) = stream.write_all(&heartbeat_msg).await {
+                            return Err(NexoError::connection_owned(format!("heartbeat send error: {}", e)));
+                        }
+
+                        // Mark heartbeat as sent
+                        heartbeat_monitor.mark_heartbeat_sent();
+                    }
                 }
-                Err(e) => {
-                    // Handler returned error - log it and continue
-                    // Don't crash the server due to handler errors
-                    eprintln!("Handler error for connection {:?}: {:?}", state.addr(), e);
-                    // Optionally send error response to client
-                    // For now, just continue processing
+
+                // Incoming message from client
+                result = stream.read(&mut buffer) => {
+                    match result {
+                        Ok(n) => {
+                            if n == 0 {
+                                // EOF - client disconnected
+                                return Ok(());
+                            }
+
+                            // Update activity and increment message count
+                            state.update_activity();
+                            heartbeat_monitor.update_activity();
+                            state.increment_message_count();
+
+                            // Dispatch message to handler and get response
+                            let response_bytes = dispatcher.dispatch(&buffer[..n]).await;
+
+                            match response_bytes {
+                                Ok(bytes) => {
+                                    // Send response back to client
+                                    if !bytes.is_empty() {
+                                        stream.write_all(&bytes).await.map_err(|e| {
+                                            NexoError::connection_owned(format!("write error: {}", e))
+                                        })?;
+                                    }
+                                    // If bytes is empty (None acknowledgment), don't send anything
+                                }
+                                Err(e) => {
+                                    // Handler returned error - log it and continue
+                                    // Don't crash the server due to handler errors
+                                    eprintln!("Handler error for connection {:?}: {:?}", state.addr(), e);
+                                    // Optionally send error response to client
+                                    // For now, just continue processing
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            return Err(NexoError::connection_owned(format!("read error: {}", e)));
+                        }
+                    }
                 }
             }
         }
@@ -270,34 +329,82 @@ impl NexoServer {
     /// This is a placeholder that keeps the connection alive by echoing back
     /// any data received. Used when no handler is set.
     ///
+    /// Uses tokio::select! to concurrently handle incoming messages and heartbeat
+    /// monitoring, ensuring the connection loop remains responsive.
+    ///
     /// # Arguments
     ///
     /// * `stream` - The TCP stream for the connection
     /// * `state` - The connection state (updated in-place)
+    /// * `heartbeat_monitor` - Heartbeat monitor for dead connection detection
     async fn handle_connection(
         mut stream: tokio::net::TcpStream,
         state: &mut ConnectionState,
+        mut heartbeat_monitor: HeartbeatMonitor,
     ) -> Result<(), NexoError> {
-        // Placeholder: Read until EOF (client disconnects)
-        // Echo back any data received
         let mut buffer = [0u8; 4096];
+
+        // Create heartbeat ticker
+        let config = heartbeat_monitor.config().clone();
+        let mut heartbeat_interval = if config.is_enabled() {
+            tokio::time::interval(config.interval())
+        } else {
+            // Create a dummy interval that never ticks if heartbeat is disabled
+            tokio::time::interval(Duration::from_secs(u64::MAX))
+        };
+
         loop {
-            let n = stream.read(&mut buffer).await.map_err(|e| {
-                NexoError::connection_owned(format!("read error: {}", e))
-            })?;
+            // Use tokio::select! to concurrently handle messages and heartbeat
+            tokio::select! {
+                // Heartbeat tick
+                _ = heartbeat_interval.tick() => {
+                    // Check for timeout
+                    if heartbeat_monitor.check_timeout() {
+                        return Err(NexoError::connection_owned(
+                            format!("connection timeout: no activity for {:?}", heartbeat_monitor.time_since_activity())
+                        ));
+                    }
 
-            if n == 0 {
-                // EOF - client disconnected
-                return Ok(());
+                    // Send heartbeat if needed
+                    if heartbeat_monitor.should_send_heartbeat() {
+                        // Create heartbeat message (empty document with MessageFunction="HRTB")
+                        let heartbeat_msg = create_heartbeat_message();
+
+                        // Send heartbeat
+                        if let Err(e) = stream.write_all(&heartbeat_msg).await {
+                            return Err(NexoError::connection_owned(format!("heartbeat send error: {}", e)));
+                        }
+
+                        // Mark heartbeat as sent
+                        heartbeat_monitor.mark_heartbeat_sent();
+                    }
+                }
+
+                // Incoming message from client
+                result = stream.read(&mut buffer) => {
+                    match result {
+                        Ok(n) => {
+                            if n == 0 {
+                                // EOF - client disconnected
+                                return Ok(());
+                            }
+
+                            // Update activity and increment message count
+                            state.update_activity();
+                            heartbeat_monitor.update_activity();
+                            state.increment_message_count();
+
+                            // Echo back (basic functionality)
+                            stream.write_all(&buffer[..n]).await.map_err(|e| {
+                                NexoError::connection_owned(format!("write error: {}", e))
+                            })?;
+                        }
+                        Err(e) => {
+                            return Err(NexoError::connection_owned(format!("read error: {}", e)));
+                        }
+                    }
+                }
             }
-
-            // Increment message count
-            state.increment_message_count();
-
-            // Echo back (basic functionality)
-            stream.write_all(&buffer[..n]).await.map_err(|e| {
-                NexoError::connection_owned(format!("write error: {}", e))
-            })?;
         }
     }
 
@@ -360,6 +467,23 @@ impl NexoServer {
             .local_addr()
             .map_err(|e| NexoError::connection_owned(format!("failed to get local address: {}", e)))
     }
+}
+
+/// Create a heartbeat message
+///
+/// This creates a minimal heartbeat message that can be sent to keep the
+/// connection alive. For now, this is a placeholder that sends an empty
+/// byte array. In a full implementation, this would create a proper CASP
+/// message with MessageFunction="HRTB".
+///
+/// # Returns
+///
+/// A byte array containing the heartbeat message
+fn create_heartbeat_message() -> Vec<u8> {
+    // Placeholder: Send empty byte array as heartbeat
+    // In a real implementation, this would create a proper CASP heartbeat message
+    // For example: an empty Casp001Document with MessageFunction="HRTB"
+    vec![]
 }
 
 #[cfg(test)]
