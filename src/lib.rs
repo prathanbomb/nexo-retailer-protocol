@@ -148,6 +148,7 @@ extern crate alloc;
 include!("protos/nexo.casp.v1.rs");
 
 // Public module exports
+pub mod client;
 pub mod codec;
 pub mod error;
 pub mod features;
