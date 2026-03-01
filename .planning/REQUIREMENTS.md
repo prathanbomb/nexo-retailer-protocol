@@ -61,10 +61,10 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **CLIENT-01**: Client API for POS initiators (request/response pattern)
 - [ ] **CLIENT-02**: Builder pattern for complex message construction
 - [x] **CLIENT-03**: Connection management (connect, disconnect)
-- [ ] **CLIENT-04**: Request/response correlation with pending request tracking
-- [ ] **CLIENT-05**: Basic reconnection logic with exponential backoff
-- [ ] **CLIENT-06**: Unique message ID generation for replay protection
-- [ ] **CLIENT-07**: Timeout handling with late response rejection
+- [x] **CLIENT-04**: Request/response correlation with pending request tracking
+- [x] **CLIENT-05**: Basic reconnection logic with exponential backoff
+- [x] **CLIENT-06**: Unique message ID generation for replay protection
+- [x] **CLIENT-07**: Timeout handling with late response rejection
 - [ ] **CLIENT-08**: Client integration tests with mock server
 
 ### Server API
@@ -79,7 +79,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **RELY-01**: Heartbeat/keepalive protocol for dead connection detection
 - [ ] **RELY-02**: Configurable heartbeat interval and timeout
-- [ ] **RELY-03**: Automatic reconnection with configurable retry attempts
+- [x] **RELY-03**: Automatic reconnection with configurable retry attempts
 
 ### Logging & Diagnostics
 
@@ -172,10 +172,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLIENT-01 | Phase 4 | Complete |
 | CLIENT-02 | Phase 4 | Pending |
 | CLIENT-03 | Phase 4 | Complete |
-| CLIENT-04 | Phase 4 | Pending |
-| CLIENT-05 | Phase 4 | Pending |
-| CLIENT-06 | Phase 4 | Pending |
-| CLIENT-07 | Phase 4 | Pending |
+| CLIENT-04 | Phase 4 | Complete |
+| CLIENT-05 | Phase 4 | Complete |
+| CLIENT-06 | Phase 4 | Complete |
+| CLIENT-07 | Phase 4 | Complete |
 | CLIENT-08 | Phase 4 | Pending |
 | SERVER-01 | Phase 5 | Pending |
 | SERVER-02 | Phase 5 | Pending |
@@ -184,7 +184,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SERVER-05 | Phase 5 | Pending |
 | RELY-01 | Phase 5 | Pending |
 | RELY-02 | Phase 5 | Pending |
-| RELY-03 | Phase 4 | Pending |
+| RELY-03 | Phase 4 | Complete |
 | LOG-01 | Phase 5 | Pending |
 | LOG-02 | Phase 5 | Pending |
 | LOG-03 | Phase 5 | Pending |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T17:16:19.895Z"
+last_updated: "2026-03-01T17:27:35.634Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 18
-  completed_plans: 15
+  completed_plans: 17
 ---
 
 ---
@@ -52,11 +52,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 4 of 6 (Client API)
-Plan: 1 of 5 in current phase (COMPLETE)
-Status: In Progress - Client connection management and request/response API complete
-Last activity: 2026-03-01 — Plan 04-01 complete (5 tasks, NexoClient with connection management, request correlation, and send/receive methods)
+Plan: 4 of 5 in current phase (COMPLETE)
+Status: In Progress - Timeout handling with request correlation complete
+Last activity: 2026-03-01 — Plan 04-04 complete (4 tasks, TimeoutConfig, generate_message_id, send_with_timeout, late response rejection)
 
-Progress: [█████░░░░░░] 44% (Phase 4: 20% complete - Plan 01 done, 4 plans remaining)
+Progress: [███████░░░░] 57% (Phase 4: 80% complete - Plans 01-04 done, 1 plan remaining)
 
 ## Performance Metrics
 
@@ -94,6 +94,10 @@ Progress: [█████░░░░░░] 44% (Phase 4: 20% complete - Plan 
 | Phase 03-transport-layer P03-05 | 20 | 3 tasks | 7 files |
 | Phase 03-transport-layer P03-06 | 4 | 4 tasks | 4 files |
 | Phase 04-client-api P01 | 204 | 5 tasks | 4 files |
+| Phase 04-client-api P02 | 3 | 5 tasks | 3 files |
+| Phase 04-client-api P03 | 5 | 5 tasks | 6 files |
+| Phase 04-client-api P03 | 313 | 5 tasks | 6 files |
+| Phase 04-client-api P04 | 3 | 4 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -154,6 +158,14 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 04-client-api]: Used Arc<AtomicBool> for thread-safe connection state in std environments
 - [Phase 04-client-api]: Generic NexoClient over Transport trait enables single codebase for std and no_std
 - [Phase 04-client-api]: Feature-gated NexoClient exports prevent conflicts when both std and embassy enabled
+- [Phase 04-client-api P03]: rand v0.8 with default features for std::thread_rng() access in std environments
+- [Phase 04-client-api P03]: EmbassyDuration type alias to avoid core::time::Duration conflicts in embassy
+- [Phase 04-client-api P03]: Exponential backoff with jitter: delay * (1.0 + random(-0.2, 0.2)) for ±20% variation
+- [Phase 04-client-api P03]: Runtime-specific backoff: wait_with_jitter() for std, wait_without_jitter() for embassy
+- [Phase 04-client-api P04]: UUID v4 for std message IDs (122 bits entropy) vs timestamp-counter for no_std
+- [Phase 04-client-api P04]: Late response rejection with warning log (std) or silent drop (no_std)
+- [Phase 04-client-api P04]: Pending request cleanup on timeout prevents memory leaks in HashMap
+- [Phase 04-client-api P04]: where T::Error: Into<NexoError> bound for timeout wrapper error conversion
 
 ### Pending Todos
 
@@ -173,6 +185,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-01 (Plan 03-05 execution)
-Stopped at: Plan 03-05 complete - all 3 tasks done, Embassy transport exported and tested
-Resume file: .planning/phases/03-transport-layer/03-05-SUMMARY.md
+Last session: 2026-03-01 (Plan 04-04 execution)
+Stopped at: Plan 04-04 complete - all 4 tasks done, Timeout handling with request correlation implemented
+Resume file: .planning/phases/04-client-api/04-04-SUMMARY.md
