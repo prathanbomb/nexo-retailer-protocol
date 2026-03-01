@@ -23,7 +23,60 @@ use tokio::sync::oneshot;
 /// This struct manages in-flight requests by mapping message IDs to oneshot
 /// senders. When a response arrives, the corresponding sender is used to
 /// deliver the response to the waiting task.
-type PendingRequests = BTreeMap<String, oneshot::Sender<Vec<u8>>>;
+struct PendingRequests {
+    inner: BTreeMap<String, oneshot::Sender<Vec<u8>>>,
+}
+
+impl PendingRequests {
+    /// Create a new pending requests tracker
+    fn new() -> Self {
+        Self {
+            inner: BTreeMap::new(),
+        }
+    }
+
+    /// Register a pending request and return the receiver
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Unique message ID for this request
+    ///
+    /// # Returns
+    ///
+    /// A oneshot receiver that will receive the response
+    fn register(&mut self, id: String) -> oneshot::Receiver<Vec<u8>> {
+        let (tx, rx) = oneshot::channel();
+        self.inner.insert(id, tx);
+        rx
+    }
+
+    /// Complete a pending request by sending the response
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Message ID of the request to complete
+    /// * `response` - Response bytes to send
+    ///
+    /// # Returns
+    ///
+    /// Ok(()) if the response was sent, Err if the receiver was dropped
+    fn complete(&mut self, id: String, response: Vec<u8>) -> Result<(), Vec<u8>> {
+        if let Some(tx) = self.inner.remove(&id) {
+            tx.send(response)
+        } else {
+            Err(response)
+        }
+    }
+
+    /// Clean up a pending request (e.g., after timeout)
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Message ID of the request to clean up
+    fn cleanup(&mut self, id: String) {
+        self.inner.remove(&id);
+    }
+}
 
 /// Nexo Retailer Protocol client for Tokio runtime
 ///
@@ -63,7 +116,6 @@ pub struct NexoClient<T: Transport = TokioTransport> {
     /// Server address for reconnection
     server_addr: String,
     /// Pending requests awaiting responses
-    #[allow(dead_code)]
     pending: PendingRequests,
 }
 
@@ -407,5 +459,65 @@ mod tests {
             }
             _ => panic!("Expected Connection error"),
         }
+    }
+
+    #[test]
+    fn test_pending_requests_register_and_complete() {
+        let mut pending = PendingRequests::new();
+
+        // Register a request
+        let rx = pending.register("msg-1".to_string());
+
+        // Complete the request
+        let response = vec![1, 2, 3, 4];
+        assert!(pending.complete("msg-1".to_string(), response.clone()).is_ok());
+
+        // Verify we can receive the response
+        let received = block_on(rx).unwrap();
+        assert_eq!(received, response);
+    }
+
+    #[test]
+    fn test_pending_requests_cleanup() {
+        let mut pending = PendingRequests::new();
+
+        // Register a request
+        pending.register("msg-1".to_string());
+        assert_eq!(pending.inner.len(), 1);
+
+        // Clean up the request
+        pending.cleanup("msg-1".to_string());
+        assert_eq!(pending.inner.len(), 0);
+    }
+
+    #[test]
+    fn test_pending_requests_complete_unknown_id() {
+        let mut pending = PendingRequests::new();
+
+        // Try to complete an unknown request
+        let response = vec![1, 2, 3, 4];
+        let result = pending.complete("unknown".to_string(), response.clone());
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), response);
+    }
+
+    #[test]
+    fn test_pending_requests_register_replaces_existing() {
+        let mut pending = PendingRequests::new();
+
+        // Register first request
+        let _rx1 = pending.register("msg-1".to_string());
+        assert_eq!(pending.inner.len(), 1);
+
+        // Register second request with same ID (should replace)
+        let rx2 = pending.register("msg-1".to_string());
+        assert_eq!(pending.inner.len(), 1);
+
+        // Complete should work with the new receiver
+        let response = vec![5, 6, 7, 8];
+        assert!(pending.complete("msg-1".to_string(), response.clone()).is_ok());
+
+        let received = block_on(rx2).unwrap();
+        assert_eq!(received, response);
     }
 }
