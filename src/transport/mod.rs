@@ -12,8 +12,21 @@ use crate::error::NexoError;
 
 pub mod framing;
 
+#[cfg(feature = "embassy-net")]
+pub mod embassy;
+
 // Re-export framing types at module level
 pub use framing::{FramedTransport, LENGTH_PREFIX_SIZE, MAX_FRAME_SIZE};
+
+// Re-export Embassy transport when feature is enabled
+#[cfg(feature = "embassy-net")]
+pub use embassy::EmbassyTransport;
+
+// Tokio transport (std feature only)
+#[cfg(feature = "std")]
+pub mod tokio;
+#[cfg(feature = "std")]
+pub use tokio::{TokioTransport, TimeoutConfig};
 
 /// Runtime-agnostic transport trait for async I/O operations
 ///
