@@ -133,15 +133,15 @@ Plans:
   6. Structured logging works with tracing (std) and defmt (no_std)
   7. Integration tests verify concurrent client handling and load scenarios
 
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 05-01: Implement server connection manager and concurrent request handling
-- [ ] 05-02: Implement request dispatcher and application handler routing
-- [ ] 05-03: Implement message deduplication for replay attack prevention
-- [ ] 05-04: Implement heartbeat/keepalive protocol
-- [ ] 05-05: Integrate structured logging (tracing for std, defmt for no_std)
-- [ ] 05-06: Write server integration tests with concurrent clients
+- [x] 05-01-PLAN.md — Implement server connection manager and concurrent request handling (SERVER-01, SERVER-02)
+- [x] 05-02-PLAN.md — Implement request dispatcher and application handler routing (SERVER-03)
+- [x] 05-03-PLAN.md — Implement message deduplication for replay attack prevention (SERVER-04)
+- [x] 05-04-PLAN.md — Implement heartbeat/keepalive protocol (RELY-01, RELY-02)
+- [x] 05-05-PLAN.md — Integrate structured logging (tracing for std, defmt for no_std) (LOG-01, LOG-02, LOG-03)
+- [x] 05-06-PLAN.md — Write server integration tests with concurrent clients (SERVER-05)
 
 ### Phase 6: Testing & Verification
 

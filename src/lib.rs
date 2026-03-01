@@ -353,6 +353,13 @@ pub use server::NexoServer;
 // Re-export ConnectionState for server usage
 pub use server::ConnectionState;
 
+// Re-export DeduplicationCache for server usage
+pub use server::DeduplicationCache;
+
+// Re-export RequestHandler for server usage
+#[cfg(feature = "std")]
+pub use server::RequestHandler;
+
 #[cfg(all(feature = "embassy-net", not(feature = "std")))]
 pub use client::NexoClient;
 

@@ -50,6 +50,12 @@
 // Per-connection state tracking
 pub mod connection;
 
+// Message deduplication cache for replay attack prevention
+pub mod dedup;
+
+// Request handler trait for application callbacks
+pub mod handler;
+
 // Runtime-specific implementations
 #[cfg(feature = "std")]
 pub mod std_impl;
@@ -61,3 +67,9 @@ pub use std_impl::NexoServer;
 
 // Re-export ConnectionState for convenience
 pub use connection::ConnectionState;
+
+// Re-export DeduplicationCache for convenience
+pub use dedup::DeduplicationCache;
+
+// Re-export RequestHandler trait for convenience
+pub use handler::RequestHandler;

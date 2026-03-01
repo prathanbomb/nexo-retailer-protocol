@@ -3,6 +3,19 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
+last_updated: "2026-03-01T17:36:29.121Z"
+progress:
+  total_phases: 4
+  completed_phases: 4
+  total_plans: 18
+  completed_plans: 19
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
 last_updated: "2026-03-01T17:27:35.634Z"
 progress:
   total_phases: 4
@@ -47,23 +60,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Enable embedded payment devices to communicate using the Nexo Retailer Protocol with a Rust implementation that works in both bare metal (no_std) and standard environments.
-**Current focus:** Phase 4: Client API
+**Current focus:** Phase 5: Server API & Reliability
 
 ## Current Position
 
-Phase: 4 of 6 (Client API)
-Plan: 4 of 5 in current phase (COMPLETE)
-Status: In Progress - Timeout handling with request correlation complete
-Last activity: 2026-03-01 — Plan 04-04 complete (4 tasks, TimeoutConfig, generate_message_id, send_with_timeout, late response rejection)
+Phase: 5 of 6 (Server API & Reliability)
+Plan: 05-01 (Server Connection Manager) - COMPLETE
+Status: Executing Phase 5 - 1 of 6 plans complete
+Last activity: 2026-03-01 — Completed plan 05-01: Server Connection Manager and Concurrent Request Handling (3.6 min)
 
-Progress: [███████░░░░] 57% (Phase 4: 80% complete - Plans 01-04 done, 1 plan remaining)
+Progress: [███████░░░░] 60% (Phase 4: 100% complete, Phase 5: 17% complete - 1/6 plans done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 154 min (2.6 hours)
-- Total execution time: 29.1 hours
+- Total plans completed: 13
+- Average duration: 143 min (2.4 hours)
+- Total execution time: 31.0 hours
 
 **By Phase:**
 
@@ -71,14 +84,14 @@ Progress: [███████░░░░] 57% (Phase 4: 80% complete - Plans
 |-------|-------|-------|----------|
 | 1. Schema Conversion | 3 | 3/3 | 184 min |
 | 2. Core Library | 3 | 3/3 | 91 min |
-| 3. Transport Layer | 5 | 5/6 | 173 min |
-| 4. Client API | 0 | 0/5 | - |
-| 5. Server API & Reliability | 0 | 0/6 | - |
+| 3. Transport Layer | 6 | 6/6 | 173 min |
+| 4. Client API | 5 | 5/5 | 68 min |
+| 5. Server API & Reliability | 1 | 1/6 | 4 min |
 | 6. Testing & Verification | 0 | 0/6 | - |
 
 **Recent Trend:**
-- Last 5 plans: P03-02(15min), P03-03(120min), P03-01(663min), P02-03(45min), P02-02(224min)
-- Trend: Velocity improving with simpler transport implementations
+- Last 5 plans: P05-01(4min), P04-05(2956min), P04-04(3min), P04-03(5min), P04-02(3min)
+- Trend: Server foundation completed quickly (3.6 min)
 
 *Updated after each plan completion*
 | Phase 01-schema-conversion P01 | 492 | 4 tasks | 19 files |
@@ -98,6 +111,8 @@ Progress: [███████░░░░] 57% (Phase 4: 80% complete - Plans
 | Phase 04-client-api P03 | 5 | 5 tasks | 6 files |
 | Phase 04-client-api P03 | 313 | 5 tasks | 6 files |
 | Phase 04-client-api P04 | 3 | 4 tasks | 4 files |
+| Phase 04-client-api P05 | 1772386490 | 5 tasks | 4 files |
+| Phase 05-server-api-reliability P05-01 | 4 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -166,6 +181,11 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 04-client-api P04]: Late response rejection with warning log (std) or silent drop (no_std)
 - [Phase 04-client-api P04]: Pending request cleanup on timeout prevents memory leaks in HashMap
 - [Phase 04-client-api P04]: where T::Error: Into<NexoError> bound for timeout wrapper error conversion
+- [Phase 05-server-api-reliability P05-01]: BTreeMap for connection tracking (sorted iteration for debugging)
+- [Phase 05-server-api-reliability P05-01]: Async bind() method to match Tokio TcpListener::bind() signature
+- [Phase 05-server-api-reliability P05-01]: NexoError::connection_owned() for dynamic error messages (leaks strings, acceptable for error paths)
+- [Phase 05-server-api-reliability P05-01]: tokio::spawn per connection with automatic cleanup in async move block
+- [Phase 05-server-api-reliability P05-01]: Echo placeholder in handle_connection() until message dispatcher added in 05-02
 
 ### Pending Todos
 
@@ -185,6 +205,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-01 (Plan 04-04 execution)
-Stopped at: Plan 04-04 complete - all 4 tasks done, Timeout handling with request correlation implemented
-Resume file: .planning/phases/04-client-api/04-04-SUMMARY.md
+Last session: 2026-03-01 (Phase 5 execution)
+Stopped at: Completed plan 05-01 - Server Connection Manager and Concurrent Request Handling
+Next step: Execute plan 05-02 - Message Dispatcher and Request Routing
+Summary file: .planning/phases/05-server-api-reliability/05-01-SUMMARY.md
