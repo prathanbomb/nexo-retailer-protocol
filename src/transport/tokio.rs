@@ -57,6 +57,261 @@ use core::time::Duration;
 use crate::error::NexoError;
 use crate::transport::Transport;
 
+/// Timeout configuration for transport operations
+///
+/// Provides a unified timeout configuration structure that can be used across
+/// both Tokio and Embassy implementations, with runtime-specific wrapper methods.
+///
+/// # Default Values
+///
+/// - Connect timeout: 10 seconds
+/// - Read timeout: 30 seconds
+/// - Write timeout: 10 seconds
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use nexo_retailer_protocol::transport::tokio::TimeoutConfig;
+/// use core::time::Duration;
+///
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let config = TimeoutConfig::new()
+///     .with_connect(Duration::from_secs(5))
+///     .with_read(Duration::from_secs(20))
+///     .with_write(Duration::from_secs(5));
+///
+/// // Use with timeout wrapper methods
+/// let result = config.with_read_timeout(async {
+///     // Some async operation
+///     Ok::<(), Box<dyn std::error::Error>>(())
+/// }).await;
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Debug, Clone, Copy)]
+pub struct TimeoutConfig {
+    /// Timeout for connection operations
+    pub connect_timeout: Duration,
+
+    /// Timeout for read operations
+    pub read_timeout: Duration,
+
+    /// Timeout for write operations
+    pub write_timeout: Duration,
+}
+
+impl Default for TimeoutConfig {
+    fn default() -> Self {
+        Self {
+            connect_timeout: Duration::from_secs(10),
+            read_timeout: Duration::from_secs(30),
+            write_timeout: Duration::from_secs(10),
+        }
+    }
+}
+
+impl TimeoutConfig {
+    /// Create a new TimeoutConfig with default values
+    ///
+    /// # Default Values
+    ///
+    /// - Connect timeout: 10 seconds
+    /// - Read timeout: 30 seconds
+    /// - Write timeout: 10 seconds
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use nexo_retailer_protocol::transport::tokio::TimeoutConfig;
+    ///
+    /// let config = TimeoutConfig::new();
+    /// assert_eq!(config.connect_timeout.as_secs(), 10);
+    /// assert_eq!(config.read_timeout.as_secs(), 30);
+    /// assert_eq!(config.write_timeout.as_secs(), 10);
+    /// ```
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Set the connect timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `d` - Duration to wait for connection
+    ///
+    /// # Returns
+    ///
+    /// Self for builder pattern chaining
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use nexo_retailer_protocol::transport::tokio::TimeoutConfig;
+    /// use core::time::Duration;
+    ///
+    /// let config = TimeoutConfig::new().with_connect(Duration::from_secs(5));
+    /// assert_eq!(config.connect_timeout.as_secs(), 5);
+    /// ```
+    pub fn with_connect(mut self, d: Duration) -> Self {
+        self.connect_timeout = d;
+        self
+    }
+
+    /// Set the read timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `d` - Duration to wait for read operations
+    ///
+    /// # Returns
+    ///
+    /// Self for builder pattern chaining
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use nexo_retailer_protocol::transport::tokio::TimeoutConfig;
+    /// use core::time::Duration;
+    ///
+    /// let config = TimeoutConfig::new().with_read(Duration::from_secs(20));
+    /// assert_eq!(config.read_timeout.as_secs(), 20);
+    /// ```
+    pub fn with_read(mut self, d: Duration) -> Self {
+        self.read_timeout = d;
+        self
+    }
+
+    /// Set the write timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `d` - Duration to wait for write operations
+    ///
+    /// # Returns
+    ///
+    /// Self for builder pattern chaining
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use nexo_retailer_protocol::transport::tokio::TimeoutConfig;
+    /// use core::time::Duration;
+    ///
+    /// let config = TimeoutConfig::new().with_write(Duration::from_secs(5));
+    /// assert_eq!(config.write_timeout.as_secs(), 5);
+    /// ```
+    pub fn with_write(mut self, d: Duration) -> Self {
+        self.write_timeout = d;
+        self
+    }
+
+    /// Wrap an async operation with a read timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - Async function to execute with timeout
+    ///
+    /// # Returns
+    ///
+    /// The result of the async operation, or `NexoError::Timeout` if it exceeds the read timeout
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use nexo_retailer_protocol::transport::tokio::TimeoutConfig;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let config = TimeoutConfig::new();
+    ///
+    /// let result = config.with_read_timeout(async {
+    ///     // Some async read operation
+    ///     Ok::<usize, Box<dyn std::error::Error>>(42)
+    /// }).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn with_read_timeout<F, T>(&self, f: F) -> Result<T, NexoError>
+    where
+        F: core::future::Future<Output = Result<T, NexoError>>,
+    {
+        tokio::time::timeout(self.read_timeout, f)
+            .await
+            .map_err(|_| NexoError::Timeout)?
+    }
+
+    /// Wrap an async operation with a write timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - Async function to execute with timeout
+    ///
+    /// # Returns
+    ///
+    /// The result of the async operation, or `NexoError::Timeout` if it exceeds the write timeout
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use nexo_retailer_protocol::transport::tokio::TimeoutConfig;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let config = TimeoutConfig::new();
+    ///
+    /// let result = config.with_write_timeout(async {
+    ///     // Some async write operation
+    ///     Ok::<usize, Box<dyn std::error::Error>>(42)
+    /// }).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn with_write_timeout<F, T>(&self, f: F) -> Result<T, NexoError>
+    where
+        F: core::future::Future<Output = Result<T, NexoError>>,
+    {
+        tokio::time::timeout(self.write_timeout, f)
+            .await
+            .map_err(|_| NexoError::Timeout)?
+    }
+
+    /// Wrap an async operation with a connect timeout
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - Async function to execute with timeout
+    ///
+    /// # Returns
+    ///
+    /// The result of the async operation, or `NexoError::Timeout` if it exceeds the connect timeout
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use nexo_retailer_protocol::transport::tokio::TimeoutConfig;
+    ///
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let config = TimeoutConfig::new();
+    ///
+    /// let result = config.with_connect_timeout(async {
+    ///     // Some async connect operation
+    ///     Ok::<(), Box<dyn std::error::Error>>(())
+    /// }).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn with_connect_timeout<F, T>(&self, f: F) -> Result<T, NexoError>
+    where
+        F: core::future::Future<Output = Result<T, NexoError>>,
+    {
+        tokio::time::timeout(self.connect_timeout, f)
+            .await
+            .map_err(|_| NexoError::Timeout)?
+    }
+}
+
 /// Tokio-based transport implementation
 ///
 /// This struct wraps `tokio::net::TcpStream` and implements the `Transport` trait,
