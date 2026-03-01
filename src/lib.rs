@@ -185,6 +185,14 @@ pub use codec::{Codec, ProstCodec, encode as encode_message, decode as decode_me
 // Re-export transport types at crate root for convenience
 pub use transport::{Transport, FramedTransport};
 
+// Re-export Tokio transport when std feature is enabled
+#[cfg(feature = "std")]
+pub use transport::TokioTransport;
+
+// Re-export TimeoutConfig when std feature is enabled
+#[cfg(feature = "std")]
+pub use transport::TimeoutConfig;
+
 #[cfg(test)]
 mod tests {
     use super::*;
