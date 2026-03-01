@@ -12,17 +12,16 @@ use crate::server::ConnectionState;
 use crate::server::handler::RequestHandler;
 use crate::server::dispatcher::Dispatcher;
 use crate::server::heartbeat::{HeartbeatConfig, HeartbeatMonitor};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use crate::transport::{FramedTransport, TokioTransport};
 
 #[cfg(feature = "std")]
-use tracing::{info, debug, warn, error, info_span};
+use tracing::{info, debug, warn, error};
 
 use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
-use prost::Message;
 
 /// Nexo Retailer Protocol server for Tokio runtime
 ///
@@ -194,6 +193,10 @@ impl NexoServer {
         let connections = Arc::clone(&self.connections);
         let handler = self.handler.clone();
 
+        // Wrap TcpStream in TokioTransport and FramedTransport for proper framing
+        let transport = TokioTransport::new(stream);
+        let framed = FramedTransport::new(transport);
+
         // Spawn connection handler task
         tokio::spawn(async move {
             // Log connection start with context
@@ -213,10 +216,10 @@ impl NexoServer {
             // Handle connection with dispatcher if handler is set
             let result = if let Some(handler) = handler {
                 let dispatcher = Dispatcher::new(handler);
-                Self::handle_connection_with_dispatcher(stream, &mut state, dispatcher, heartbeat_monitor).await
+                Self::handle_connection_with_dispatcher(framed, &mut state, dispatcher, heartbeat_monitor).await
             } else {
                 // No handler set - use basic echo handler
-                Self::handle_connection(stream, &mut state, heartbeat_monitor).await
+                Self::handle_connection(framed, &mut state, heartbeat_monitor).await
             };
 
             // Clean up connection state when handler exits
@@ -237,26 +240,24 @@ impl NexoServer {
 
     /// Handle a single connection with dispatcher
     ///
-    /// This method reads messages from the client, dispatches them to the handler,
-    /// and sends responses back. It continues until the client disconnects.
+    /// This method reads framed messages from the client, dispatches them to the handler,
+    /// and sends framed responses back. It continues until the client disconnects.
     ///
     /// Uses tokio::select! to concurrently handle incoming messages and heartbeat
     /// monitoring, ensuring the connection loop remains responsive.
     ///
     /// # Arguments
     ///
-    /// * `stream` - The TCP stream for the connection
+    /// * `framed` - The framed transport for the connection
     /// * `state` - The connection state (updated in-place)
     /// * `dispatcher` - Message dispatcher for routing to handlers
     /// * `heartbeat_monitor` - Heartbeat monitor for dead connection detection
     async fn handle_connection_with_dispatcher(
-        mut stream: tokio::net::TcpStream,
+        mut framed: FramedTransport<TokioTransport>,
         state: &mut ConnectionState,
         dispatcher: Dispatcher,
         mut heartbeat_monitor: HeartbeatMonitor,
     ) -> Result<(), NexoError> {
-        let mut buffer = [0u8; 4096];
-
         // Create heartbeat ticker
         let config = heartbeat_monitor.config().clone();
         let mut heartbeat_interval = if config.is_enabled() {
@@ -283,17 +284,15 @@ impl NexoServer {
 
                     // Send heartbeat if needed
                     if heartbeat_monitor.should_send_heartbeat() {
-                        // Create heartbeat message (empty document with MessageFunction="HRTB")
-                        // For now, we'll just send an empty byte array as a placeholder
-                        // In a real implementation, this would be a proper CASP heartbeat message
-                        let heartbeat_msg = create_heartbeat_message();
+                        // Create heartbeat message with proper CASP format
+                        let heartbeat_doc = create_heartbeat_document();
 
                         #[cfg(feature = "std")]
                         debug!("Heartbeat sent");
 
-                        // Send heartbeat
-                        if let Err(e) = stream.write_all(&heartbeat_msg).await {
-                            return Err(NexoError::connection_owned(format!("heartbeat send error: {}", e)));
+                        // Send heartbeat with proper framing
+                        if let Err(e) = framed.send_message(&heartbeat_doc).await {
+                            return Err(NexoError::connection_owned(format!("heartbeat send error: {:?}", e)));
                         }
 
                         // Mark heartbeat as sent
@@ -301,38 +300,30 @@ impl NexoServer {
                     }
                 }
 
-                // Incoming message from client
-                result = stream.read(&mut buffer) => {
+                // Incoming message from client (using framed recv_message)
+                result = framed.recv_message::<crate::Casp001Document>() => {
                     match result {
-                        Ok(n) => {
-                            if n == 0 {
-                                // EOF - client disconnected
-                                return Ok(());
-                            }
-
+                        Ok(document) => {
                             // Update activity and increment message count
                             state.update_activity();
                             heartbeat_monitor.update_activity();
                             state.increment_message_count();
 
                             #[cfg(feature = "std")]
-                            debug!(byte_count = n, "Message received");
+                            debug!("Message received (framed)");
 
-                            // Dispatch message to handler and get response
-                            let response_bytes = dispatcher.dispatch(&buffer[..n]).await;
+                            // Dispatch decoded document to handler and get response
+                            let response_result = dispatcher.dispatch_document(document).await;
 
-                            match response_bytes {
-                                Ok(bytes) => {
-                                    // Send response back to client
-                                    if !bytes.is_empty() {
-                                        #[cfg(feature = "std")]
-                                        debug!("Dispatching to handler");
+                            match response_result {
+                                Ok(response_doc) => {
+                                    // Send framed response back to client
+                                    #[cfg(feature = "std")]
+                                    debug!("Dispatching to handler");
 
-                                        stream.write_all(&bytes).await.map_err(|e| {
-                                            NexoError::connection_owned(format!("write error: {}", e))
-                                        })?;
-                                    }
-                                    // If bytes is empty (None acknowledgment), don't send anything
+                                    framed.send_message(&response_doc).await.map_err(|e| {
+                                        NexoError::connection_owned(format!("write error: {:?}", e))
+                                    })?;
                                 }
                                 Err(e) => {
                                     // Handler returned error - log it and continue
@@ -347,7 +338,13 @@ impl NexoServer {
                             }
                         }
                         Err(e) => {
-                            return Err(NexoError::connection_owned(format!("read error: {}", e)));
+                            // Check if this is a connection closed error
+                            let error_str = format!("{:?}", e);
+                            if error_str.contains("EOF") || error_str.contains("closed") {
+                                // Client disconnected
+                                return Ok(());
+                            }
+                            return Err(NexoError::connection_owned(format!("read error: {:?}", e)));
                         }
                     }
                 }
@@ -365,16 +362,14 @@ impl NexoServer {
     ///
     /// # Arguments
     ///
-    /// * `stream` - The TCP stream for the connection
+    /// * `framed` - The framed transport for the connection
     /// * `state` - The connection state (updated in-place)
     /// * `heartbeat_monitor` - Heartbeat monitor for dead connection detection
     async fn handle_connection(
-        mut stream: tokio::net::TcpStream,
+        mut framed: FramedTransport<TokioTransport>,
         state: &mut ConnectionState,
         mut heartbeat_monitor: HeartbeatMonitor,
     ) -> Result<(), NexoError> {
-        let mut buffer = [0u8; 4096];
-
         // Create heartbeat ticker
         let config = heartbeat_monitor.config().clone();
         let mut heartbeat_interval = if config.is_enabled() {
@@ -398,12 +393,12 @@ impl NexoServer {
 
                     // Send heartbeat if needed
                     if heartbeat_monitor.should_send_heartbeat() {
-                        // Create heartbeat message (empty document with MessageFunction="HRTB")
-                        let heartbeat_msg = create_heartbeat_message();
+                        // Create heartbeat message with proper CASP format
+                        let heartbeat_doc = create_heartbeat_document();
 
-                        // Send heartbeat
-                        if let Err(e) = stream.write_all(&heartbeat_msg).await {
-                            return Err(NexoError::connection_owned(format!("heartbeat send error: {}", e)));
+                        // Send heartbeat with proper framing
+                        if let Err(e) = framed.send_message(&heartbeat_doc).await {
+                            return Err(NexoError::connection_owned(format!("heartbeat send error: {:?}", e)));
                         }
 
                         // Mark heartbeat as sent
@@ -411,30 +406,31 @@ impl NexoServer {
                     }
                 }
 
-                // Incoming message from client
-                result = stream.read(&mut buffer) => {
+                // Incoming message from client (using framed recv_message)
+                result = framed.recv_message::<crate::Casp001Document>() => {
                     match result {
-                        Ok(n) => {
-                            if n == 0 {
-                                // EOF - client disconnected
-                                return Ok(());
-                            }
-
+                        Ok(document) => {
                             // Update activity and increment message count
                             state.update_activity();
                             heartbeat_monitor.update_activity();
                             state.increment_message_count();
 
                             #[cfg(feature = "std")]
-                            debug!(byte_count = n, "Message received (echo mode)");
+                            debug!("Message received (echo mode, framed)");
 
-                            // Echo back (basic functionality)
-                            stream.write_all(&buffer[..n]).await.map_err(|e| {
-                                NexoError::connection_owned(format!("write error: {}", e))
+                            // Echo back (basic functionality) - send framed response
+                            framed.send_message(&document).await.map_err(|e| {
+                                NexoError::connection_owned(format!("write error: {:?}", e))
                             })?;
                         }
                         Err(e) => {
-                            return Err(NexoError::connection_owned(format!("read error: {}", e)));
+                            // Check if this is a connection closed error
+                            let error_str = format!("{:?}", e);
+                            if error_str.contains("EOF") || error_str.contains("closed") {
+                                // Client disconnected
+                                return Ok(());
+                            }
+                            return Err(NexoError::connection_owned(format!("read error: {:?}", e)));
                         }
                     }
                 }
@@ -503,21 +499,30 @@ impl NexoServer {
     }
 }
 
-/// Create a heartbeat message
+/// Create a heartbeat CASP document
 ///
 /// This creates a minimal heartbeat message that can be sent to keep the
-/// connection alive. For now, this is a placeholder that sends an empty
-/// byte array. In a full implementation, this would create a proper CASP
-/// message with MessageFunction="HRTB".
+/// connection alive. The heartbeat uses a Casp001Document with MessageFunction="HRTB"
+/// to indicate a heartbeat message per the Nexo protocol.
 ///
 /// # Returns
 ///
-/// A byte array containing the heartbeat message
-fn create_heartbeat_message() -> Vec<u8> {
-    // Placeholder: Send empty byte array as heartbeat
-    // In a real implementation, this would create a proper CASP heartbeat message
-    // For example: an empty Casp001Document with MessageFunction="HRTB"
-    vec![]
+/// A Casp001Document with heartbeat message format
+fn create_heartbeat_document() -> crate::Casp001Document {
+    // Create a minimal heartbeat message with MessageFunction="HRTB"
+    // This follows the Nexo Retailer Protocol specification for heartbeat messages
+    crate::Casp001Document {
+        document: Some(crate::Casp001DocumentDocument {
+            sale_to_poi_svc_req: Some(crate::SaleToPoiServiceRequestV06 {
+                hdr: Some(crate::Header4 {
+                    msg_fctn: Some("HRTB".to_string()),
+                    proto_vrsn: Some("6.0".to_string()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+        }),
+    }
 }
 
 #[cfg(test)]

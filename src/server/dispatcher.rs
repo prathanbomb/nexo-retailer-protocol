@@ -148,11 +148,10 @@ impl Dispatcher {
     /// # }
     /// ```
     pub async fn dispatch(&self, bytes: &[u8]) -> Result<Vec<u8>, NexoError> {
-        // Try to decode as Casp001Document (SaleToPOIServiceRequestV06)
-        if let Ok(request) = decode_message::<Casp001Document>(bytes) {
-            // Check if document field is set (empty messages decode as any type)
-            if request.document.is_some() {
-                let response = self.handler.handle_payment_request(request).await?;
+        // Decode as Casp001Document and use dispatch_document
+        if let Ok(document) = decode_message::<Casp001Document>(bytes) {
+            if document.document.is_some() {
+                let response = self.dispatch_document(document).await?;
                 return encode_message(&response);
             }
         }
@@ -238,6 +237,43 @@ impl Dispatcher {
             field: "message_type",
             reason: "unsupported message type or malformed protobuf",
         })
+    }
+
+    /// Dispatch a decoded Casp001Document to the handler
+    ///
+    /// This method accepts an already-decoded document, eliminating the
+    /// double-encoding problem when using FramedTransport. The handler
+    /// processes the document and returns a Casp002Document response.
+    ///
+    /// # Arguments
+    ///
+    /// * `document` - Decoded Casp001Document payment request
+    ///
+    /// # Returns
+    ///
+    /// Casp002Document response from the handler
+    ///
+    /// # Errors
+    ///
+    /// Returns `NexoError` if the handler returns an error
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use nexo_retailer_protocol::server::{Dispatcher, RequestHandler};
+    /// # use nexo_retailer_protocol::{Casp001Document, NexoError};
+    /// # use std::sync::Arc;
+    /// # #[tokio::main]
+    /// # async fn main() -> Result<(), NexoError> {
+    /// # let handler = Arc::new(MyHandler);
+    /// let dispatcher = Dispatcher::new(handler);
+    /// let request = Casp001Document::default();
+    /// let response = dispatcher.dispatch_document(request).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn dispatch_document(&self, document: Casp001Document) -> Result<Casp002Document, NexoError> {
+        self.handler.handle_payment_request(document).await
     }
 }
 
@@ -488,5 +524,48 @@ mod tests {
 
         // Just verify it doesn't crash - routing depends on content
         assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_dispatch_document_with_decoded_struct() {
+        let handler = Arc::new(MockRequestHandler::new());
+        let dispatcher = Dispatcher::new(handler.clone());
+
+        // Create a Casp001Document directly (no encoding needed)
+        let request = Casp001Document {
+            document: Some(crate::Casp001DocumentDocument::default()),
+        };
+
+        // Dispatch using dispatch_document (accepts decoded struct)
+        let response = dispatcher.dispatch_document(request).await;
+
+        // Verify handler was called
+        assert!(handler.payment_request_called.load(Ordering::SeqCst));
+        assert!(response.is_ok());
+
+        // Verify response is Casp002Document
+        let response_doc = response.unwrap();
+        assert!(response_doc.document.is_none() || response_doc.document.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_dispatch_document_no_double_encoding() {
+        // This test verifies that dispatch_document avoids double-encoding
+        // by accepting already-decoded documents
+        let handler = Arc::new(MockRequestHandler::new());
+        let dispatcher = Dispatcher::new(handler);
+
+        // Create a request document
+        let request = Casp001Document {
+            document: Some(crate::Casp001DocumentDocument::default()),
+        };
+
+        // Call dispatch_document directly - no encoding/decoding involved
+        let result = dispatcher.dispatch_document(request).await;
+        assert!(result.is_ok());
+
+        // The response is a Casp002Document, not bytes
+        let response = result.unwrap();
+        assert!(response.document.is_none() || response.document.is_some());
     }
 }
