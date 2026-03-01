@@ -292,6 +292,7 @@ pub mod client;
 pub mod codec;
 pub mod error;
 pub mod features;
+pub mod server;
 pub mod transport;
 pub mod validate;
 
@@ -343,6 +344,14 @@ pub use transport::{EmbassyTransport, EmbassyTimeoutConfig};
 // The client is generic over Transport, so it works with both std and embassy
 #[cfg(feature = "std")]
 pub use client::NexoClient;
+
+// Re-export NexoServer at crate root for ergonomic API
+// The server uses Tokio runtime in std environments
+#[cfg(feature = "std")]
+pub use server::NexoServer;
+
+// Re-export ConnectionState for server usage
+pub use server::ConnectionState;
 
 #[cfg(all(feature = "embassy-net", not(feature = "std")))]
 pub use client::NexoClient;
