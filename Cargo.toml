@@ -85,6 +85,11 @@ path = "tests/unit/codec_roundtrip.rs"
 required-features = ["alloc"]
 
 [[test]]
+name = "validation"
+path = "tests/unit/validation.rs"
+required-features = ["alloc"]
+
+[[test]]
 name = "client_integration"
 path = "tests/client_integration.rs"
 required-features = ["std"]
