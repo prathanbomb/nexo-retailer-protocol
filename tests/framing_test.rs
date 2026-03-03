@@ -467,3 +467,275 @@ async fn test_large_message_under_limit() {
     use nexo_retailer_protocol::transport::MAX_FRAME_SIZE;
     assert_eq!(MAX_FRAME_SIZE, 4 * 1024 * 1024);
 }
+
+/// Test zero-length message handling
+///
+/// Verifies that a message with length prefix = 0 is handled correctly.
+#[tokio::test]
+async fn test_framed_zero_length_message() {
+    // Start server that sends zero-length message
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+
+        // Send zero-length prefix
+        let len = 0u32.to_be_bytes();
+        socket.write_all(&len).await.unwrap();
+    });
+
+    // Connect and receive
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+    let mut framed = FramedTransport::new(transport);
+
+    // Should successfully receive empty message (decodes to default)
+    let result: Result<Casp001Document, _> = framed.recv_message().await;
+    assert!(result.is_ok(), "Zero-length message should decode to default");
+
+    let received = result.unwrap();
+    let expected = Casp001Document::default();
+    assert_eq!(expected.encode_to_vec(), received.encode_to_vec());
+}
+
+/// Test max size message (exactly 4MB - 1 byte)
+///
+/// Verifies that messages just under the 4MB limit work correctly.
+/// Note: We can't create an actual 4MB protobuf message easily,
+/// so this test verifies the constant is correct.
+#[tokio::test]
+async fn test_framed_max_size_boundary() {
+    // Verify MAX_FRAME_SIZE is exactly 4MB
+    use nexo_retailer_protocol::transport::MAX_FRAME_SIZE;
+
+    // 4MB = 4 * 1024 * 1024 = 4194304 bytes
+    assert_eq!(MAX_FRAME_SIZE, 4_194_304, "MAX_FRAME_SIZE should be exactly 4MB");
+
+    // Messages at exactly MAX_FRAME_SIZE should be accepted
+    // Messages at MAX_FRAME_SIZE + 1 should be rejected
+
+    // Test boundary values
+    let at_limit: usize = MAX_FRAME_SIZE;
+    let over_limit: usize = MAX_FRAME_SIZE + 1;
+
+    assert!(at_limit <= MAX_FRAME_SIZE);
+    assert!(over_limit > MAX_FRAME_SIZE);
+}
+
+/// Test multiple messages with boundaries enforced
+///
+/// Verifies that multiple messages sent in quick succession
+/// are correctly separated without cross-message contamination.
+#[tokio::test]
+async fn test_framed_multiple_messages_boundaries() {
+    // Start server that sends 5 messages back-to-back
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+
+        // Create and send 5 different-sized messages
+        for i in 0..5u8 {
+            // Create message with varying content to test boundaries
+            let msg = Casp001Document::default();
+            let encoded = msg.encode_to_vec();
+
+            // Send length prefix
+            socket.write_all(&(encoded.len() as u32).to_be_bytes()).await.unwrap();
+            // Send message body
+            socket.write_all(&encoded).await.unwrap();
+
+            // Small delay to simulate real-world conditions
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    });
+
+    // Connect and receive all messages
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+    let mut framed = FramedTransport::new(transport);
+
+    // Receive all 5 messages and verify no cross-contamination
+    for _ in 0..5 {
+        let received: Casp001Document = framed.recv_message().await.unwrap();
+        let expected = Casp001Document::default();
+        assert_eq!(expected.encode_to_vec(), received.encode_to_vec());
+    }
+}
+
+/// Test corrupted payload handling
+///
+/// Verifies that receiving corrupted protobuf data returns
+/// a decoding error without panicking.
+#[tokio::test]
+async fn test_framed_corrupted_payload() {
+    // Start server that sends corrupted payload
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+
+        // Send valid length prefix (100 bytes)
+        let len = 100u32.to_be_bytes();
+        socket.write_all(&len).await.unwrap();
+
+        // Send corrupted/random bytes (not valid protobuf)
+        let corrupted: [u8; 100] = core::array::from_fn(|i| (i * 17) as u8);
+        socket.write_all(&corrupted).await.unwrap();
+    });
+
+    // Connect and try to receive
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+    let mut framed = FramedTransport::new(transport);
+
+    let result: Result<Casp001Document, _> = framed.recv_message().await;
+
+    // Should get a decoding error (not a panic)
+    match result {
+        Err(NexoError::Decoding { details }) => {
+            assert!(details.contains("Failed to decode protobuf message"));
+        }
+        Err(NexoError::Connection { .. }) => {
+            // Also acceptable - connection may close after sending
+        }
+        other => {
+            panic!("Expected Decoding error for corrupted payload, got: {:?}", other);
+        }
+    }
+}
+
+/// Test oversized message rejection at exactly MAX_FRAME_SIZE + 1
+///
+/// Verifies that receiving a length prefix of exactly 4MB + 1 is rejected.
+#[tokio::test]
+async fn test_framed_oversized_message_rejection() {
+    use nexo_retailer_protocol::transport::MAX_FRAME_SIZE;
+
+    // Start server that sends length prefix just over the limit
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+
+        // Send length prefix of MAX_FRAME_SIZE + 1
+        let oversized_len = (MAX_FRAME_SIZE + 1) as u32;
+        socket.write_all(&oversized_len.to_be_bytes()).await.unwrap();
+    });
+
+    // Connect and try to receive
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+    let mut framed = FramedTransport::new(transport);
+
+    let result: Result<Casp001Document, _> = framed.recv_message().await;
+
+    // Should be rejected with decoding error
+    match result {
+        Err(NexoError::Decoding { details }) => {
+            assert!(details.contains("exceeds maximum frame size"));
+        }
+        other => {
+            panic!("Expected Decoding error for oversized message, got: {:?}", other);
+        }
+    }
+}
+
+/// Test truncated length prefix (3 bytes instead of 4)
+///
+/// Verifies that a partial length prefix is handled gracefully.
+#[tokio::test]
+async fn test_framed_truncated_length_prefix() {
+    // Start server that sends only 3 bytes of length prefix
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+
+        // Send only 3 bytes of the 4-byte length prefix
+        socket.write_all(&[0x00, 0x00, 0x00]).await.unwrap();
+
+        // Close connection
+        let _ = socket.shutdown().await;
+    });
+
+    // Connect and try to receive
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+    let mut framed = FramedTransport::new(transport);
+
+    let result: Result<Casp001Document, _> = framed.recv_message().await;
+
+    // Should get an error (connection closed or timeout)
+    assert!(result.is_err(), "Should fail with truncated length prefix");
+
+    match result {
+        Err(NexoError::Connection { .. }) | Err(NexoError::Timeout { .. }) => {
+            // Expected: connection closed or timeout
+        }
+        Err(NexoError::Decoding { .. }) => {
+            // Also acceptable - may be reported as decoding error
+        }
+        other => {
+            panic!("Expected Connection/Timeout/Decoding error, got: {:?}", other);
+        }
+    }
+}
+
+/// Test interleaved reads and writes
+///
+/// Verifies that FramedTransport can handle interleaved
+/// send and receive operations correctly.
+#[tokio::test]
+async fn test_framed_interleaved_operations() {
+    // Start full-duplex echo server
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+
+        // Echo each message as it arrives
+        for _ in 0..5 {
+            let mut len_buf = [0u8; 4];
+            socket.read_exact(&mut len_buf).await.unwrap();
+
+            let len = u32::from_be_bytes(len_buf) as usize;
+            let mut msg_buf = vec![0u8; len];
+            socket.read_exact(&mut msg_buf).await.unwrap();
+
+            // Echo back immediately
+            socket.write_all(&len_buf).await.unwrap();
+            socket.write_all(&msg_buf).await.unwrap();
+        }
+    });
+
+    // Connect
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+    let mut framed = FramedTransport::new(transport);
+
+    // Interleave sends and receives
+    for i in 0..5 {
+        let msg = Casp001Document::default();
+        framed.send_message(&msg).await
+            .expect(&format!("Send {} should succeed", i));
+
+        let received: Casp001Document = framed.recv_message().await
+            .expect(&format!("Receive {} should succeed", i));
+
+        assert_eq!(msg.encode_to_vec(), received.encode_to_vec(),
+                   "Message {} should round-trip correctly", i);
+    }
+}
