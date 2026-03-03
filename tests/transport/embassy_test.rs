@@ -194,6 +194,78 @@ mod embassy_integration_tests {
         // assert_eq!(n, 4);
         // assert_eq!(&recv_buf[..n], &test_data[..]);
     }
+
+    /// Test Embassy transport connect success
+    ///
+    /// This test requires:
+    /// - Embassy executor
+    /// - Network stack with reachable server
+    ///
+    /// Test verifies:
+    /// - Successful connection to a server
+    /// - is_connected returns true after connect
+    ///
+    /// To run: cargo test --features embassy --target thumbv7em-none-eabihf -- --ignored
+    #[test]
+    #[ignore]
+    fn test_embassy_transport_connect_success() {
+        // Implementation would:
+        // 1. Create Embassy network stack
+        // 2. Start a simple server
+        // 3. Create EmbassyTransport
+        // 4. Connect to the server
+        // 5. Verify is_connected returns true
+        //
+        // Example structure:
+        // let mut rx_buffer = [0u8; 4096];
+        // let mut tx_buffer = [0u8; 4096];
+        // let socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
+        // let mut transport = EmbassyTransport::new(socket, &mut rx_buffer, &mut tx_buffer)
+        //     .with_connect_timeout(Duration::from_secs(5));
+        //
+        // let result = transport.connect("192.168.1.100:8080").await;
+        // assert!(result.is_ok());
+        // assert!(transport.is_connected());
+    }
+
+    /// Test Embassy transport framing integration
+    ///
+    /// This test requires:
+    /// - Embassy executor
+    /// - Network stack with echo server
+    ///
+    /// Test verifies:
+    /// - FramedTransport wraps EmbassyTransport correctly
+    /// - Length-prefix framing works with Embassy transport
+    ///
+    /// To run: cargo test --features embassy --target thumbv7em-none-eabihf -- --ignored
+    #[test]
+    #[ignore]
+    fn test_embassy_transport_framing() {
+        // Implementation would:
+        // 1. Create Embassy network stack
+        // 2. Start an echo server that understands length-prefix framing
+        // 3. Create EmbassyTransport
+        // 4. Wrap with FramedTransport
+        // 5. Send a CASP message
+        // 6. Verify round-trip works correctly
+        //
+        // Example structure:
+        // use nexo_retailer_protocol::transport::FramedTransport;
+        // use nexo_retailer_protocol::Casp001Document;
+        //
+        // let mut rx_buffer = [0u8; 4096];
+        // let mut tx_buffer = [0u8; 4096];
+        // let socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
+        // let transport = EmbassyTransport::new(socket, &mut rx_buffer, &mut tx_buffer);
+        // let mut framed = FramedTransport::new(transport);
+        //
+        // framed.connect("192.168.1.100:8080").await?;
+        //
+        // let msg = Casp001Document::default();
+        // framed.send_message(&msg).await?;
+        // let received: Casp001Document = framed.recv_message().await?;
+    }
 }
 
 // Tests that can run without special infrastructure
@@ -292,5 +364,125 @@ mod embassy_config_tests {
         assert_eq!(_connect_timeout, Duration::from_secs(10));
         assert_eq!(_read_timeout, Duration::from_secs(30));
         assert_eq!(_write_timeout, Duration::from_secs(10));
+    }
+
+    /// Test Embassy address parsing for (IpAddress, u16) tuples
+    #[test]
+    fn test_embassy_address_parsing() {
+        // Test manual address parsing as used in EmbassyTransport::connect_internal
+        // Embassy uses (IpAddress, u16) tuples instead of SocketAddr
+
+        // Valid IPv4:port format
+        let addr = "192.168.1.100:8080";
+        if let Some((ip_str, port_str)) = addr.split_once(':') {
+            // IP should parse correctly
+            assert!(ip_str.parse::<embassy_net::IpAddress>().is_ok());
+            // Port should parse correctly
+            assert!(port_str.parse::<u16>().is_ok());
+            assert_eq!(port_str.parse::<u16>().unwrap(), 8080u16);
+        } else {
+            panic!("Address should have IP:PORT format");
+        }
+
+        // Test invalid formats
+        let invalid_no_port = "192.168.1.100";
+        assert!(invalid_no_port.split_once(':').is_none());
+
+        // Test localhost
+        let localhost = "127.0.0.1:3000";
+        if let Some((ip_str, port_str)) = localhost.split_once(':') {
+            assert!(ip_str.parse::<embassy_net::IpAddress>().is_ok());
+            assert_eq!(port_str.parse::<u16>().unwrap(), 3000u16);
+        }
+
+        // Test that invalid IP fails parsing
+        let invalid_ip = "invalid:8080";
+        if let Some((ip_str, _)) = invalid_ip.split_once(':') {
+            assert!(ip_str.parse::<embassy_net::IpAddress>().is_err());
+        }
+    }
+
+    /// Test Embassy timeout duration comparisons
+    #[test]
+    fn test_embassy_duration_comparisons() {
+        // Embassy's Duration supports comparison operations
+        let short = Duration::from_secs(5);
+        let medium = Duration::from_secs(10);
+        let long = Duration::from_secs(30);
+
+        assert!(short < medium);
+        assert!(medium < long);
+        assert!(short < long);
+
+        // Test equality
+        let same = Duration::from_secs(10);
+        assert_eq!(medium, same);
+    }
+
+    /// Test Embassy timeout config with milliseconds
+    #[test]
+    fn test_embassy_timeout_millis() {
+        // Test sub-second timeout configuration
+        let config = EmbassyTimeoutConfig::new()
+            .with_connect(Duration::from_millis(500))
+            .with_read(Duration::from_millis(100))
+            .with_write(Duration::from_millis(200));
+
+        assert_eq!(config.connect_timeout, Duration::from_millis(500));
+        assert_eq!(config.read_timeout, Duration::from_millis(100));
+        assert_eq!(config.write_timeout, Duration::from_millis(200));
+    }
+
+    /// Test NexoError variants compatibility with no_std
+    #[test]
+    fn test_nexo_error_no_std_compat() {
+        // Test all error variants that should work in no_std
+        let errors: [NexoError; 5] = [
+            NexoError::Timeout,
+            NexoError::Connection { details: "test" },
+            NexoError::Encoding { details: "test" },
+            NexoError::Decoding { details: "test" },
+            NexoError::Validation { field: "test", reason: "test" },
+        ];
+
+        // Verify all error types can be created and matched
+        for error in &errors {
+            match error {
+                NexoError::Timeout => {}
+                NexoError::Connection { .. } => {}
+                NexoError::Encoding { .. } => {}
+                NexoError::Decoding { .. } => {}
+                NexoError::Validation { .. } => {}
+            }
+        }
+    }
+
+    /// Test Embassy config clone and copy
+    #[test]
+    fn test_embassy_config_copy_clone() {
+        let config1 = EmbassyTimeoutConfig::new()
+            .with_connect(Duration::from_secs(5));
+
+        // Copy (EmbassyTimeoutConfig implements Copy)
+        let config2 = config1;
+        assert_eq!(config1.connect_timeout, config2.connect_timeout);
+
+        // Clone
+        #[allow(clippy::clone_on_copy)]
+        let config3 = config1.clone();
+        assert_eq!(config1.connect_timeout, config3.connect_timeout);
+    }
+
+    /// Test Embassy config Debug output
+    #[test]
+    fn test_embassy_config_debug() {
+        let config = EmbassyTimeoutConfig::new();
+        let debug_str = format!("{:?}", config);
+
+        // Debug output should contain field names
+        assert!(debug_str.contains("EmbassyTimeoutConfig"));
+        assert!(debug_str.contains("connect_timeout"));
+        assert!(debug_str.contains("read_timeout"));
+        assert!(debug_str.contains("write_timeout"));
     }
 }
