@@ -98,6 +98,38 @@ Run unit tests with:
 cargo test
 ```
 
+### Property-Based Tests
+
+The project uses `proptest` for property-based testing to discover serialization edge cases:
+
+```bash
+# Run property-based tests
+cargo test --test serialization_edge_cases --features std
+
+# Run with verbose output
+cargo test --test serialization_edge_cases --features std -- --nocapture
+```
+
+Property tests verify:
+- **Malformed input handling**: Random byte arrays never cause panics
+- **Truncated input handling**: Incomplete messages fail gracefully
+- **Boundary conditions**: Size limits and numeric boundaries
+- **Oversized message rejection**: Messages > 4MB handled correctly
+- **Corrupted length prefixes**: Invalid framing handled gracefully
+- **Round-trip invariants**: decode(encode(msg)) == msg always holds
+
+#### Regression Persistence
+
+Proptest automatically persists discovered edge cases to `proptest-regressions/`. These files should be committed to version control to prevent regressions:
+
+```bash
+# After a property test finds a failing case, commit the regression file
+git add proptest-regressions/*.txt
+git commit -m "chore: add proptest regression for edge case"
+```
+
+The CI workflow verifies that all regression files are committed.
+
 ### Integration Tests
 
 The project includes integration tests that verify the complete client request/response flow with a mock Nexo server:

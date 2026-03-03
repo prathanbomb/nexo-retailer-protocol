@@ -6,4 +6,7 @@ src/protos/nexo/
 
 # Proptest regression files - COMMIT these to version control
 # They preserve edge cases discovered during property testing
-# proptest-regressions/*.txt should be committed
+# The .gitkeep ensures the directory is tracked even when empty
+proptest-regressions/
+!proptest-regressions/.gitkeep
+!proptest-regressions/*.txt

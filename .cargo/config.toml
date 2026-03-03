@@ -1,0 +1,15 @@
+# Cargo configuration for nexo-retailer-protocol
+#
+# This file configures build and test settings for the project.
+
+[env]
+# Proptest configuration
+# Default number of test cases per property test
+PROPTEST_CASES = "256"
+# Maximum number of locally rejected strategies before giving up
+PROPTEST_MAX_LOCAL_REJECTS = "10000"
+# Maximum number of globally rejected strategies before giving up
+PROPTEST_MAX_GLOBAL_REJECTS = "10000"
+
+# Note: Individual tests can override these with ProptestConfig
+# High-value fuzzing tests may use PROPTEST_CASES=1000 or more
