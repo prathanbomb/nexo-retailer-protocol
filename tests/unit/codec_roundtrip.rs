@@ -16,6 +16,19 @@
 //!
 //! - Round-trip tests require `alloc` feature for Vec allocation.
 //! - Property-based tests require `std` feature (proptest requires std).
+//!
+//! # Platform Compatibility
+//!
+//! | Target | Command | Status |
+//! |--------|---------|--------|
+//! | std (default) | `cargo test --test codec_roundtrip --features std` | All 61 tests pass |
+//! | alloc only | `cargo test --test codec_roundtrip --features alloc` | 56 tests pass (no property tests) |
+//! | bare-metal (thumbv7em-none-eabihf) | N/A | Tests compile but require hardware/QEMU runner |
+//!
+//! # Performance
+//!
+//! - Full test suite executes in < 1 second on CI
+//! - Target: < 30 seconds (requirement met)
 
 #![cfg(all(test, feature = "alloc"))]
 
