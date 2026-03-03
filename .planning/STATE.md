@@ -3,6 +3,19 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
+last_updated: "2026-03-03T10:52:33.842Z"
+progress:
+  total_phases: 7
+  completed_phases: 6
+  total_plans: 33
+  completed_plans: 33
+---
+
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
 last_updated: "2026-03-03T09:18:11.555Z"
 progress:
   total_phases: 7
@@ -39,18 +52,18 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 6 of 6 (Testing & Verification)
-Plan: 06-04a (Client Integration Tests) - COMPLETE
-Status: Phase 6 in progress - 4 of 8 plans complete
-Last activity: 2026-03-03 — Completed plan 06-04a: Client Integration Tests (48 min)
+Plan: 06-06 (Bare-Metal CI Integration) - COMPLETE
+Status: Phase 6 in progress - 5 of 8 plans complete
+Last activity: 2026-03-03 — Completed plan 06-06: Bare-Metal CI Integration (21 min)
 
-Progress: [█████░░░░░] 50% (Phase 6 - 4/8 plans done)
+Progress: [██████░░░░] 62% (Phase 6 - 5/8 plans done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
-- Average duration: 82 min (1.4 hours)
-- Total execution time: 39.1 hours
+- Total plans completed: 31
+- Average duration: 81 min (1.4 hours)
+- Total execution time: 39.5 hours
 
 **By Phase:**
 
@@ -62,14 +75,15 @@ Progress: [█████░░░░░] 50% (Phase 6 - 4/8 plans done)
 | 4. Client API | 5 | 5/5 | 68 min |
 | 5. Server API & Reliability | 6 | 6/6 | 77 min |
 | 5.1 Fix Server Framing | 1 | 1/1 | 14 min |
-| 6. Testing & Verification | 4 | 4/8 | 35 min |
+| 6. Testing & Verification | 5 | 5/8 | 32 min |
 
 **Recent Trend:**
-- Last 5 plans: P06-04a(48min), P06-04b(35min), P06-02(45min), P06-01(15min), P05.1-01(14min)
-- Trend: Client integration tests complete with 26 tests (14 client + 12 E2E)
+- Last 5 plans: P06-06(21min), P06-04b(35min), P06-04a(48min), P06-02(45min), P06-01(15min)
+- Trend: CI infrastructure complete for std and bare-metal targets
 
 *Updated after each plan completion*
 | Phase 06-testing-verification P03 | 35 | 7 tasks | 5 files |
+| Phase 06-testing-verification P06 | 21 | 8 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -155,6 +169,12 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 06-04a]: Mock server uses raw byte receive to handle any CASP message type without decoding
 - [Phase 06-04a]: E2E tests require --test-threads=1 to avoid TCP port binding conflicts when running in parallel
 - [Phase 06-04a]: FramedTransport recv_raw/send_raw methods for raw byte handling in tests
+- [Phase 06-06]: GitHub Actions CI workflows for std and bare-metal test targets
+- [Phase 06-06]: Test execution time monitoring with 5min (std) and 10min (bare-metal) thresholds
+- [Phase 06-06]: Proptest regression persistence in version control
+- [Phase 06-06]: Dependency audit checks all feature combinations (no-default, alloc, embassy)
+- [Phase 06-06]: Code coverage tracking with cargo-tarpaulin and Codecov
+- [Phase 06-testing-verification]: CI workflows for std and bare-metal test targets with time monitoring
 
 ### Pending Todos
 
@@ -171,10 +191,12 @@ None yet.
 
 **Deferred items:**
 - Embassy transport integration testing on actual hardware or QEMU (tests marked #[ignore] with instructions)
+- Large proptest regression files (~55MB) from oversized message test need optimization
+- Incomplete no_std gating in server modules (full verification relies on cross-compilation)
 
 ## Session Continuity
 
 Last session: 2026-03-03 (Phase 6 execution)
-Stopped at: Completed plan 06-04a - Client Integration Tests
-Next step: Continue Phase 6 - Testing & Verification (plans 06-05a, 06-05b, 06-06)
-Summary file: .planning/phases/06-testing-verification/06-04a-SUMMARY.md
+Stopped at: Completed plan 06-06 - Bare-Metal CI Integration
+Next step: Continue Phase 6 - Testing & Verification (plans 06-05a, 06-05b remaining)
+Summary file: .planning/phases/06-testing-verification/06-06-SUMMARY.md

@@ -92,8 +92,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **TEST-01**: Unit tests for all message types (encode/decode round-trip)
 - [x] **TEST-02**: Unit tests for validation logic
 - [x] **TEST-03**: Integration tests for transport layer
-- [ ] **TEST-04**: Integration tests for client/server communication
-- [ ] **TEST-05**: Property-based tests for serialization edge cases
+- [x] **TEST-04**: Integration tests for client/server communication
+- [x] **TEST-05**: Property-based tests for serialization edge cases
 
 ## v2 Requirements
 
@@ -188,11 +188,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOG-01 | Phase 5 | Complete |
 | LOG-02 | Phase 5 | Complete |
 | LOG-03 | Phase 5 | Complete |
-| TEST-01 | Phase 6 | Pending |
-| TEST-02 | Phase 6 | Pending |
+| TEST-01 | Phase 6 | Complete |
+| TEST-02 | Phase 6 | Complete |
 | TEST-03 | Phase 6 | Complete |
-| TEST-04 | Phase 6 | Pending |
-| TEST-05 | Phase 6 | Pending |
+| TEST-04 | Phase 6 | Complete |
+| TEST-05 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 55 total
