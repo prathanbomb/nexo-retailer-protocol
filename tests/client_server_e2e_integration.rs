@@ -41,6 +41,15 @@
 //! | test_e2e_framed_transport_integration | FramedTransport | DONE |
 //! | test_e2e_malformed_message_handling | Error handling | DONE |
 //! | test_e2e_oversized_message_rejection | Size limits | DONE |
+//!
+//! # Running Tests
+//!
+//! These tests spawn TCP servers and may have port conflicts when run in parallel.
+//! For reliable results, run with `--test-threads=1`:
+//!
+//! ```bash
+//! cargo test --test client_server_e2e_integration --features std -- --test-threads=1
+//! ```
 
 #![cfg(feature = "std")]
 
