@@ -441,4 +441,123 @@ mod tests {
         };
         assert!(validate_monetary_amount(&amount).is_err());
     }
+
+    // ------------------------------------------------------------------------
+    // Realistic Monetary Value Tests (ISO 4217 currencies)
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_realistic_usd_amount() {
+        // $10.50 USD
+        // 10 dollars + 50 cents = 10 units + 500000000 nanos (0.50 * 1e9)
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "USD".to_string(),
+            units: 10,
+            nanos: 500_000_000,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
+
+    #[test]
+    fn test_realistic_eur_amount() {
+        // EUR 0.01 (one cent)
+        // 0 euros + 1 cent = 0 units + 10000000 nanos (0.01 * 1e9)
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "EUR".to_string(),
+            units: 0,
+            nanos: 10_000_000,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
+
+    #[test]
+    fn test_realistic_jpy_amount() {
+        // JPY 1000 (Japanese Yen has no decimal places)
+        // 1000 yen = 1000 units + 0 nanos
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "JPY".to_string(),
+            units: 1000,
+            nanos: 0,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
+
+    #[test]
+    fn test_realistic_gbp_amount() {
+        // GBP 99.99
+        // 99 pounds + 99 pence = 99 units + 990000000 nanos (0.99 * 1e9)
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "GBP".to_string(),
+            units: 99,
+            nanos: 990_000_000,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
+
+    #[test]
+    fn test_realistic_cad_amount() {
+        // CAD 1234.56
+        // 1234 dollars + 56 cents = 1234 units + 560000000 nanos
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "CAD".to_string(),
+            units: 1234,
+            nanos: 560_000_000,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
+
+    #[test]
+    fn test_realistic_large_transaction() {
+        // Large transaction: $1,000,000.00 USD
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "USD".to_string(),
+            units: 1_000_000,
+            nanos: 0,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
+
+    #[test]
+    fn test_realistic_fractional_cents() {
+        // Smallest representable amount: $0.000000001 USD (1 nano-dollar)
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "USD".to_string(),
+            units: 0,
+            nanos: 1,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
+
+    #[test]
+    fn test_realistic_negative_refund() {
+        // Negative amount for refund: -$50.25 USD
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "USD".to_string(),
+            units: -50,
+            nanos: -250_000_000,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
+
+    #[test]
+    fn test_nanos_boundary_999999999() {
+        // Maximum valid nanos value: 999,999,999 (0.999999999)
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "USD".to_string(),
+            units: 1,
+            nanos: 999_999_999,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
+
+    #[test]
+    fn test_nanos_boundary_negative_999999999() {
+        // Minimum valid nanos value: -999,999,999 (-0.999999999)
+        let amount = crate::ActiveCurrencyAndAmount {
+            ccy: "USD".to_string(),
+            units: -1,
+            nanos: -999_999_999,
+        };
+        assert!(validate_monetary_amount(&amount).is_ok());
+    }
 }
