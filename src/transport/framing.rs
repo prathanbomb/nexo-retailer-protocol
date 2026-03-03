@@ -149,6 +149,73 @@ impl<T: Transport> FramedTransport<T> {
         Ok(msg)
     }
 
+    /// Receive raw bytes with length-prefix framing
+    ///
+    /// This method receives the length prefix and returns the raw message bytes
+    /// without decoding them. Useful for handling any message type.
+    ///
+    /// # Errors
+    ///
+    /// Returns NexoError if:
+    /// - Length prefix cannot be read
+    /// - Message body cannot be read
+    /// - Message size exceeds MAX_FRAME_SIZE
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    pub async fn recv_raw(&mut self) -> Result<Vec<u8>, T::Error> {
+        // Read length prefix (4-byte big-endian)
+        let mut length_prefix_bytes = [0u8; LENGTH_PREFIX_SIZE];
+        self.read_exact(&mut length_prefix_bytes).await?;
+
+        let length = u32::from_be_bytes(length_prefix_bytes) as usize;
+
+        // Validate message size
+        if length > MAX_FRAME_SIZE {
+            return Err(NexoError::Decoding {
+                details: "Message size exceeds maximum frame size (4MB)",
+            }
+            .into());
+        }
+
+        // Read message body
+        let mut buffer = vec![0u8; length];
+        self.read_exact(&mut buffer).await?;
+
+        Ok(buffer)
+    }
+
+    /// Send raw bytes with length-prefix framing
+    ///
+    /// This method adds the length prefix and sends the raw bytes without
+    /// encoding. Useful for sending pre-encoded messages.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Raw bytes to send
+    ///
+    /// # Errors
+    ///
+    /// Returns NexoError if:
+    /// - Message size exceeds MAX_FRAME_SIZE
+    /// - Write operation fails
+    pub async fn send_raw(&mut self, data: &[u8]) -> Result<(), T::Error> {
+        // Validate message size
+        if data.len() > MAX_FRAME_SIZE {
+            return Err(NexoError::Encoding {
+                details: "Message size exceeds maximum frame size (4MB)",
+            }
+            .into());
+        }
+
+        // Write length prefix (4-byte big-endian)
+        let length_prefix = (data.len() as u32).to_be_bytes();
+        self.write_all(&length_prefix).await?;
+
+        // Write message body
+        self.write_all(data).await?;
+
+        Ok(())
+    }
+
     /// Write all bytes to the transport
     ///
     /// This is a helper method that ensures all bytes are written,

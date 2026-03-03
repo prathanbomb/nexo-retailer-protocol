@@ -3,6 +3,9 @@
 //! This module provides a mock server implementation that follows the Nexo TCP
 //! framing protocol. It supports echo responses, connection close simulation,
 //! and delayed response simulation for testing client behavior.
+//!
+//! The server can handle all 17 CASP message types by receiving raw bytes and
+//! sending back appropriate response documents.
 
 use std::sync::Arc;
 use std::net::SocketAddr;
@@ -11,7 +14,7 @@ use tokio::sync::Mutex;
 
 use nexo_retailer_protocol::transport::FramedTransport;
 use nexo_retailer_protocol::transport::TokioTransport;
-use nexo_retailer_protocol::{Casp002Document, Casp002DocumentDocument, SaleToPoiServiceResponseV06};
+use prost::Message;
 
 /// Mock Nexo Server that implements the Nexo TCP framing protocol
 ///
@@ -171,6 +174,10 @@ impl MockNexoServer {
     }
 
     /// Handle a single client connection
+    ///
+    /// This handler receives raw bytes (as Vec<u8>) and echoes back a Casp002Document
+    /// response. The raw bytes approach allows handling any CASP message type without
+    /// needing to decode the specific request type.
     async fn handle_connection(
         socket: TcpStream,
         delay_ms: u64,
@@ -178,31 +185,38 @@ impl MockNexoServer {
         let transport = TokioTransport::new(socket);
         let mut framed = FramedTransport::new(transport);
 
-        // Receive request - just receive bytes, we'll echo back a response
-        // We don't care about the request type for echo behavior
-        let receive_result = framed.recv_message::<Casp002Document>().await;
+        // Keep handling messages until the connection is closed
+        loop {
+            // Receive request as raw bytes to handle any CASP message type
+            let receive_result = framed.recv_raw().await;
 
-        match receive_result {
-            Ok(_request) => {
-                // Add delay if configured
-                if delay_ms > 0 {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(delay_ms)).await;
+            match receive_result {
+                Ok(_request_bytes) => {
+                    // Add delay if configured
+                    if delay_ms > 0 {
+                        tokio::time::sleep(tokio::time::Duration::from_millis(delay_ms)).await;
+                    }
+
+                    // Send back a Casp002Document response for any request
+                    // This allows testing all CASP types without complex routing logic
+                    let response = nexo_retailer_protocol::Casp002Document {
+                        document: Some(nexo_retailer_protocol::Casp002DocumentDocument {
+                            sale_to_poi_svc_rsp: Some(nexo_retailer_protocol::SaleToPoiServiceResponseV06::default()),
+                        }),
+                    };
+
+                    // Encode and send the response
+                    let response_bytes = response.encode_to_vec();
+                    if let Err(e) = framed.send_raw(&response_bytes).await {
+                        eprintln!("Mock server send error: {:?}", e);
+                        break;
+                    }
                 }
-
-                // Echo back a response with actual content
-                let response_body = SaleToPoiServiceResponseV06::default();
-                let response = Casp002Document {
-                    document: Some(Casp002DocumentDocument {
-                        sale_to_poi_svc_rsp: Some(response_body),
-                    }),
-                };
-
-                if let Err(e) = framed.send_message(&response).await {
-                    eprintln!("Mock server send error: {:?}", e);
+                Err(e) => {
+                    // Connection closed or error - this is expected when client disconnects
+                    eprintln!("Mock server connection ended: {:?}", e);
+                    break;
                 }
-            }
-            Err(e) => {
-                eprintln!("Mock server receive error: {:?}", e);
             }
         }
 
