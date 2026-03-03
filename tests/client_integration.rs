@@ -1,14 +1,63 @@
 //! Integration tests for Nexo Retailer Protocol Client
 //!
 //! This test suite verifies the complete client request/response flow with a mock Nexo server.
+//!
+//! # Coverage Matrix - Client Scenarios
+//!
+//! | Scenario | Test | Status | Priority |
+//! |----------|------|--------|----------|
+//! | Client connection | test_client_connects_to_server | DONE | P1 |
+//! | Connection failure handling | test_client_connection_failure_handling | TODO | P1 |
+//! | Request timeout | test_client_times_out_on_slow_response | DONE | P1 |
+//! | Late response rejection | test_client_late_response_rejected | TODO | P1 |
+//! | Concurrent requests | test_client_concurrent_requests | TODO | P2 |
+//! | Message ID generation | test_client_message_id_generation | TODO | P2 |
+//! | Reconnection backoff | test_client_reconnection_backoff | TODO | P1 |
+//! | Basic reconnection | test_client_reconnects_on_connection_failure | DONE | P1 |
+//! | Payment request send | test_client_sends_payment_request | DONE | P1 |
+//! | Response receive | test_client_receives_response | DONE | P1 |
+//! | Builder pattern | test_client_sends_built_message | DONE | P2 |
+//! | Builder validation | test_builder_rejects_invalid_message | DONE | P2 |
+//! | All 17 CASP types | test_client_all_17_casp_types | TODO | P1 |
+//!
+//! # Coverage Matrix - 17 CASP Message Types
+//!
+//! | Type | Name | Test Coverage | Priority |
+//! |------|------|---------------|----------|
+//! | Casp001Document | Sale Request | test_client_sends_payment_request | P1 |
+//! | Casp002Document | Sale Response | test_client_receives_response | P1 |
+//! | Casp003Document | Reversal Request | test_client_all_17_casp_types | P2 |
+//! | Casp004Document | Reversal Response | test_client_all_17_casp_types | P2 |
+//! | Casp005Document | Reconciliation Request | test_client_all_17_casp_types | P2 |
+//! | Casp006Document | Reconciliation Response | test_client_all_17_casp_types | P2 |
+//! | Casp007Document | Card Data Request | test_client_all_17_casp_types | P2 |
+//! | Casp008Document | Card Data Response | test_client_all_17_casp_types | P2 |
+//! | Casp009Document | Transaction Status Request | test_client_all_17_casp_types | P2 |
+//! | Casp010Document | Transaction Status Response | test_client_all_17_casp_types | P2 |
+//! | Casp011Document | Login Request | test_client_all_17_casp_types | P2 |
+//! | Casp012Document | Login Response | test_client_all_17_casp_types | P2 |
+//! | Casp013Document | Keep Alive Request | test_client_all_17_casp_types | P2 |
+//! | Casp014Document | Keep Alive Response | test_client_all_17_casp_types | P2 |
+//! | Casp015Document | Error Message | test_client_all_17_casp_types | P2 |
+//! | Casp016Document | Configuration Request | test_client_all_17_casp_types | P2 |
+//! | Casp017Document | Configuration Response | test_client_all_17_casp_types | P2 |
+//!
+//! # Test Gaps Identified
+//!
+//! **P1 (Must Have):**
+//! 1. test_client_connection_failure_handling - Test graceful handling when connection fails
+//! 2. test_client_late_response_rejected - Test late responses rejected after timeout
+//! 3. test_client_reconnection_backoff - Test exponential backoff on reconnection
+//! 4. test_client_all_17_casp_types - Test all 17 CASP message types through client
+//!
+//! **P2 (Should Have):**
+//! 5. test_client_concurrent_requests - Test multiple simultaneous pending requests
+//! 6. test_client_message_id_generation - Test unique message IDs generated correctly
 
 mod mock_server;
 
-use std::time::Duration;
-use tokio::time::timeout;
-
 use nexo_retailer_protocol::{
-    NexoClient, ReconnectConfig, TimeoutConfig, MessageBuilder, NexoError,
+    NexoClient, TimeoutConfig, MessageBuilder, NexoError,
     Header4Builder, PaymentRequestBuilder,
 };
 
