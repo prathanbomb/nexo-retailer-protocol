@@ -90,6 +90,11 @@ path = "tests/unit/validation.rs"
 required-features = ["alloc"]
 
 [[test]]
+name = "serialization_edge_cases"
+path = "tests/unit/serialization_edge_cases.rs"
+required-features = ["std"]
+
+[[test]]
 name = "client_integration"
 path = "tests/client_integration.rs"
 required-features = ["std"]
