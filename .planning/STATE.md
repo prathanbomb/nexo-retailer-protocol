@@ -39,11 +39,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 6 of 6 (Testing & Verification)
-Plan: 06-04b (Server Integration Tests) - COMPLETE
-Status: Phase 6 in progress - 3 of 8 plans complete
-Last activity: 2026-03-03 — Completed plan 06-04b: Server Integration Tests (35 min)
+Plan: 06-04a (Client Integration Tests) - COMPLETE
+Status: Phase 6 in progress - 4 of 8 plans complete
+Last activity: 2026-03-03 — Completed plan 06-04a: Client Integration Tests (48 min)
 
-Progress: [████░░░░░░] 38% (Phase 6 - 3/8 plans done)
+Progress: [█████░░░░░] 50% (Phase 6 - 4/8 plans done)
 
 ## Performance Metrics
 
@@ -62,11 +62,11 @@ Progress: [████░░░░░░] 38% (Phase 6 - 3/8 plans done)
 | 4. Client API | 5 | 5/5 | 68 min |
 | 5. Server API & Reliability | 6 | 6/6 | 77 min |
 | 5.1 Fix Server Framing | 1 | 1/1 | 14 min |
-| 6. Testing & Verification | 3 | 3/8 | 32 min |
+| 6. Testing & Verification | 4 | 4/8 | 35 min |
 
 **Recent Trend:**
-- Last 5 plans: P06-04b(35min), P06-02(45min), P06-01(15min), P05.1-01(14min), P05-06(3min)
-- Trend: Server integration tests complete with 82 tests across 5 test files
+- Last 5 plans: P06-04a(48min), P06-04b(35min), P06-02(45min), P06-01(15min), P05.1-01(14min)
+- Trend: Client integration tests complete with 26 tests (14 client + 12 E2E)
 
 *Updated after each plan completion*
 | Phase 06-testing-verification P03 | 35 | 7 tasks | 5 files |
@@ -152,6 +152,9 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 06-04b]: CountingHandler pattern with AtomicU32 for thread-safe concurrent request tracking in tests
 - [Phase 06-testing-verification]: Transport tests use feature flags for std vs embassy gating
 - [Phase 06-testing-verification]: Embassy integration tests remain #[ignore] requiring hardware execution
+- [Phase 06-04a]: Mock server uses raw byte receive to handle any CASP message type without decoding
+- [Phase 06-04a]: E2E tests require --test-threads=1 to avoid TCP port binding conflicts when running in parallel
+- [Phase 06-04a]: FramedTransport recv_raw/send_raw methods for raw byte handling in tests
 
 ### Pending Todos
 
@@ -172,6 +175,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03 (Phase 6 execution)
-Stopped at: Completed plan 06-04b - Server Integration Tests
-Next step: Continue Phase 6 - Testing & Verification (plans 06-03, 06-04a, 06-05a, 06-05b, 06-06)
-Summary file: .planning/phases/06-testing-verification/06-04b-SUMMARY.md
+Stopped at: Completed plan 06-04a - Client Integration Tests
+Next step: Continue Phase 6 - Testing & Verification (plans 06-05a, 06-05b, 06-06)
+Summary file: .planning/phases/06-testing-verification/06-04a-SUMMARY.md

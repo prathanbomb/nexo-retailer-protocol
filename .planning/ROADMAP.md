@@ -191,7 +191,7 @@ Plans:
 - [x] 06-01-PLAN.md — Write unit tests for all message types (encode/decode round-trip) (TEST-01) ✓ (2026-03-03)
 - [x] 06-02-PLAN.md — Write unit tests for validation logic (TEST-02) ✓ (2026-03-03)
 - [ ] 06-03-PLAN.md — Write integration tests for transport layer (TEST-03)
-- [ ] 06-04a-PLAN.md — Write client integration tests (TEST-04)
+- [x] 06-04a-PLAN.md — Write client integration tests (TEST-04)
 - [x] 06-04b-PLAN.md — Write server integration tests (TEST-04) ✓ (2026-03-03)
 - [ ] 06-05a-PLAN.md — Write property-based tests for serialization edge cases (TEST-05)
 - [ ] 06-05b-PLAN.md — Write stress/load tests for server
