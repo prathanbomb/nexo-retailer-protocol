@@ -6,7 +6,8 @@ rust-version = "1.85"
 authors = ["Nexo Retailer Protocol Contributors"]
 description = "Rust implementation of Nexo Retailer Protocol (ISO 20022 CASP) with std and no_std support"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/your-org/nexo-retailer-protocol"
+repository = "https://github.com/prathanbomb/nexo-retailer-protocol"
+readme = "README.md"
 keywords = ["nexo", "payment", "iso20022", "casp", "protobuf"]
 categories = ["no-std", "parser-implementations", "api-bindings"]
 

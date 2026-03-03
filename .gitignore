@@ -10,3 +10,6 @@ src/protos/nexo/
 proptest-regressions/*
 !proptest-regressions/.gitkeep
 !proptest-regressions/*.txt
+
+# Original XSD schema archives
+archive_*/

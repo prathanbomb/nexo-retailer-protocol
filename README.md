@@ -1,8 +1,8 @@
 # Nexo Retailer Protocol (ISO 20022 CASP)
 
-[![Test Suite](https://github.com/your-org/nexo-retailer-protocol/actions/workflows/test.yml/badge.svg)](https://github.com/your-org/nexo-retailer-protocol/actions/workflows/test.yml)
-[![no_std Build](https://github.com/your-org/nexo-retailer-protocol/actions/workflows/no_std.yml/badge.svg)](https://github.com/your-org/nexo-retailer-protocol/actions/workflows/no_std.yml)
-[![Coverage](https://codecov.io/gh/your-org/nexo-retailer-protocol/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/nexo-retailer-protocol)
+[![Test Suite](https://github.com/prathanbomb/nexo-retailer-protocol/actions/workflows/test.yml/badge.svg)](https://github.com/prathanbomb/nexo-retailer-protocol/actions/workflows/test.yml)
+[![no_std Build](https://github.com/prathanbomb/nexo-retailer-protocol/actions/workflows/no_std.yml/badge.svg)](https://github.com/prathanbomb/nexo-retailer-protocol/actions/workflows/no_std.yml)
+[![Coverage](https://codecov.io/gh/prathanbomb/nexo-retailer-protocol/branch/main/graph/badge.svg)](https://codecov.io/gh/prathanbomb/nexo-retailer-protocol)
 
 A Rust implementation of the Nexo Retailer Protocol based on ISO 20022 CASP (Cardholder and Acquirer System Protocol) specifications.
 
