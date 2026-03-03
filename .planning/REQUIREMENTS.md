@@ -90,7 +90,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Testing
 
 - [x] **TEST-01**: Unit tests for all message types (encode/decode round-trip)
-- [ ] **TEST-02**: Unit tests for validation logic
+- [x] **TEST-02**: Unit tests for validation logic
 - [ ] **TEST-03**: Integration tests for transport layer
 - [ ] **TEST-04**: Integration tests for client/server communication
 - [ ] **TEST-05**: Property-based tests for serialization edge cases

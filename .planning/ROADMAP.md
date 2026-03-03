@@ -189,7 +189,7 @@ Plans:
 
 Plans:
 - [x] 06-01-PLAN.md — Write unit tests for all message types (encode/decode round-trip) (TEST-01) ✓ (2026-03-03)
-- [ ] 06-02-PLAN.md — Write unit tests for validation logic (TEST-02)
+- [x] 06-02-PLAN.md — Write unit tests for validation logic (TEST-02) ✓ (2026-03-03)
 - [ ] 06-03-PLAN.md — Write integration tests for transport layer (TEST-03)
 - [ ] 06-04-PLAN.md — Write integration tests for client/server communication (TEST-04)
 - [ ] 06-05-PLAN.md — Write property-based tests for serialization edge cases (TEST-05)
@@ -208,4 +208,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 4. Client API | 0/5 | Not started | - |
 | 5. Server API & Reliability | 6/6 | Complete | 2026-03-02 |
 | 5.1. Fix Server Framing Integration | 1/1 | Complete | 2026-03-02 |
-| 6. Testing & Verification | 1/6 | In progress | - |
+| 6. Testing & Verification | 2/6 | In progress | - |
