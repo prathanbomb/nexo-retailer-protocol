@@ -479,6 +479,22 @@ mod tests {
         assert!(validate_required(&field, "Count").is_err());
     }
 
+    #[test]
+    fn test_validate_required_error_message_includes_field_name() {
+        let field: Option<String> = None;
+        let result = validate_required(&field, "MyCustomField");
+
+        // Verify error message includes the field name
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let err_msg = err.to_string();
+        assert!(
+            err_msg.contains("MyCustomField"),
+            "Error message '{}' should contain field name 'MyCustomField'",
+            err_msg
+        );
+    }
+
     // ------------------------------------------------------------------------
     // validate_positive_i64 tests
     // ------------------------------------------------------------------------
@@ -497,6 +513,39 @@ mod tests {
         assert!(validate_positive_i64(i64::MIN, "Count").is_err());
     }
 
+    #[test]
+    fn test_validate_positive_i64_boundary_cases() {
+        // Boundary: smallest positive value (1)
+        assert!(validate_positive_i64(1, "Count").is_ok());
+
+        // Boundary: zero (should fail - not positive)
+        assert!(validate_positive_i64(0, "Count").is_err());
+
+        // Boundary: largest positive value
+        assert!(validate_positive_i64(i64::MAX, "Count").is_ok());
+
+        // Boundary: smallest negative value (should fail)
+        assert!(validate_positive_i64(i64::MIN, "Count").is_err());
+
+        // Boundary: -1 (should fail)
+        assert!(validate_positive_i64(-1, "Count").is_err());
+    }
+
+    #[test]
+    fn test_validate_positive_i64_error_message_includes_field_name() {
+        let result = validate_positive_i64(0, "AmountField");
+
+        // Verify error message includes the field name
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let err_msg = err.to_string();
+        assert!(
+            err_msg.contains("AmountField"),
+            "Error message '{}' should contain field name 'AmountField'",
+            err_msg
+        );
+    }
+
     // ------------------------------------------------------------------------
     // validate_non_negative_i32 tests
     // ------------------------------------------------------------------------
@@ -512,6 +561,39 @@ mod tests {
     fn test_validate_non_negative_i32_invalid() {
         assert!(validate_non_negative_i32(-1, "Index").is_err());
         assert!(validate_non_negative_i32(i32::MIN, "Index").is_err());
+    }
+
+    #[test]
+    fn test_validate_non_negative_i32_boundary_cases() {
+        // Boundary: zero (valid - non-negative)
+        assert!(validate_non_negative_i32(0, "Index").is_ok());
+
+        // Boundary: smallest positive value
+        assert!(validate_non_negative_i32(1, "Index").is_ok());
+
+        // Boundary: largest non-negative value
+        assert!(validate_non_negative_i32(i32::MAX, "Index").is_ok());
+
+        // Boundary: -1 (should fail - first negative)
+        assert!(validate_non_negative_i32(-1, "Index").is_err());
+
+        // Boundary: smallest negative value (should fail)
+        assert!(validate_non_negative_i32(i32::MIN, "Index").is_err());
+    }
+
+    #[test]
+    fn test_validate_non_negative_i32_error_message_includes_field_name() {
+        let result = validate_non_negative_i32(-1, "IndexField");
+
+        // Verify error message includes the field name
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let err_msg = err.to_string();
+        assert!(
+            err_msg.contains("IndexField"),
+            "Error message '{}' should contain field name 'IndexField'",
+            err_msg
+        );
     }
 
     // ------------------------------------------------------------------------
@@ -537,6 +619,40 @@ mod tests {
         const VALID_VALUES: &[u32] = &[0, 1, 2];
         assert!(validate_enum_value(1u32, VALID_VALUES, "TestEnum").is_ok());
         assert!(validate_enum_value(99u32, VALID_VALUES, "TestEnum").is_err());
+    }
+
+    #[test]
+    fn test_validate_enum_value_error_message_includes_field_name() {
+        const VALID_VALUES: &[i32] = &[0, 1, 2];
+        let result = validate_enum_value(99, VALID_VALUES, "StatusEnum");
+
+        // Verify error message includes the field name
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let err_msg = err.to_string();
+        assert!(
+            err_msg.contains("StatusEnum"),
+            "Error message '{}' should contain field name 'StatusEnum'",
+            err_msg
+        );
+    }
+
+    #[test]
+    fn test_validate_enum_value_boundary_cases() {
+        // Test with range 1-5
+        const VALID_VALUES: &[i32] = &[1, 2, 3, 4, 5];
+
+        // Boundary: minimum valid value
+        assert!(validate_enum_value(1, VALID_VALUES, "RangeEnum").is_ok());
+
+        // Boundary: maximum valid value
+        assert!(validate_enum_value(5, VALID_VALUES, "RangeEnum").is_ok());
+
+        // Boundary: just below minimum
+        assert!(validate_enum_value(0, VALID_VALUES, "RangeEnum").is_err());
+
+        // Boundary: just above maximum
+        assert!(validate_enum_value(6, VALID_VALUES, "RangeEnum").is_err());
     }
 
     // ------------------------------------------------------------------------
