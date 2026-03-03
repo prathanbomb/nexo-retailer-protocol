@@ -105,6 +105,11 @@ name = "transport_embassy_test"
 path = "tests/transport/embassy_test.rs"
 required-features = ["embassy"]
 
+[[test]]
+name = "transport_connection_lifecycle"
+path = "tests/transport/connection_lifecycle.rs"
+required-features = ["std"]
+
 # Dev dependencies for testing (Phase 2+)
 [dev-dependencies]
 # prost-types for testing framing layer
