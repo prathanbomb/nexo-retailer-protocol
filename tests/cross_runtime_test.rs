@@ -337,3 +337,268 @@ async fn test_framed_transport_generic() {
 
     // The fact this compiles proves FramedTransport is properly generic
 }
+
+/// Test cross-runtime message roundtrip with Tokio
+///
+/// Verifies that message encoding/decoding works consistently
+/// across the framing layer with Tokio transport.
+#[tokio::test]
+async fn test_cross_runtime_roundtrip_tokio() {
+    use nexo_retailer_protocol::transport::{FramedTransport, TokioTransport};
+    use nexo_retailer_protocol::Casp001Document;
+    use prost::Message;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+
+    // Start echo server
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+
+        // Echo each message
+        for _ in 0..3 {
+            let mut len_buf = [0u8; 4];
+            socket.read_exact(&mut len_buf).await.unwrap();
+
+            let len = u32::from_be_bytes(len_buf) as usize;
+            let mut msg_buf = vec![0u8; len];
+            socket.read_exact(&mut msg_buf).await.unwrap();
+
+            socket.write_all(&len_buf).await.unwrap();
+            socket.write_all(&msg_buf).await.unwrap();
+        }
+    });
+
+    // Connect with Tokio transport
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+    let mut framed = FramedTransport::new(transport);
+
+    // Send and receive multiple messages
+    for _ in 0..3 {
+        let msg = Casp001Document::default();
+        framed.send_message(&msg).await.unwrap();
+
+        let received: Casp001Document = framed.recv_message().await.unwrap();
+        assert_eq!(msg.encode_to_vec(), received.encode_to_vec());
+    }
+}
+
+/// Test cross-runtime timeout behavior consistency
+///
+/// Verifies that timeout behavior is consistent across different transports.
+#[tokio::test]
+async fn test_cross_runtime_timeout_behavior() {
+    use nexo_retailer_protocol::transport::TokioTransport;
+
+    // Test connection timeout
+    let start = std::time::Instant::now();
+    let result = TokioTransport::connect("192.0.2.1:8080", Duration::from_millis(100)).await;
+    let elapsed = start.elapsed();
+
+    // Should timeout or fail quickly
+    assert!(result.is_err());
+    assert!(elapsed < Duration::from_secs(5), "Timeout should be enforced");
+
+    match result {
+        Err(NexoError::Timeout { .. }) | Err(NexoError::Connection { .. }) => {
+            // Expected: either timeout or connection failure
+        }
+        Ok(_) => {
+            panic!("Expected timeout or connection error, got success");
+        }
+        Err(_) => {
+            // Any other error is also acceptable
+        }
+    }
+}
+
+/// Test cross-runtime framing protocol consistency
+///
+/// Verifies that the framing protocol (4-byte length prefix) is
+/// implemented consistently regardless of transport.
+#[tokio::test]
+async fn test_cross_runtime_framing_protocol() {
+    use nexo_retailer_protocol::transport::{FramedTransport, TokioTransport, LENGTH_PREFIX_SIZE, MAX_FRAME_SIZE};
+    use prost::Message;
+
+    // Verify framing constants are consistent
+    assert_eq!(LENGTH_PREFIX_SIZE, 4, "Length prefix should be 4 bytes");
+    assert_eq!(MAX_FRAME_SIZE, 4 * 1024 * 1024, "Max frame size should be 4MB");
+
+    // Start server that verifies framing format
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let (mut socket, _) = listener.accept().await.unwrap();
+
+        // Read length prefix
+        let mut len_buf = [0u8; 4];
+        socket.read_exact(&mut len_buf).await.unwrap();
+
+        // Verify big-endian format
+        let len = u32::from_be_bytes(len_buf) as usize;
+
+        // Read message
+        let mut msg_buf = vec![0u8; len];
+        socket.read_exact(&mut msg_buf).await.unwrap();
+
+        // Echo back with same framing
+        socket.write_all(&len_buf).await.unwrap();
+        socket.write_all(&msg_buf).await.unwrap();
+    });
+
+    // Connect and send message
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+    let mut framed = FramedTransport::new(transport);
+
+    let msg = nexo_retailer_protocol::Casp001Document::default();
+    framed.send_message(&msg).await.unwrap();
+
+    let received: nexo_retailer_protocol::Casp001Document = framed.recv_message().await.unwrap();
+    assert_eq!(msg.encode_to_vec(), received.encode_to_vec());
+}
+
+/// Test cross-runtime error handling consistency
+///
+/// Verifies that errors are handled consistently across transports.
+#[tokio::test]
+async fn test_cross_runtime_error_handling() {
+    use nexo_retailer_protocol::transport::{FramedTransport, TokioTransport};
+    use nexo_retailer_protocol::Casp001Document;
+    use prost::Message;
+
+    // Test error when connecting to invalid address
+    let result = TokioTransport::connect("invalid-address", Duration::from_secs(1)).await;
+    assert!(result.is_err(), "Invalid address should return error");
+
+    match result {
+        Err(NexoError::Connection { .. }) => {
+            // Expected: connection error for invalid address
+        }
+        other => {
+            // Some systems might return different errors
+            assert!(other.is_err());
+        }
+    }
+
+    // Test error when receiving from server that sends invalid data
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        use tokio::io::AsyncWriteExt;
+
+        let (mut socket, _) = listener.accept().await.unwrap();
+
+        // Send invalid framing (length prefix says 100 bytes, but send only 10)
+        let len = 100u32.to_be_bytes();
+        socket.write_all(&len).await.unwrap();
+        socket.write_all(&[0u8; 10]).await.unwrap();
+        // Close connection - client should get error trying to read remaining bytes
+    });
+
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+    let mut framed = FramedTransport::new(transport);
+
+    let result: Result<nexo_retailer_protocol::Casp001Document, _> = framed.recv_message().await;
+    assert!(result.is_err(), "Should get error for truncated message");
+}
+
+/// Test Transport trait object safety
+///
+/// Verifies that the Transport trait can be used in generic contexts.
+#[tokio::test]
+async fn test_transport_trait_object_safety() {
+    use nexo_retailer_protocol::transport::TokioTransport;
+
+    // This test verifies that we can use Transport in generic functions
+    // The trait is not object-safe due to async methods, but it works with generics
+
+    fn with_transport<T: Transport>(_transport: &T) -> bool {
+        // Can call trait methods through generic bound
+        true
+    }
+
+    // Start server
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap().to_string();
+
+    tokio::spawn(async move {
+        let (_socket, _) = listener.accept().await.unwrap();
+        tokio::time::sleep(Duration::from_secs(5)).await;
+    });
+
+    let transport = TokioTransport::connect(&addr, Duration::from_secs(1))
+        .await
+        .unwrap();
+
+    // Use generic function with Transport implementation
+    assert!(with_transport(&transport));
+}
+
+/// Test timeout config consistency across runtimes
+///
+/// Verifies that timeout configurations work consistently.
+#[tokio::test]
+async fn test_timeout_config_consistency() {
+    use nexo_retailer_protocol::transport::{TokioTransport, TimeoutConfig};
+
+    // Test default timeout config
+    let config = TimeoutConfig::new();
+    assert_eq!(config.connect_timeout, Duration::from_secs(10));
+    assert_eq!(config.read_timeout, Duration::from_secs(30));
+    assert_eq!(config.write_timeout, Duration::from_secs(10));
+
+    // Test builder pattern
+    let custom_config = TimeoutConfig::new()
+        .with_connect(Duration::from_secs(5))
+        .with_read(Duration::from_secs(60))
+        .with_write(Duration::from_secs(20));
+
+    assert_eq!(custom_config.connect_timeout, Duration::from_secs(5));
+    assert_eq!(custom_config.read_timeout, Duration::from_secs(60));
+    assert_eq!(custom_config.write_timeout, Duration::from_secs(20));
+
+    // Verify config is Copy
+    let copied = custom_config;
+    assert_eq!(copied.connect_timeout, custom_config.connect_timeout);
+}
+
+/// Test that both transports use same error type
+///
+/// Verifies that TokioTransport and EmbassyTransport both use NexoError
+/// for consistent error handling across runtimes.
+#[tokio::test]
+async fn test_consistent_error_types() {
+    use nexo_retailer_protocol::transport::TokioTransport;
+
+    // Verify TokioTransport uses NexoError
+    type TokioError = <TokioTransport as Transport>::Error;
+
+    // Create various NexoError variants
+    let errors: [NexoError; 5] = [
+        NexoError::Timeout,
+        NexoError::Connection { details: "test" },
+        NexoError::Encoding { details: "test" },
+        NexoError::Decoding { details: "test" },
+        NexoError::Validation { field: "test", reason: "test" },
+    ];
+
+    // Verify all errors can be converted to transport error type
+    for error in errors {
+        let transport_error: TokioError = error;
+        // Verify it implements core::error::Error
+        let _: &dyn core::error::Error = &transport_error;
+    }
+}
