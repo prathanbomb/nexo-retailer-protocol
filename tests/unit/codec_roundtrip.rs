@@ -85,7 +85,43 @@ use nexo_retailer_protocol::{
     LoginManagement6, NetworkManagement6, SecurityManagement2,
     CertificateManagement6, TotaliserManagement6, PrintManagement6,
     ApplicationManagement6,
+    ActiveCurrencyAndAmount,
 };
+
+// =============================================================================
+// ISO 4217 Currency Code Test Data
+// =============================================================================
+
+/// Create a monetary amount in USD following ActiveCurrencyAndAmount rules.
+///
+/// Uses integer representation: units + nanos/10^9
+/// Example: $100.50 = { units: 100, nanos: 500000000 }
+fn create_usd_amount(units: i64, nanos: i32) -> ActiveCurrencyAndAmount {
+    ActiveCurrencyAndAmount {
+        ccy: "USD".to_string(),
+        units,
+        nanos,
+    }
+}
+
+/// Create a monetary amount in EUR following ActiveCurrencyAndAmount rules.
+fn create_eur_amount(units: i64, nanos: i32) -> ActiveCurrencyAndAmount {
+    ActiveCurrencyAndAmount {
+        ccy: "EUR".to_string(),
+        units,
+        nanos,
+    }
+}
+
+/// Create a monetary amount in JPY following ActiveCurrencyAndAmount rules.
+/// JPY has no decimal places, so nanos should be 0.
+fn create_jpy_amount(units: i64) -> ActiveCurrencyAndAmount {
+    ActiveCurrencyAndAmount {
+        ccy: "JPY".to_string(),
+        units,
+        nanos: 0,
+    }
+}
 
 /// Create a test header with realistic field values.
 fn create_test_header() -> Header4 {
@@ -323,6 +359,76 @@ gen_roundtrip_test!(Casp014Document, create_test_casp014);
 gen_roundtrip_test!(Casp015Document, create_test_casp015);
 gen_roundtrip_test!(Casp016Document, create_test_casp016);
 gen_roundtrip_test!(Casp017Document, create_test_casp017);
+
+// =============================================================================
+// Monetary Amount Round-Trip Tests (ISO 4217 Currency Codes)
+// =============================================================================
+
+/// Test that ActiveCurrencyAndAmount with USD currency round-trips correctly.
+#[test]
+fn test_usd_amount_roundtrip() {
+    let original = create_usd_amount(100, 500000000); // $100.50
+    let encoded = original.encode_to_vec();
+    let decoded = ActiveCurrencyAndAmount::decode(&encoded[..]).expect("decode should succeed");
+    assert_eq!(original, decoded);
+    assert_eq!(original.ccy, "USD");
+    assert_eq!(original.units, 100);
+    assert_eq!(original.nanos, 500000000);
+}
+
+/// Test that ActiveCurrencyAndAmount with EUR currency round-trips correctly.
+#[test]
+fn test_eur_amount_roundtrip() {
+    let original = create_eur_amount(50, 25000000); // EUR 50.025
+    let encoded = original.encode_to_vec();
+    let decoded = ActiveCurrencyAndAmount::decode(&encoded[..]).expect("decode should succeed");
+    assert_eq!(original, decoded);
+    assert_eq!(original.ccy, "EUR");
+}
+
+/// Test that ActiveCurrencyAndAmount with JPY currency round-trips correctly.
+#[test]
+fn test_jpy_amount_roundtrip() {
+    let original = create_jpy_amount(10000); // JPY 10,000 (no decimal places)
+    let encoded = original.encode_to_vec();
+    let decoded = ActiveCurrencyAndAmount::decode(&encoded[..]).expect("decode should succeed");
+    assert_eq!(original, decoded);
+    assert_eq!(original.ccy, "JPY");
+    assert_eq!(original.nanos, 0);
+}
+
+/// Test negative monetary amounts (refunds, credits).
+#[test]
+fn test_negative_amount_roundtrip() {
+    let original = ActiveCurrencyAndAmount {
+        ccy: "USD".to_string(),
+        units: -50,
+        nanos: -750000000, // -$50.75 (sign must match units)
+    };
+    let encoded = original.encode_to_vec();
+    let decoded = ActiveCurrencyAndAmount::decode(&encoded[..]).expect("decode should succeed");
+    assert_eq!(original, decoded);
+}
+
+/// Test encoded_len accuracy for monetary amounts.
+#[test]
+fn test_amount_encoded_len_matches() {
+    let amounts = vec![
+        create_usd_amount(100, 500000000),
+        create_eur_amount(1000, 0),
+        create_jpy_amount(1000000),
+    ];
+
+    for amount in amounts {
+        let expected_len = amount.encoded_len();
+        let encoded = amount.encode_to_vec();
+        assert_eq!(
+            expected_len, encoded.len(),
+            "encoded_len mismatch for {:?}",
+            amount.ccy
+        );
+    }
+}
 
 // =============================================================================
 // Property-Based Tests (std feature required for proptest)
