@@ -364,4 +364,90 @@ mod tests {
         let text = "Line 1\nLine 2\r\nLine 3\tTabbed";
         assert!(validate_max256_text(text).is_ok());
     }
+
+    // ------------------------------------------------------------------------
+    // Additional boundary tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn test_validate_max256_text_exactly_at_boundary() {
+        // Test at exactly 256 bytes (should pass)
+        let text = "A".repeat(256);
+        assert!(validate_max256_text(&text).is_ok());
+    }
+
+    #[test]
+    fn test_validate_max256_text_one_over_boundary() {
+        // Test at 257 bytes (should fail)
+        let text = "A".repeat(257);
+        let result = validate_max256_text(&text);
+        assert!(result.is_err());
+        // Verify error message includes actual length
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("257"));
+    }
+
+    #[test]
+    fn test_validate_max70_text_exactly_at_boundary() {
+        // Test at exactly 70 bytes (should pass)
+        let text = "A".repeat(70);
+        assert!(validate_max70_text(&text).is_ok());
+    }
+
+    #[test]
+    fn test_validate_max70_text_one_over_boundary() {
+        // Test at 71 bytes (should fail)
+        let text = "A".repeat(71);
+        let result = validate_max70_text(&text);
+        assert!(result.is_err());
+        // Verify error message includes actual length
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("71"));
+    }
+
+    #[test]
+    fn test_validate_max20000_text_exactly_at_boundary() {
+        // Test at exactly 20000 bytes (should pass)
+        let text = "A".repeat(20000);
+        assert!(validate_max20000_text(&text).is_ok());
+    }
+
+    #[test]
+    fn test_validate_max20000_text_one_over_boundary() {
+        // Test at 20001 bytes (should fail)
+        let text = "A".repeat(20001);
+        let result = validate_max20000_text(&text);
+        assert!(result.is_err());
+        // Verify error message includes actual length
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("20001"));
+    }
+
+    #[test]
+    fn test_validate_max_text_custom_limits() {
+        // Test validate_max_text with various custom limits
+        assert!(validate_max_text("hello", 5).is_ok());
+        assert!(validate_max_text("hello", 6).is_ok());
+        assert!(validate_max_text("hello", 4).is_err());
+
+        // Test with limit of 1
+        assert!(validate_max_text("a", 1).is_ok());
+        assert!(validate_max_text("ab", 1).is_err());
+
+        // Test with limit of 1000
+        let text = "A".repeat(1000);
+        assert!(validate_max_text(&text, 1000).is_ok());
+        assert!(validate_max_text(&text, 999).is_err());
+    }
+
+    #[test]
+    fn test_validate_max_text_error_message_content() {
+        let result = validate_max_text("hello world", 5);
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+
+        // Error message should include actual length and max
+        assert!(err_msg.contains("11"), "Should contain actual length");
+        assert!(err_msg.contains("5"), "Should contain max length");
+    }
 }
