@@ -13,3 +13,10 @@ proptest-regressions/*
 
 # Original XSD schema archives
 archive_*/
+.claude
+.idea
+target
+
+tests
+Cargo.lock
+xsd_to_proto_converter.py
