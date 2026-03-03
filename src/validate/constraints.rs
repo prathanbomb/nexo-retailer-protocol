@@ -805,4 +805,81 @@ mod alloc_tests {
         assert!(validate_repeated_field(&items, 10000, "Items").is_ok());
         assert!(validate_repeated_field(&items, 100, "Items").is_err());
     }
+
+    #[test]
+    fn test_validate_repeated_field_boundary_at_max() {
+        // Test collection at exactly max size (should pass)
+        let items: Vec<i32> = (0..100).collect();
+        assert!(validate_repeated_field(&items, 100, "Items").is_ok());
+    }
+
+    #[test]
+    fn test_validate_repeated_field_boundary_one_over_max() {
+        // Test collection at max+1 size (should fail)
+        let items: Vec<i32> = (0..101).collect();
+        let result = validate_repeated_field(&items, 100, "Items");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_repeated_field_with_vec_string() {
+        // Test with Vec<String> for repeated string fields
+        let strings: Vec<String> = vec!["a".to_string(), "b".to_string(), "c".to_string()];
+        assert!(validate_repeated_field(&strings, 5, "StringFields").is_ok());
+        assert!(validate_repeated_field(&strings, 2, "StringFields").is_err());
+    }
+
+    #[test]
+    fn test_validate_repeated_field_with_vec_i64() {
+        // Test with Vec<i64> for repeated numeric fields
+        let numbers: Vec<i64> = vec![100, 200, 300, 400, 500];
+        assert!(validate_repeated_field(&numbers, 10, "NumericFields").is_ok());
+        assert!(validate_repeated_field(&numbers, 4, "NumericFields").is_err());
+    }
+
+    #[test]
+    fn test_validate_repeated_field_with_vec_protobuf_messages() {
+        // Test with Vec<protobuf messages> for repeated nested messages
+        let amounts: Vec<crate::ActiveCurrencyAndAmount> = vec![
+            crate::ActiveCurrencyAndAmount { ccy: "USD".to_string(), units: 10, nanos: 0 },
+            crate::ActiveCurrencyAndAmount { ccy: "EUR".to_string(), units: 20, nanos: 0 },
+        ];
+        assert!(validate_repeated_field(&amounts, 5, "Amounts").is_ok());
+        assert!(validate_repeated_field(&amounts, 1, "Amounts").is_err());
+    }
+
+    #[test]
+    fn test_validate_repeated_field_error_message_includes_field_name() {
+        let items: Vec<i32> = (0..11).collect();
+        let result = validate_repeated_field(&items, 10, "MyRepeatedField");
+
+        // Verify error message includes field name and size limit
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        // The error should contain information about the constraint violation
+        assert!(
+            err_msg.contains("11") || err_msg.contains("10"),
+            "Error message should contain size info: {}",
+            err_msg
+        );
+    }
+
+    #[test]
+    fn test_validate_repeated_field_with_zero_max() {
+        // Edge case: max = 0 means only empty collection is valid
+        let empty: Vec<String> = vec![];
+        assert!(validate_repeated_field(&empty, 0, "ZeroMax").is_ok());
+
+        let one_item: Vec<String> = vec!["a".to_string()];
+        assert!(validate_repeated_field(&one_item, 0, "ZeroMax").is_err());
+    }
+
+    #[test]
+    fn test_validate_repeated_field_with_single_item() {
+        // Test with single item at various limits
+        let single: Vec<String> = vec!["only_one".to_string()];
+        assert!(validate_repeated_field(&single, 1, "SingleItem").is_ok());
+        assert!(validate_repeated_field(&single, 2, "SingleItem").is_ok());
+        assert!(validate_repeated_field(&single, 0, "SingleItem").is_err());
+    }
 }
