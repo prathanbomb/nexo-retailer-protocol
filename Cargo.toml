@@ -94,3 +94,7 @@ futures-executor = "0.3"
 futures = "0.3"
 # env_logger for logging in integration tests
 env_logger = "0.11"
+# proptest for property-based testing (Phase 6)
+proptest = "1.4"
+# proptest-derive for Arbitrary trait derivation
+proptest-derive = "0.4"
