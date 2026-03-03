@@ -80,6 +80,11 @@ required-features = ["std"]
 
 # Integration tests
 [[test]]
+name = "codec_roundtrip"
+path = "tests/unit/codec_roundtrip.rs"
+required-features = ["alloc"]
+
+[[test]]
 name = "client_integration"
 path = "tests/client_integration.rs"
 required-features = ["std"]
@@ -98,3 +103,5 @@ env_logger = "0.11"
 proptest = "1.4"
 # proptest-derive for Arbitrary trait derivation
 proptest-derive = "0.4"
+# paste for macro identifier generation
+paste = "1.0"
