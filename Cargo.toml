@@ -94,6 +94,17 @@ name = "client_integration"
 path = "tests/client_integration.rs"
 required-features = ["std"]
 
+# Transport tests
+[[test]]
+name = "transport_tokio_test"
+path = "tests/transport/tokio_test.rs"
+required-features = ["std"]
+
+[[test]]
+name = "transport_embassy_test"
+path = "tests/transport/embassy_test.rs"
+required-features = ["embassy"]
+
 # Dev dependencies for testing (Phase 2+)
 [dev-dependencies]
 # prost-types for testing framing layer
