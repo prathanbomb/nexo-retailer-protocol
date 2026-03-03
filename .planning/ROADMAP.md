@@ -185,15 +185,15 @@ Plans:
   5. Property-based tests discover serialization edge cases (malformed inputs, boundary conditions)
   6. Bare-metal CI target runs full test suite on every commit
 
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 06-01: Write unit tests for all message types (encode/decode round-trip)
-- [ ] 06-02: Write unit tests for validation logic
-- [ ] 06-03: Write integration tests for transport layer
-- [ ] 06-04: Write integration tests for client/server communication
-- [ ] 06-05: Write property-based tests for serialization edge cases
-- [ ] 06-06: Configure bare-metal CI to run full test suite
+- [x] 06-01-PLAN.md — Write unit tests for all message types (encode/decode round-trip) (TEST-01) ✓ (2026-03-03)
+- [ ] 06-02-PLAN.md — Write unit tests for validation logic (TEST-02)
+- [ ] 06-03-PLAN.md — Write integration tests for transport layer (TEST-03)
+- [ ] 06-04-PLAN.md — Write integration tests for client/server communication (TEST-04)
+- [ ] 06-05-PLAN.md — Write property-based tests for serialization edge cases (TEST-05)
+- [ ] 06-06-PLAN.md — Configure bare-metal CI to run full test suite (TEST-01, TEST-02, TEST-03, TEST-04, TEST-05)
 
 ## Progress
 
@@ -208,4 +208,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 4. Client API | 0/5 | Not started | - |
 | 5. Server API & Reliability | 6/6 | Complete | 2026-03-02 |
 | 5.1. Fix Server Framing Integration | 1/1 | Complete | 2026-03-02 |
-| 6. Testing & Verification | 0/6 | Not started | - |
+| 6. Testing & Verification | 1/6 | In progress | - |

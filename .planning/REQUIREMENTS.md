@@ -11,8 +11,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **SCHEMA-01**: All 17 CASP XSD files (casp.001-017) converted to .proto format
 - [x] **SCHEMA-02**: Field number registry established with reserved field tracking to prevent silent data corruption
-- [ ] **SCHEMA-03**: Build script (build.rs) using prost-build for Rust code generation
-- [ ] **SCHEMA-04**: Generated Rust message structs configured with BTreeMap for no_std compatibility
+- [x] **SCHEMA-03**: Build script (build.rs) using prost-build for Rust code generation
+- [x] **SCHEMA-04**: Generated Rust message structs configured with BTreeMap for no_std compatibility
 - [x] **SCHEMA-05**: Integer-based monetary value types (int64 units + int32 nanos, never float/double)
 
 ### Serialization (Codec)
@@ -41,55 +41,55 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Transport Layer
 
-- [ ] **TRANS-01**: Transport trait defining async read/write interface
+- [x] **TRANS-01**: Transport trait defining async read/write interface
 - [ ] **TRANS-02**: Custom TCP framing per Nexo specification (message boundaries, length prefixes)
-- [ ] **TRANS-03**: Tokio transport implementation (std feature)
-- [ ] **TRANS-04**: Embassy transport implementation (no_std feature)
-- [ ] **TRANS-05**: Connection timeout handling
-- [ ] **TRANS-06**: Message framing tests (round-trip with oversized/malformed messages)
+- [x] **TRANS-03**: Tokio transport implementation (std feature)
+- [x] **TRANS-04**: Embassy transport implementation (no_std feature)
+- [x] **TRANS-05**: Connection timeout handling
+- [x] **TRANS-06**: Message framing tests (round-trip with oversized/malformed messages)
 
 ### Feature Flags & Platform Support
 
 - [x] **PLAT-01**: std feature enables Tokio, tracing, and standard library
 - [x] **PLAT-02**: no_std feature enables Embassy, heapless, and defmt
 - [x] **PLAT-03**: alloc feature enables heap-based collections for validation
-- [ ] **PLAT-04**: Bare-metal CI target (thumbv7em-none-eabihf) from day one
-- [ ] **PLAT-05**: Dependency audit for std leakage on no_std builds
+- [x] **PLAT-04**: Bare-metal CI target (thumbv7em-none-eabihf) from day one
+- [x] **PLAT-05**: Dependency audit for std leakage on no_std builds
 
 ### Client API
 
 - [x] **CLIENT-01**: Client API for POS initiators (request/response pattern)
-- [ ] **CLIENT-02**: Builder pattern for complex message construction
+- [x] **CLIENT-02**: Builder pattern for complex message construction
 - [x] **CLIENT-03**: Connection management (connect, disconnect)
 - [x] **CLIENT-04**: Request/response correlation with pending request tracking
 - [x] **CLIENT-05**: Basic reconnection logic with exponential backoff
 - [x] **CLIENT-06**: Unique message ID generation for replay protection
 - [x] **CLIENT-07**: Timeout handling with late response rejection
-- [ ] **CLIENT-08**: Client integration tests with mock server
+- [x] **CLIENT-08**: Client integration tests with mock server
 
 ### Server API
 
 - [ ] **SERVER-01**: Server API for device listeners (concurrent connection handling)
-- [ ] **SERVER-02**: Connection manager with per-connection state tracking
+- [x] **SERVER-02**: Connection manager with per-connection state tracking
 - [ ] **SERVER-03**: Request dispatcher routing to application handlers
 - [x] **SERVER-04**: Message deduplication for replay attack prevention
 - [ ] **SERVER-05**: Server integration tests with concurrent clients
 
 ### Reliability Features
 
-- [ ] **RELY-01**: Heartbeat/keepalive protocol for dead connection detection
-- [ ] **RELY-02**: Configurable heartbeat interval and timeout
+- [x] **RELY-01**: Heartbeat/keepalive protocol for dead connection detection
+- [x] **RELY-02**: Configurable heartbeat interval and timeout
 - [x] **RELY-03**: Automatic reconnection with configurable retry attempts
 
 ### Logging & Diagnostics
 
-- [ ] **LOG-01**: Structured logging integration (tracing for std, defmt for no_std)
-- [ ] **LOG-02**: Configurable log verbosity levels
-- [ ] **LOG-03**: Connection state logging for debugging
+- [x] **LOG-01**: Structured logging integration (tracing for std, defmt for no_std)
+- [x] **LOG-02**: Configurable log verbosity levels
+- [x] **LOG-03**: Connection state logging for debugging
 
 ### Testing
 
-- [ ] **TEST-01**: Unit tests for all message types (encode/decode round-trip)
+- [x] **TEST-01**: Unit tests for all message types (encode/decode round-trip)
 - [ ] **TEST-02**: Unit tests for validation logic
 - [ ] **TEST-03**: Integration tests for transport layer
 - [ ] **TEST-04**: Integration tests for client/server communication
@@ -140,8 +140,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | SCHEMA-01 | Phase 1 | Complete |
 | SCHEMA-02 | Phase 1 | Complete |
-| SCHEMA-03 | Phase 1 | Pending |
-| SCHEMA-04 | Phase 1 | Pending |
+| SCHEMA-03 | Phase 1 | Complete |
+| SCHEMA-04 | Phase 1 | Complete |
 | SCHEMA-05 | Phase 1 | Complete |
 | CODEC-01 | Phase 2 | Complete |
 | CODEC-02 | Phase 2 | Complete |
@@ -158,36 +158,36 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ERROR-02 | Phase 2 | Complete |
 | ERROR-03 | Phase 2 | Complete |
 | ERROR-04 | Phase 2 | Complete |
-| TRANS-01 | Phase 3 | Pending |
-| TRANS-02 | Phase 3 | Pending |
-| TRANS-03 | Phase 3 | Pending |
-| TRANS-04 | Phase 3 | Pending |
-| TRANS-05 | Phase 3 | Pending |
-| TRANS-06 | Phase 3 | Pending |
+| TRANS-01 | Phase 3 | Complete |
+| TRANS-02 | Phase 5.1 | Pending |
+| TRANS-03 | Phase 3 | Complete |
+| TRANS-04 | Phase 3 | Complete |
+| TRANS-05 | Phase 3 | Complete |
+| TRANS-06 | Phase 3 | Complete |
 | PLAT-01 | Phase 2 | Complete |
 | PLAT-02 | Phase 2 | Complete |
 | PLAT-03 | Phase 2 | Complete |
-| PLAT-04 | Phase 2 | Pending |
-| PLAT-05 | Phase 2 | Pending |
+| PLAT-04 | Phase 2 | Complete |
+| PLAT-05 | Phase 2 | Complete |
 | CLIENT-01 | Phase 4 | Complete |
-| CLIENT-02 | Phase 4 | Pending |
+| CLIENT-02 | Phase 4 | Complete |
 | CLIENT-03 | Phase 4 | Complete |
 | CLIENT-04 | Phase 4 | Complete |
 | CLIENT-05 | Phase 4 | Complete |
 | CLIENT-06 | Phase 4 | Complete |
 | CLIENT-07 | Phase 4 | Complete |
-| CLIENT-08 | Phase 4 | Pending |
-| SERVER-01 | Phase 5 | Pending |
-| SERVER-02 | Phase 5 | Pending |
-| SERVER-03 | Phase 5 | Pending |
+| CLIENT-08 | Phase 4 | Complete |
+| SERVER-01 | Phase 5.1 | Pending |
+| SERVER-02 | Phase 5 | Complete |
+| SERVER-03 | Phase 5.1 | Pending |
 | SERVER-04 | Phase 5 | Complete |
-| SERVER-05 | Phase 5 | Pending |
-| RELY-01 | Phase 5 | Pending |
-| RELY-02 | Phase 5 | Pending |
+| SERVER-05 | Phase 5.1 | Pending |
+| RELY-01 | Phase 5 | Complete |
+| RELY-02 | Phase 5 | Complete |
 | RELY-03 | Phase 4 | Complete |
-| LOG-01 | Phase 5 | Pending |
-| LOG-02 | Phase 5 | Pending |
-| LOG-03 | Phase 5 | Pending |
+| LOG-01 | Phase 5 | Complete |
+| LOG-02 | Phase 5 | Complete |
+| LOG-03 | Phase 5 | Complete |
 | TEST-01 | Phase 6 | Pending |
 | TEST-02 | Phase 6 | Pending |
 | TEST-03 | Phase 6 | Pending |

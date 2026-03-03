@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-03-02T19:20:00.000Z"
+last_updated: "2026-03-03T07:31:26Z"
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 28
-  completed_plans: 27
-  current_plan_phase: 05.1-fix-server-framing
-  current_plan_number: 01
+  total_plans: 29
+  completed_plans: 29
+  current_plan_phase: 06-testing-verification
+  current_plan_number: 02
   current_plan_status: complete
 ---
 
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Enable embedded payment devices to communicate using the Nexo Retailer Protocol with a Rust implementation that works in both bare metal (no_std) and standard environments.
-**Current focus:** Phase 5.1: Fix Server Framing
+**Current focus:** Phase 6: Testing & Verification
 
 ## Current Position
 
-Phase: 5.1 of 6 (Fix Server Framing)
-Plan: 05.1-01 (Integrate FramedTransport into Server) - COMPLETE
-Status: Phase 5.1 Complete - 1 of 1 plan complete
-Last activity: 2026-03-02 — Completed plan 05.1-01: Integrate FramedTransport into Server (14 min)
+Phase: 6 of 6 (Testing & Verification)
+Plan: 06-02 (Validation Logic Unit Tests) - COMPLETE
+Status: Phase 6 in progress - 2 of 8 plans complete
+Last activity: 2026-03-03 — Completed plan 06-02: Validation Logic Unit Tests (45 min)
 
-Progress: [██████████] 100% (Phase 5.1 complete - 1/1 plan done)
+Progress: [███░░░░░░░] 25% (Phase 6 - 2/8 plans done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 27
-- Average duration: 85 min (1.4 hours)
-- Total execution time: 38.3 hours
+- Total plans completed: 28
+- Average duration: 83 min (1.4 hours)
+- Total execution time: 38.5 hours
 
 **By Phase:**
 
@@ -49,11 +49,11 @@ Progress: [██████████] 100% (Phase 5.1 complete - 1/1 plan d
 | 4. Client API | 5 | 5/5 | 68 min |
 | 5. Server API & Reliability | 6 | 6/6 | 77 min |
 | 5.1 Fix Server Framing | 1 | 1/1 | 14 min |
-| 6. Testing & Verification | 0 | 0/6 | - |
+| 6. Testing & Verification | 2 | 2/8 | 30 min |
 
 **Recent Trend:**
-- Last 5 plans: P05.1-01(14min), P05-06(3min), P05-05(3min), P05-01(4min), P04-05(2956min)
-- Trend: Server FramedTransport integration completed successfully
+- Last 5 plans: P06-02(45min), P06-01(15min), P05.1-01(14min), P05-06(3min), P05-05(3min)
+- Trend: Validation testing complete with 115 tests
 
 *Updated after each plan completion*
 
@@ -126,6 +126,14 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 05.1-01]: Wrap TcpStream in FramedTransport at connection accept for proper length-prefix framing
 - [Phase 05.1-01]: dispatch_document() accepts decoded Casp001Document structs to eliminate double-encoding
 - [Phase 05.1-01]: FramedTransport for all server message I/O ensures 4-byte length prefix protocol
+- [Phase 06-01]: Macro-based test generation with gen_roundtrip_test! for 17 CASP message types
+- [Phase 06-01]: Property-based testing with proptest (256 cases per property, std-only)
+- [Phase 06-01]: Feature-gated tests: alloc for round-trip tests, std for property tests
+- [Phase 06-01]: ISO 4217 currency code helpers (USD, EUR, JPY) for monetary amount tests
+- [Phase 06-02]: Test organization: Module tests in src/validate/*.rs, integration tests in tests/unit/validation.rs
+- [Phase 06-02]: Feature gating: All validation tests use #[cfg(all(test, feature = alloc))] for no_std compatibility
+- [Phase 06-02]: Boundary test pattern: Test at limit (pass) and at limit+1 (fail)
+- [Phase 06-02]: Error message test pattern: Verify field name and constraint type in error string
 
 ### Pending Todos
 
@@ -145,7 +153,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-02 (Phase 5.1 execution)
-Stopped at: Completed plan 05.1-01 - Integrate FramedTransport into Server
-Next step: Execute Phase 6 - Testing & Verification
-Summary file: .planning/phases/05.1-fix-server-framing/05.1-01-SUMMARY.md
+Last session: 2026-03-03 (Phase 6 execution)
+Stopped at: Completed plan 06-01 - Codec Round-Trip Unit Tests
+Next step: Continue Phase 6 - Testing & Verification (plans 06-02 through 06-06)
+Summary file: .planning/phases/06-testing-verification/06-01-SUMMARY.md
