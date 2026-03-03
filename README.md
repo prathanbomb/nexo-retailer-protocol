@@ -1,5 +1,9 @@
 # Nexo Retailer Protocol (ISO 20022 CASP)
 
+[![Test Suite](https://github.com/your-org/nexo-retailer-protocol/actions/workflows/test.yml/badge.svg)](https://github.com/your-org/nexo-retailer-protocol/actions/workflows/test.yml)
+[![no_std Build](https://github.com/your-org/nexo-retailer-protocol/actions/workflows/no_std.yml/badge.svg)](https://github.com/your-org/nexo-retailer-protocol/actions/workflows/no_std.yml)
+[![Coverage](https://codecov.io/gh/your-org/nexo-retailer-protocol/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/nexo-retailer-protocol)
+
 A Rust implementation of the Nexo Retailer Protocol based on ISO 20022 CASP (Cardholder and Acquirer System Protocol) specifications.
 
 ## Features
@@ -126,10 +130,34 @@ This script verifies that no std dependencies are pulled in when building for ba
 
 ## CI
 
-The project includes a GitHub Actions workflow that:
+The project includes GitHub Actions workflows that:
+
+### Test Suite (test.yml)
+- Runs tests on std target with all features
+- Runs tests on no_std alloc target
+- Checks for uncommitted proptest regressions
+- Monitors test execution time (threshold: 5 minutes)
+- Uploads code coverage to Codecov
+
+### Bare-Metal CI (no_std.yml)
 - Builds for `thumbv7em-none-eabihf` target
-- Runs dependency audit for std leakage
+- Runs tests on bare-metal target (alloc feature)
+- Runs tests with embassy feature
+- Runs dependency audit for std leakage on all feature combinations
 - Builds documentation for bare-metal target
+- Monitors test execution time (threshold: 10 minutes)
+
+### Running Timed Tests Locally
+
+Use the timed test script for local execution monitoring:
+
+```bash
+# Run std tests with time monitoring
+./scripts/run-timed-tests.sh --std
+
+# Run alloc tests with custom threshold
+THRESHOLD_SECONDS=300 ./scripts/run-timed-tests.sh --alloc
+```
 
 ## Supported CASP Messages
 
