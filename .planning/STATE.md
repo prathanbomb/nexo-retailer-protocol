@@ -2,41 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-03T10:52:33.842Z"
+status: in_progress
+last_updated: "2026-03-03T11:10:00Z"
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 33
   completed_plans: 33
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-03-03T09:18:11.555Z"
-progress:
-  total_phases: 7
-  completed_phases: 6
-  total_plans: 33
-  completed_plans: 31
----
-
----
-gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: in_progress
-last_updated: "2026-03-03T08:35:00Z"
-progress:
-  total_phases: 6
-  completed_phases: 5
-  total_plans: 29
-  completed_plans: 30
   current_plan_phase: 06-testing-verification
-  current_plan_number: 04b
+  current_plan_number: 05a
   current_plan_status: complete
 ---
 
@@ -52,18 +26,18 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 6 of 6 (Testing & Verification)
-Plan: 06-06 (Bare-Metal CI Integration) - COMPLETE
-Status: Phase 6 in progress - 5 of 8 plans complete
-Last activity: 2026-03-03 — Completed plan 06-06: Bare-Metal CI Integration (21 min)
+Plan: 06-05a (Basic Property-Based Tests for Serialization) - COMPLETE
+Status: Phase 6 in progress - 7 of 8 plans complete
+Last activity: 2026-03-03 — Completed plan 06-05a: Basic Property-Based Tests for Serialization (37 min)
 
-Progress: [██████░░░░] 62% (Phase 6 - 5/8 plans done)
+Progress: [████████░░] 87% (Phase 6 - 7/8 plans done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 31
-- Average duration: 81 min (1.4 hours)
-- Total execution time: 39.5 hours
+- Total plans completed: 33
+- Average duration: 78 min (1.3 hours)
+- Total execution time: 40.6 hours
 
 **By Phase:**
 
@@ -75,15 +49,13 @@ Progress: [██████░░░░] 62% (Phase 6 - 5/8 plans done)
 | 4. Client API | 5 | 5/5 | 68 min |
 | 5. Server API & Reliability | 6 | 6/6 | 77 min |
 | 5.1 Fix Server Framing | 1 | 1/1 | 14 min |
-| 6. Testing & Verification | 5 | 5/8 | 32 min |
+| 6. Testing & Verification | 7 | 7/8 | 31 min |
 
 **Recent Trend:**
-- Last 5 plans: P06-06(21min), P06-04b(35min), P06-04a(48min), P06-02(45min), P06-01(15min)
-- Trend: CI infrastructure complete for std and bare-metal targets
+- Last 5 plans: P06-05a(37min), P06-05b(30min), P06-06(21min), P06-04b(35min), P06-04a(48min)
+- Trend: Property-based tests complete with 67 tests covering edge cases
 
 *Updated after each plan completion*
-| Phase 06-testing-verification P03 | 35 | 7 tasks | 5 files |
-| Phase 06-testing-verification P06 | 21 | 8 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -174,7 +146,12 @@ Key architectural decisions will be logged during Phase 1 (Schema Conversion) an
 - [Phase 06-06]: Proptest regression persistence in version control
 - [Phase 06-06]: Dependency audit checks all feature combinations (no-default, alloc, embassy)
 - [Phase 06-06]: Code coverage tracking with cargo-tarpaulin and Codecov
-- [Phase 06-testing-verification]: CI workflows for std and bare-metal test targets with time monitoring
+- [Phase 06-05b]: Advanced property tests with 67 test functions covering corrupted prefixes, fuzzing, and round-trip invariants
+- [Phase 06-05b]: High-case-count proptest blocks (1000 cases) for fuzzing tests
+- [Phase 06-05b]: MockTransportForFraming pattern for FramedTransport edge case testing
+- [Phase 06-05b]: Proptest regression persistence with .cargo/config.toml and CI verification
+- [Phase 06-05a]: Property-based tests for serialization edge cases (malformed, truncated, boundary, oversized)
+- [Phase 06-05a]: 67 tests covering all 17 CASP message types with proptest
 
 ### Pending Todos
 
@@ -197,6 +174,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03 (Phase 6 execution)
-Stopped at: Completed plan 06-06 - Bare-Metal CI Integration
-Next step: Continue Phase 6 - Testing & Verification (plans 06-05a, 06-05b remaining)
-Summary file: .planning/phases/06-testing-verification/06-06-SUMMARY.md
+Stopped at: Completed plan 06-05a - Basic Property-Based Tests for Serialization
+Next step: Continue Phase 6 - Testing & Verification (plan 06-07 remaining)
+Summary file: .planning/phases/06-testing-verification/06-05a-SUMMARY.md
